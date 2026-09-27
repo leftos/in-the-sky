@@ -1,21 +1,23 @@
 # Events
 
-Status: written 2026-09-26 by `event-writer` for M1 step D4 (`docs/plans/2026-09-26-m1-headless-cabin-flight.md`). The owner picked the four M1 events from the brainstorm and ruled the module additions the same day; the specs are in section 10, and their trait, age-band and incident ids are the ones `docs/design/passengers.md` (D1) names. Owner of this doc: `event-writer`. It follows ruling R27 (the module shape) and owner decisions OD1 (auto-resolve by quality) and OD5 (one seat-conflict event) in that plan, with the additions in section 1. Terms are in the glossary in [docs/README.md](../README.md); the needs, phases and pillars are in [CONCEPT.md](./CONCEPT.md). Every number here marked "first value, D3" is a starting value that `docs/design/balance.md` owns and tunes.
+Status: written 2026-09-26 by `event-writer` for M1 step D4 (`docs/plans/2026-09-26-m1-headless-cabin-flight.md`). The owner picked the four M1 events from the brainstorm and ruled the module additions the same day; the specs are in section 10, and their trait, age-band and incident ids are the ones `docs/design/passengers.md` (D1) names. Sections 1, 6 and 7 were brought true to the event port and its Lua adapter (step S3) on 2026-09-27. Owner of this doc: `event-writer`. It follows ruling R27 (the module shape) and owner decisions OD1 (auto-resolve by quality) and OD5 (one seat-conflict event) in that plan, with the additions in section 1. Terms are in the glossary in [docs/README.md](../README.md); the needs, phases and pillars are in [CONCEPT.md](./CONCEPT.md). Every number here marked "first value, D3" is a starting value that `docs/design/balance.md` owns and tunes.
 
 ## 1. What an event is
 
-An event is a surfaced cabin situation with two to four choices whose consequences land later. It is one Lua module, declarative, and it never touches the simulation: it reads read-only facts and returns tables the host turns into work and delayed consequences. A module that throws, or runs out of its instruction budget, is disabled for that flight only.
+An event is a surfaced cabin situation with two to four choices whose consequences land later. It is one Lua module, declarative, and it never touches the simulation: it reads read-only facts and returns tables the host turns into work and delayed consequences. A module that throws, runs out of its instruction budget, or returns something malformed from any of its four functions (the checks below) is disabled for that flight only, with the offending field named in the reason; so is a module whose table is malformed when it loads (step S3).
 
-A module returns one table:
+A module is a Lua chunk that returns one table:
 
 | Field | What it is |
 |---|---|
-| `id` | The event's content id, lowercase with hyphens (`split-group`). Never shown to a player. |
-| `phases` | The flight phases (section 2) the event may fire in. |
-| `trigger(ctx)` | Reads the cabin through `ctx` and returns nothing, or a facts table recording what it saw: who is involved, how busy the crew are, the phase. It checks the phase first and rolls its own chance (section 3). |
-| `describe(facts)` | The scene: one or two sentences saying what a crew member would notice (section 6). |
+| `id` | The event's content id, lowercase with hyphens (`split-group`). It must equal the id the module is loaded under, or the module is disabled at load. Never shown to a player. |
+| `phases` | A non-empty list of the flight phases (section 2) the event may fire in, by the ids of section 2. A name that is not a stage disables the module at load. The host asks the trigger only in these phases. |
+| `trigger(ctx)` | Reads the cabin through `ctx` (section 7) and returns `nil`, or a facts table recording what it saw: who is involved, how busy the crew are, the phase. It checks the phase first and rolls its own chance (section 3). `facts.subject`, when present, must be the id of a passenger aboard. |
+| `describe(facts)` | The scene, a string: one or two sentences saying what a crew member would notice (section 6). |
 | `choices(facts)` | Two to four choices, each `{ id, label, needs_crew, minutes, quality }`. `needs_crew` says whether the choice becomes a task on the task board; `minutes` is how long that crew work takes (0 for a choice with no crew); `quality` is how good the choice is for these facts, a number in [0, 1] (section 4). A choice the facts rule out (no free seat, no companion) is left out, as long as two to four remain (owner, 2026-09-26). |
-| `effects(facts, choice_id)` | The chosen branch's delayed consequences: a list of the four kinds below. |
+| `effects(facts, choice_id)` | The chosen branch's delayed consequences: a list of the four kinds below. `choice_id` is always one of the ids `choices` last offered for these facts. |
+
+The facts table is the trigger's own Lua table: the host keeps it and hands the same table to `describe`, `choices` and `effects`, so it records plain values (ids, seat labels, flags, numbers), never `ctx` itself (section 7).
 
 The consequence kinds (R27, plus two added by the owner, 2026-09-26):
 
@@ -26,11 +28,22 @@ The consequence kinds (R27, plus two added by the owner, 2026-09-26):
 | Seat move | `{ after_minutes, swap = { a, b } }` or `{ after_minutes, target, to_seat }` | Swaps the seats of passengers `a` and `b`, or moves one passenger to a free seat the facts recorded. The host checks it first (both aboard, the seat still free and in the same cabin class, nobody mid-walk to the lavatory); a move that fails the check is dropped and journaled as a moment with the reason, and the rest of the branch still lands. During boarding it changes the seat assignment, and the passenger walks there. |
 | Line | `{ after_minutes, target, line }` | Journals the line as a moment tied to the event, the choice and the target, so the report can cite it. Changes no state. |
 
-Targets are selectors the host resolves: `"subject"` (the passenger the facts name as `subject`), `"neighbours"` (the subject's adjacent seats and across the aisle, the reach of Unease contagion, leaving out any passenger the facts name, so no one named in the event takes a neighbours' delta on top of their own; orchestrator ruling, 2026-09-26), or a passenger id the trigger recorded in the facts.
+Targets are selectors the host resolves: `"subject"` (the passenger the facts name as `subject`), `"neighbours"` (the subject's adjacent seats and across the aisle, the reach of Unease contagion, leaving out any passenger the facts name, so no one named in the event takes a neighbours' delta on top of their own; orchestrator ruling, 2026-09-26), or a passenger id the trigger recorded in the facts. A passenger id is checked only as a whole number when `effects` returns; a consequence whose passenger is no longer aboard when it lands is dropped and journaled.
+
+**What the host checks** (step S3). Each rule below, broken, disables the module for the flight, and the reason names the field (`'choices[2].minutes' is 3, not 0 for a choice with no crew`).
+
+- `choices` returns a list of 2 to 4 tables with unique `id`s, each with a string `id` and `label`, a boolean `needs_crew`, a number `minutes` and a number `quality` in [0, 1]. A choice with `needs_crew = false` has `minutes = 0`; one with crew has `minutes` above 0.
+- The list includes a crew-free choice with the id `leave`, which a timed-out task resolves with (section 5).
+- `effects` returns a list of at most 32 consequences. Each is a table with exactly one of the fields `need`, `incident`, `swap`, `to_seat` and `line`, which decides its kind.
+- `after_minutes` is a number of 0 or more, finite; the host converts it to ticks, rounding half away from zero. `delta` is a finite number. `need` is a lowercase need name (`refreshment`, `bladder`, `rest`, `unease`, `boredom`); `incident` is an incident id (`accident`, `panic`, `food_demand`, `noise_complaint`, `disruptive_passenger`, `fight`); `line` and `to_seat` are strings.
+- `target` is `"subject"`, `"neighbours"` or a passenger id. A `to_seat` move and an incident each name one passenger, never `"neighbours"`. A swap takes no `target`: its `swap` list holds exactly two entries, each `"subject"` or a passenger id, naming two different passengers.
+- `"subject"` and `"neighbours"` need facts that name a `subject`.
+- `describe` returns a string.
+- `trigger` and `effects` may draw from `math.random`, which reads the random stream the host hands that call; `describe` and `choices` may not, and a draw there disables the module. So does a draw while the module loads.
 
 **What a crew task reveals** (event-writer, 2026-09-27). A module declares nothing about observation; the host derives it from the chosen branch, by one fixed rule. When a crew member starts an event's crew task, every passenger the branch's consequences target by name (`subject`, or a passenger id from the facts; never `neighbours`, whom the crew member does not speak to) has Unease revealed, plus every other need that a Need consequence of that branch lowers (a negative `delta`) on that passenger. The bands are read at the start of the task, before any of the branch's deltas land. A need the branch only raises is not revealed: a later cost, such as the Bladder rise that follows a drink, is not something the crew member reads at the seat. A choice with no crew, and a `leave` applied because nobody came (section 5), reveal nothing. This is the "event's crew task" row of `passengers.md` section 9 (OD3). For the M1 events it gives: `split-group`'s `swap` and `pair` and `nervous-flyer`'s `sit`, Unease only; `armrest-dispute`'s `calm` and `reseat`, Unease, and `drink`, Unease and Refreshment for both passengers; `restless-child`'s `pack` and `play`, Boredom and Unease for the child and Unease for the parent (and for the passenger in front on `play`).
 
-The trigger checks the phase itself even though `phases` lists them: a meal complaint during boarding is a bug in the module, and the shipped-event test (`ShippedEventTests`, step X4) checks that every trigger returns nothing outside its phases.
+The trigger checks the phase itself even though `phases` lists them and the host asks it only there: a meal complaint during boarding is a bug in the module, and the shipped-event test (`ShippedEventTests`, step X4) calls every trigger directly outside its phases to check it returns nothing.
 
 ## 2. Flight phases an event may name
 
@@ -105,21 +118,55 @@ In M1 the words reach the text report (a moment cites the event, the choice and 
 - **No internal names** in any text: a state key, event id or choice id stays in the module.
 - A word not in the docs goes to the owner as a proposal before it goes in a line.
 
-The module's Lua follows two rules as well, from S1's review of the Lua host:
+The module's Lua follows these rules as well, the first two from S1's review of the Lua host and the rest from S3's event adapter:
 
 - **No recursion through `pcall`, `xpcall` or a metamethod.** The depth at which a stack overflow comes there depends on the machine's native stack, so the same flight could overflow on one machine and not on another, and a golden hash would differ between Windows and Linux.
 - **No `pcall` of your own around code that may overflow.** The module's `pcall` swallows the overflow, so the host never sees it and the Lua state is not rebuilt.
+- **Facts record values, never `ctx`.** `ctx` is readable only while `trigger` runs; kept in the facts, an upvalue or a global and read from `describe`, `choices` or `effects`, it raises "ctx is readable only during trigger" and disables the module. Copy what a later function needs (an id, a seat label, a flag) into the facts.
+- **Draw only in `trigger` and `effects`.** `describe` and `choices` are pure functions of the facts: whatever varies between flights is rolled in the trigger and recorded, or rolled in `effects`.
+- **Pick the first that fits, in the order `ctx` gives.** Lists come in a fixed order (section 7), so a trigger that scans them and takes the first match replays the same on the same seed.
+- **Spell names exactly.** A need name `ctx:need` does not know, or a trait name `ctx:has_trait` does not know, is a Lua error that disables the module. Copy trait ids from `passengers.md`.
 
 ## 7. What triggers read
 
-For S3 and F6, which define `ctx`. The four M1 events read:
+A trigger reads the cabin through `ctx`, built in step S3 (`LuaEventContext`) over the Engine's `EventContext`, which F6 fills. It holds what the four M1 events read and nothing more. Every member is a read: scalars are fields (`ctx.stage`), everything else is a method called with a colon (`ctx:need(id, "unease")`). `ctx` is readable only while `trigger` runs (section 6).
 
-- the phase and the seatbelt sign, and whether there is turbulence now;
-- whether a service round is running;
-- the task board: the longest wait of any task on it now (the "crew are stretched" signal);
-- boarding progress: the share of the manifest seated;
-- free seats (unbooked), with their class and whether two free seats are side by side;
-- per passenger: the five needs, trait ids, group (booking) id and the other members, age band (`adult` or `child`), seat and seat neighbours (adjacent and across the aisle), the passenger in the seat in front, whether asleep, and whether seated.
+**The flight.**
+
+| Member | What it reads |
+|---|---|
+| `ctx.stage` | The stage, by the ids of section 2 (`boarding`, `taxi-out`, `cruise`...). |
+| `ctx.seatbelt_sign` | Whether the seatbelt sign is lit. |
+| `ctx.turbulence` | How rough the air is now: `none`, `light` or `moderate`. |
+| `ctx.service_round_running` | Whether a service round is running (the split between cruise service and quiet cruise). |
+| `ctx.longest_task_wait_minutes` | The longest wait, in sim minutes, of any task on the task board now; 0 when the board is empty. The "crew are stretched" signal. |
+| `ctx.boarding_seated_share` | The share of the manifest seated, in [0, 1]. |
+
+**Lists.** A list is read as a count and a 1-based index, `for i = 1, ctx.passenger_count do local id = ctx:passenger(i) ... end`. An index outside the list reads `nil`.
+
+| Member | What it reads |
+|---|---|
+| `ctx.passenger_count`, `ctx:passenger(i)` | The passengers aboard, by id, in ascending passenger id. |
+| `ctx.free_seat_count`, `ctx:free_seat(i)` | The free (unbooked) seats, by label (`23A`), in seat order: row by row from the front, left to right within a row. |
+| `ctx:free_seat_class(i)` | The cabin class of free seat `i`: `business` or `economy`. |
+| `ctx:free_seat_has_free_neighbour(i)` | Whether a seat side by side with free seat `i` is free too. |
+
+**Per passenger**, by id. An id that is not aboard reads `nil`.
+
+| Member | What it reads |
+|---|---|
+| `ctx:need(id, name)` | One of the five needs, 0 to 100, by its lowercase name: `refreshment`, `bladder`, `rest`, `unease`, `boredom`. Any other name is a Lua error. |
+| `ctx:has_trait(id, name)` | Whether the passenger carries the trait with that id (`nervous_flyer`); a name no trait has is a Lua error. |
+| `ctx:group(id)` | The passenger's group (booking) id. |
+| `ctx:group_member_count(id)`, `ctx:group_member(id, i)` | The other members of the group, by id, in ascending passenger id; a count of 0 for a passenger travelling alone. |
+| `ctx:age_band(id)` | `adult` or `child`. |
+| `ctx:seat(id)` | The label of the passenger's seat. |
+| `ctx:neighbour_count(id)`, `ctx:neighbour(id, i)` | The passengers in the adjacent seats and across the aisle (the reach of Unease contagion), by id, in ascending passenger id. |
+| `ctx:front(id)` | The id of the passenger in the seat in front, or `nil` when that seat is empty or there is none. |
+| `ctx:asleep(id)` | Whether the passenger is asleep. |
+| `ctx:seated(id)` | Whether the passenger is in their seat. |
+
+The fixed orders are what let a trigger that takes the first passenger or seat that fits replay the same flight on the same seed.
 
 ## 8. Brainstorm (M1)
 

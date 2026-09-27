@@ -130,6 +130,31 @@ public sealed class LuaHostTests
         Assert.Equal(depthBefore, host.StackDepth);
     }
 
+    /// <summary>
+    /// A host function that calls back into the host while a Lua call runs is refused, since the call's stack slice and
+    /// budget hook serve one call at a time; the refusal escapes as a host bug and disables neither module.
+    /// </summary>
+    [Fact]
+    public void RunReEnteredThrows()
+    {
+        using LuaHost host = new(LuaHost.StandardInstructionBudget);
+        Assert.True(host.LoadModule("outer", "return { run = function(f) return f() end }"));
+        Assert.True(host.LoadModule("inner", "return { run = function() return 1 end }"));
+        int depthBefore = host.StackDepth;
+        LuaFunction reenter = new("reenter", (context, _) => new(context.Return(host.TryCall("inner", "run", [], new LuaValue[1]))));
+
+        Exception? escaped = Record.Exception(() => host.TryCall("outer", "run", [reenter], new LuaValue[1]));
+
+        Assert.NotNull(escaped);
+        InvalidOperationException? refused = escaped as InvalidOperationException ?? escaped.InnerException as InvalidOperationException;
+        Assert.NotNull(refused);
+        Assert.StartsWith("LuaHost.Run re-entered", refused.Message, StringComparison.Ordinal);
+        Assert.False(host.IsDisabled("outer"));
+        Assert.False(host.IsDisabled("inner"));
+        Assert.Equal(depthBefore, host.StackDepth);
+        Assert.Equal(1.0, Call(host, "inner", "run", 1)[0].Read<double>());
+    }
+
     /// <summary>A top-level error, a return that is not a table and a parse error each disable the module at load.</summary>
     [Theory]
     [InlineData("error('boom at load')", "boom at load")]

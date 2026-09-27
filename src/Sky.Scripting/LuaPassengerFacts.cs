@@ -13,7 +13,7 @@ namespace Sky.Scripting;
 [LuaObject]
 internal sealed partial class LuaPassengerFacts
 {
-    private static readonly string[] StageNames =
+    internal static readonly string[] StageNames =
     [
         "pre-boarding",
         "boarding",
@@ -28,7 +28,7 @@ internal sealed partial class LuaPassengerFacts
         "done",
     ];
 
-    private static readonly string[] TurbulenceNames = ["none", "light", "moderate"];
+    internal static readonly string[] TurbulenceNames = ["none", "light", "moderate"];
 
     private readonly string[] moduleIds;
     private readonly string[] traitNames;

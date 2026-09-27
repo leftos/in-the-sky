@@ -16,7 +16,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 2 | 15 | 2 | 17 |
 | Sky.Engine.Tests | 21 | 206 | 27 | 233 |
-| Sky.Scripting.Tests | 3 | 21 | 12 | 33 |
+| Sky.Scripting.Tests | 4 | 31 | 25 | 56 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
 | Sky.SimConnect.Tests | 1 | 1 | 0 | 1 |
@@ -55,14 +55,15 @@ Every class below reads the referenced assembly names from its project's compile
 | Class | Tests | Proves |
 |---|---|---|
 | `ReferenceTests` | 1 | `ReferencesOnlyItsAllowedSkyProjects`: `Sky.Content` references `Sky.Engine` and no other Sky project. |
-| `ContentLoaderTests` | 16 | `ContentLoader` over fixture trees written by `ContentTree`: a minimal tree loads into Engine types with ids interned in declaration order; a malformed, unknown, missing or null field fails naming the file and JSON path; enums take only exact member names; omitted optional fields take their defaults; an unknown or duplicate id and a missing module fail naming them; an Engine refusal becomes a `ContentLoadException`; the hash changes with a byte or a rename, ignores listing order, root location and files other than `.json` and `.lua`. |
+| `ContentLoaderTests` | 27 | `ContentLoader` over fixture trees written by `ContentTree`: a minimal tree loads into Engine types with ids interned in declaration order; a malformed, unknown, missing or null field fails naming the file and JSON path; enums take only exact member names; omitted optional fields take their defaults; an unknown or duplicate id and a missing module fail naming them; an Engine refusal becomes a `ContentLoadException`; the hash changes with a byte or a rename, ignores listing order, root location and files other than `.json` and `.lua`. |
 
 ## Sky.Scripting.Tests
 
 | Class | Tests | Proves |
 |---|---|---|
 | `ReferenceTests` | 1 | `ReferencesOnlyItsAllowedSkyProjects`: `Sky.Scripting` references `Sky.Engine` and no other Sky project. |
-| `LuaHostTests` | 37 | `LuaHost`: the sandbox hides `io`, `os`, `require`, `load`, `dofile`, `debug`, `_G`, the metatable and raw functions, `print`, `coroutine`, `string.dump` and `math.randomseed`, while string method syntax works; the budget stops a bare and a `pcall`-wrapped loop and disables only that module; the stack depth is restored after a caught error; an overflow disables its module, rebuilds the state and restarts module-level state; load-time errors, wrong returns and non-function calls disable with a reason taken from the error value; a host exception escapes; unknown ids throw; `string.rep` is capped in both forms; `math.random` matches the `SimRandom` draws, rejects non-integer bounds and is unavailable while a module loads; modules share no globals. |
+| `LuaHostTests` | 38 | `LuaHost`: the sandbox hides `io`, `os`, `require`, `load`, `dofile`, `debug`, `_G`, the metatable and raw functions, `print`, `coroutine`, `string.dump` and `math.randomseed`, while string method syntax works; the budget stops a bare and a `pcall`-wrapped loop and disables only that module; the stack depth is restored after a caught error; an overflow disables its module, rebuilds the state and restarts module-level state; load-time errors, wrong returns and non-function calls disable with a reason taken from the error value; a host exception escapes; unknown ids throw; `string.rep` is capped in both forms; `math.random` matches the `SimRandom` draws, rejects non-integer bounds and is unavailable while a module loads; modules share no globals; `Run` re-entered throws. |
+| `EventScriptsTests` | 73 | `LuaBehaviorScripts`' event half over inline modules: a trigger fires only in its phase; choices come back with their fields and need a crew-free `leave`; effects come back as the five consequence kinds at their tick offsets, half a tick rounding away from zero; `ctx` read after the trigger, a throwing `effects`, a malformed load, choice, effect or trigger result, an unknown need or trait name each disable the module with a reason naming the field, and another module still fires; a disabled event reports why; trigger and effects draw only from their own stream; a released handle, an unoffered choice, an unrenderable context and a bad event id throw. |
 | `ActivityScoringTests` | 60 | `LuaBehaviorScripts`: a thirsty passenger scores `drink` above `sleep`; a module that throws scores 0 and is disabled while the others score, and is not called again; a negative, NaN, infinite, nil, string or numeric-string result scores 0 and disables with the value in the reason; a module without `utility` or failing to load scores 0; a `math.random` draw disables even with a stream set; every Lua member reaches Lua (one row each, every stage and turbulence id from the enums); a saved `facts` reads the passenger being scored; facts that cannot be rendered, mismatched spans, unknown candidates, blank, repeated or null ids and names are refused before any score is written. |
 
 ## Sky.Session.Tests

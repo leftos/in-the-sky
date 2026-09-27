@@ -305,7 +305,7 @@ public sealed class ActivityScoringTests
         using LuaHost host = new(LuaHost.StandardInstructionBudget);
         ActivityModule[] activities = [new("drink", DrinkScoresRefreshment), new("drink", SleepScoresHalfRest)];
 
-        ArgumentException error = Assert.Throws<ArgumentException>(() => new LuaBehaviorScripts(host, activities, TraitNames));
+        ArgumentException error = Assert.Throws<ArgumentException>(() => new LuaBehaviorScripts(host, activities, [], TraitNames));
 
         Assert.Contains("repeats", error.Message, StringComparison.Ordinal);
     }
@@ -319,7 +319,7 @@ public sealed class ActivityScoringTests
         using LuaHost host = new(LuaHost.StandardInstructionBudget);
         ActivityModule[] activities = [new("drink", DrinkScoresRefreshment), new(id, SleepScoresHalfRest)];
 
-        ArgumentException error = Assert.Throws<ArgumentException>(() => new LuaBehaviorScripts(host, activities, TraitNames));
+        ArgumentException error = Assert.Throws<ArgumentException>(() => new LuaBehaviorScripts(host, activities, [], TraitNames));
 
         Assert.Contains("Activity 1", error.Message, StringComparison.Ordinal);
     }
@@ -333,27 +333,29 @@ public sealed class ActivityScoringTests
         using LuaHost host = new(LuaHost.StandardInstructionBudget);
         string[] traitNames = ["light_sleeper", name];
 
-        ArgumentException error = Assert.Throws<ArgumentException>(() => new LuaBehaviorScripts(host, OneModule, traitNames));
+        ArgumentException error = Assert.Throws<ArgumentException>(() => new LuaBehaviorScripts(host, OneModule, [], traitNames));
 
         Assert.Contains("Trait 1", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>None of the three arguments may be null.</summary>
+    /// <summary>None of the four arguments may be null.</summary>
     [Fact]
     public void NullArgumentsAreRefused()
     {
         using LuaHost host = new(LuaHost.StandardInstructionBudget);
 
-        ArgumentNullException noHost = Assert.Throws<ArgumentNullException>(() => new LuaBehaviorScripts(null!, OneModule, TraitNames));
-        ArgumentNullException noActivities = Assert.Throws<ArgumentNullException>(() => new LuaBehaviorScripts(host, null!, TraitNames));
-        ArgumentNullException noTraitNames = Assert.Throws<ArgumentNullException>(() => new LuaBehaviorScripts(host, OneModule, null!));
+        ArgumentNullException noHost = Assert.Throws<ArgumentNullException>(() => new LuaBehaviorScripts(null!, OneModule, [], TraitNames));
+        ArgumentNullException noActivities = Assert.Throws<ArgumentNullException>(() => new LuaBehaviorScripts(host, null!, [], TraitNames));
+        ArgumentNullException noEvents = Assert.Throws<ArgumentNullException>(() => new LuaBehaviorScripts(host, OneModule, null!, TraitNames));
+        ArgumentNullException noTraitNames = Assert.Throws<ArgumentNullException>(() => new LuaBehaviorScripts(host, OneModule, [], null!));
 
         Assert.Equal("host", noHost.ParamName);
         Assert.Equal("activities", noActivities.ParamName);
+        Assert.Equal("events", noEvents.ParamName);
         Assert.Equal("traitNames", noTraitNames.ParamName);
     }
 
-    private static LuaBehaviorScripts Build(LuaHost host, params ActivityModule[] activities) => new(host, activities, TraitNames);
+    private static LuaBehaviorScripts Build(LuaHost host, params ActivityModule[] activities) => new(host, activities, [], TraitNames);
 
     private static double[] Score(LuaBehaviorScripts scripts, PassengerFacts facts, params ActivityId[] candidates)
     {

@@ -36,6 +36,7 @@ public sealed class LuaHost : IDisposable
     private int hookFires;
     private int generation;
     private bool loading;
+    private bool running;
 
     /// <summary>Creates a host with a fresh state and no modules.</summary>
     /// <param name="instructionBudget">
@@ -52,11 +53,20 @@ public sealed class LuaHost : IDisposable
         state = LuaSandbox.CreateState();
     }
 
+    /// <summary>
+    /// Gets the state calls run in now, which a host-side adapter raises its Lua errors in; it changes after a stack
+    /// overflow, so read it at the moment of the error.
+    /// </summary>
+    internal LuaState State => state;
+
     /// <summary>Gets the depth of the Lua value stack, which every call leaves as it found it.</summary>
     internal int StackDepth => state.Stack.Count;
 
-    /// <summary>Sets the stream that <c>math.random</c> draws from until the next call of this method.</summary>
-    /// <param name="random">The stream, usually the named stream of the character being scored.</param>
+    /// <summary>
+    /// Sets the stream that <c>math.random</c> draws from; it holds until <see cref="ClearRandom"/> or the next call of
+    /// this method. Scoring clears it at every call, so a caller that draws sets its own stream before each call.
+    /// </summary>
+    /// <param name="random">The stream, usually the named stream of the character or event being evaluated.</param>
     public void SetRandom(SimRandom random)
     {
         ArgumentNullException.ThrowIfNull(random);
@@ -65,7 +75,8 @@ public sealed class LuaHost : IDisposable
 
     /// <summary>
     /// Takes the stream away, so <c>math.random</c> throws until <see cref="SetRandom"/> is called again. A scoring call
-    /// clears it: activity modules draw nothing (R6).
+    /// clears it, since activity modules draw nothing (R6); every event call clears it too, after a trigger or effects
+    /// call and before a describe or choices call.
     /// </summary>
     internal void ClearRandom() => stream = null;
 
@@ -118,6 +129,17 @@ public sealed class LuaHost : IDisposable
     {
         LuaModule module = GetModule(moduleId);
         return module.Table is not null && module.Table[functionName].Type == LuaValueType.Function;
+    }
+
+    /// <summary>Reads one field of an enabled module's table, without calling anything.</summary>
+    /// <param name="moduleId">A loaded module's id.</param>
+    /// <param name="fieldName">The field of the module's table.</param>
+    /// <returns>The field's value; nil when the module is disabled or the field is absent.</returns>
+    /// <exception cref="ArgumentException"><paramref name="moduleId"/> was never loaded.</exception>
+    internal LuaValue GetField(string moduleId, string fieldName)
+    {
+        LuaModule module = GetModule(moduleId);
+        return module.Table is null ? LuaValue.Nil : module.Table[fieldName];
     }
 
     /// <summary>Disables a module for the rest of the flight for a reason the caller knows and the host does not.</summary>
@@ -271,12 +293,21 @@ public sealed class LuaHost : IDisposable
 
     private void Run(LuaValue function, ReadOnlySpan<LuaValue> arguments, Span<LuaValue> results)
     {
+        if (running)
+        {
+            throw new InvalidOperationException(
+                "LuaHost.Run re-entered: a host function called back into the host during a Lua call. The call's stack slice, "
+                    + "budget and count hook serve one call at a time, so a host function never calls a module."
+            );
+        }
+
         LuaStack stack = state.Stack;
         int depth = stack.Count;
-        hookFires = 0;
-        state.SetHook(countHook, "", HookInterval);
+        running = true;
         try
         {
+            hookFires = 0;
+            state.SetHook(countHook, "", HookInterval);
             stack.Push(function);
             stack.PushRange(arguments);
             int count = Complete(state.CallAsync(depth, depth, budget.Token));
@@ -287,6 +318,7 @@ public sealed class LuaHost : IDisposable
         finally
         {
             stack.PopUntil(depth);
+            running = false;
         }
     }
 

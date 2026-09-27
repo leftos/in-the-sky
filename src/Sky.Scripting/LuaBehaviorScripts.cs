@@ -1,14 +1,17 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Lua;
 using Sky.Engine.Flight;
 using Sky.Engine.Passengers;
 using Sky.Engine.Ports;
+using Sky.Engine.Randomness;
 
 namespace Sky.Scripting;
 
 /// <summary>
-/// Scores activities by calling each activity module's <c>utility</c> function through the Lua host: one module per
-/// activity, one call per candidate, and one adapter reused for every call so a scoring loop allocates nothing.
+/// The Lua implementation of the behaviour port. Scores activities by calling each activity module's <c>utility</c>
+/// function through the Lua host: one module per activity, one call per candidate, and one adapter reused for every call
+/// so a scoring loop allocates nothing. Evaluates events through the event modules loaded into the same host.
 /// </summary>
 public sealed class LuaBehaviorScripts : IBehaviorScripts
 {
@@ -18,23 +21,33 @@ public sealed class LuaBehaviorScripts : IBehaviorScripts
     private readonly string[] moduleIds;
     private readonly string[] traitNames;
     private readonly LuaPassengerFacts adapter;
+    private readonly LuaEventScripts events;
     private readonly LuaValue[] arguments = new LuaValue[1];
     private readonly LuaValue[] results = new LuaValue[1];
 
-    /// <summary>Loads the flight's activity modules and disables the ones this class can never score.</summary>
+    /// <summary>
+    /// Loads the flight's activity modules, then its event modules, and disables the ones this class can never call.
+    /// </summary>
     /// <param name="host">The host that owns the flight's Lua state.</param>
     /// <param name="activities">
     /// One module per activity; <c>activities[i]</c> is the module of <c>new ActivityId(i)</c>.
     /// </param>
+    /// <param name="events">The flight's event modules, in load order; their ids are <see cref="EventIds"/>.</param>
     /// <param name="traitNames">One name per trait; <c>traitNames[i]</c> is the name of <c>new TraitId(i)</c>.</param>
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     /// <exception cref="ArgumentException">
-    /// An activity id or trait name is blank, or two activities carry the same id. The message names the index.
+    /// An activity id, event id or trait name is blank, or two modules carry the same id. The message names the index.
     /// </exception>
-    public LuaBehaviorScripts(LuaHost host, IReadOnlyList<ActivityModule> activities, IReadOnlyList<string> traitNames)
+    public LuaBehaviorScripts(
+        LuaHost host,
+        IReadOnlyList<ActivityModule> activities,
+        IReadOnlyList<EventModule> events,
+        IReadOnlyList<string> traitNames
+    )
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(activities);
+        ArgumentNullException.ThrowIfNull(events);
         ArgumentNullException.ThrowIfNull(traitNames);
         this.host = host;
         moduleIds = ValidateActivities(activities);
@@ -42,7 +55,42 @@ public sealed class LuaBehaviorScripts : IBehaviorScripts
         adapter = new LuaPassengerFacts(moduleIds, this.traitNames);
         arguments[0] = adapter;
         Load(activities);
+        this.events = new LuaEventScripts(host, events, moduleIds, this.traitNames);
     }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> EventIds => events.EventIds;
+
+    /// <inheritdoc/>
+    /// <exception cref="ArgumentException"><paramref name="eventId"/> names no loaded event.</exception>
+    public bool IsEventDisabled(string eventId, [NotNullWhen(true)] out string? reason) => events.IsEventDisabled(eventId, out reason);
+
+    /// <inheritdoc/>
+    /// <exception cref="ArgumentNullException"><paramref name="random"/> is null.</exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="eventId"/> names no loaded event, or <paramref name="ctx"/> holds a null list, an undefined stage,
+    /// turbulence level, age band or cabin class, a trait outside the trait table, or a repeated passenger id.
+    /// </exception>
+    public EventFacts? Trigger(string eventId, in EventContext ctx, SimRandom random) => events.Trigger(eventId, ctx, random);
+
+    /// <inheritdoc/>
+    /// <exception cref="InvalidOperationException"><paramref name="facts"/> were released, or no trigger here returned them.</exception>
+    public string Describe(EventFacts facts) => events.Describe(facts);
+
+    /// <inheritdoc/>
+    /// <exception cref="InvalidOperationException"><paramref name="facts"/> were released, or no trigger here returned them.</exception>
+    public IReadOnlyList<EventChoice> Choices(EventFacts facts) => events.Choices(facts);
+
+    /// <inheritdoc/>
+    /// <exception cref="InvalidOperationException">
+    /// <paramref name="facts"/> were released, or no trigger here returned them; or the event is enabled and
+    /// <paramref name="choiceId"/> is not among the choices <see cref="Choices"/> last offered for them.
+    /// </exception>
+    public IReadOnlyList<DelayedConsequence> Effects(EventFacts facts, string choiceId, SimRandom random) => events.Effects(facts, choiceId, random);
+
+    /// <inheritdoc/>
+    /// <exception cref="InvalidOperationException"><paramref name="facts"/> were released already, or no trigger here returned them.</exception>
+    public void Release(EventFacts facts) => events.Release(facts);
 
     /// <inheritdoc/>
     /// <exception cref="ArgumentException">
