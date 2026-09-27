@@ -26,12 +26,16 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Auto-resolve | Crew make an event's choice on their own, weighted by competence, traits and fatigue. It is used when no player is making the choice. |
 | Balance CSV | `Sky.Sim`'s output from a sweep: one row per seed with the four outcome measures, read by `balance-analyst`. |
 | Bridge | The code the godot MCP server injects into a running client through an `override.cfg` beside `project.godot`, so an agent can drive the game; it is removed when the run stops and never tracked. |
+| Brief | The written instructions for one implementer run: the plan steps it carries, the files each touches and the command that proves each. |
 | Cabin ready | The tick at which boarding is complete, bins are closed and every passenger is seated and belted: the part of an on-time door the cabin controls. |
 | Cascade | One system's effect setting off another's, such as a drinks round filling the lav queue that then blocks the cart. |
 | Ceiling | The longest a gate may run before `tools/gate.ps1` or `tools/test-all.ps1` kills it with its children (exit 124); a few times what it takes today, so reaching one means a hang. |
 | Concept pass | The short design sitting before any code that produces `docs/design/CONCEPT.md`. |
 | Contagion | A need spreading between neighbours; in M1 only Unease spreads, to adjacent seats and across the aisle. |
+| Content hash | A SHA-256 over every content file's path and bytes, written in a journal's header so a replay against changed content is refused. |
 | Crew-observed view | The player's picture of the cabin, built from what crew have seen, which ages and goes stale. A setting switches it to the true state. |
+| Decision log | The flight's record of every passenger decision with its top three candidate scores, which the dev inspector and `Sky.Sim decisions` read. |
+| Decision point | A moment when Lua runs: a character choosing its next activity, or an event's `trigger`, `describe`, `choices` or `effects` being evaluated (ADR 0010). |
 | Decision round | The step of the `/nextup` loop where every choice a brief needs is settled before dispatch: technical ones by the orchestrator, design, player-facing and public ones by the owner. |
 | Delayed consequence | What a Lua event's effect returns instead of changing state at once: a change the engine applies later, at a tick it names. |
 | Dependency edge | A project reference between two `Sky.*` projects. `docs/ARCHITECTURE.md` lists the allowed edges and each test twin's `ReferenceTests` pins them. |
@@ -41,25 +45,33 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Doc drift | A doc naming a file, project or test that has changed or gone since the doc was written; a prek hook (`tools/hooks/Test-DocDrift.ps1`) checks `ARCHITECTURE.md` and `TEST_ALMANAC.md` against the tree, and a commit-msg hook refuses a `src/Sky.Content/` commit that stages no `docs/design/` file and gives no `Docs: unchanged, <why>` line. |
 | Docs map | The table in the `sky-nextup` skill naming which doc owns which kind of change, walked before every commit. |
 | Engine | `Sky.Engine`, the simulation library, which references no other project or package. |
+| Escalation deadline | The tick by which crew must reach an incident; an incident still unanswered then is missed. |
 | Event | A Lua module (`trigger`, `describe`, `choices`, `effects`) that surfaces a situation with choices; crew auto-resolve it when no player chooses. |
 | Experience | A passenger's whole-flight result, 0 to 100, computed from their distress over the flight (`docs/design/CONCEPT.md` section 6). |
 | Fix round | One return trip of review findings to the implementer that wrote the change; an item gets two at most. |
+| Flight emulator | The standalone-mode `ISimFeed` in `Sky.Session`: it plays a scenario's phase timeline, seatbelt sign and turbulence, and its output is journaled so a replay never runs it. |
 | Flight phase | A stage of a flight from boarding to deboarding (boarding, taxi, climb, cruise, descent, deboarding and so on); the stage machine enters each in order. |
 | Gate | A check that must pass before work lands (a build, a test run, a format check, a hook), run under `tools/gate.ps1`; `tools/test-all.ps1` is the whole gate. |
+| Golden flight | A seed whose end-state hash is pinned in a test, recorded on Windows, so a run on another OS shows whether replay is byte-identical across platforms. |
 | Hazard | A review finding that can break a build, a run or a player's session; after one is fixed, the reviewer does a last pass. |
 | Headless | Run without a window or Godot: `Sky.Sim` flies a whole flight headless, and M1 is a headless flight. |
 | Incident | A situation that needs crew action within a window (a medical case, a dispute); it is handled or missed, and the report counts both. |
+| Input record | A journal record a replay consumes: a frame's tick count or a feed observation (from M3, a player command). |
+| Instruction budget | The cap on how many Lua instructions one call may run, enforced by Lua-CSharp's count hook; a definition that exceeds it is disabled for the flight. |
 | Invariant fuzzing | Running many seeded flights and checking after every tick that rules which must always hold still hold. |
 | Journal | The record of a flight's inputs (tick counts per frame, commands, observations) that, with the seed, replays the flight exactly. |
-| Last pass | A reviewer's final read of a diff after a hazard was fixed, checking only that the fix holds and broke nothing. |
 | Landing note | The `Landed YYYY-MM-DD: …` text a finished plan line carries into `docs/plans/archive/`: what landed, test counts, the red proof and review findings. |
+| Last pass | A reviewer's final read of a diff after a hazard was fixed, checking only that the fix holds and broke nothing. |
 | Lever | Something the player (from M3) or a policy (in M1) sets that changes the conditions the cabin plays out in: a service schedule, a crew zone, the lighting plan. A lever is never an order to one passenger. |
+| Lever variant | A scenario file that differs from the reference scenario in exactly one lever, swept against it to show the lever matters. |
 | Milestone | A numbered stage of the roadmap (M0 to M6) in `docs/plans/MAIN.md`; each has a definition of done. |
 | Moment | Two senses. (1) A surfaced situation the player or crew answers with a choice, as opposed to a policy ("decide at the level of a moment"; seat conflicts arrive as moments). (2) In the report, a journal record that moved an outcome: its tick, what happened, who was involved, the cause chain behind it, and its effect on each scoring outcome. The report is built from moments. |
 | Named stream | A random sequence handed out by the one seeded RNG root under a fixed name, so adding draws in one system never shifts another's. |
 | Nav graph | The graph the engine derives from a layout: aisle slots, seat nodes, galley, lav and door nodes, with capacity and reservations. |
 | Need | One of the five meters a passenger carries (Refreshment, Bladder, Rest, Unease, Boredom), 0 to 100; each rises at a rate and a lever moves it. |
+| Next-hop table | The nav graph's precomputed routing: for every pair of nodes, the next node on a shortest path, with ties broken by the lower node id. |
 | Orchestrator | The main Claude session: it owns plans, docs, config and commits, dispatches code edits to the `implementer` agent, and settles non-game technical decisions itself. |
+| Outcome record | A journal record of a moment, written as it happens; a replay regenerates outcome records and compares them rather than reading them as input. |
 | Pillar | One of the design principles in `docs/design/CONCEPT.md` section 2 that every feature is tested against. |
 | Policy | A standing decision that applies to a class of people or situations (a service plan, a crew zone), as opposed to a moment. |
 | Port | An interface the Engine defines and another project implements (`IClockSource`, `ISimFeed`, `IBehaviorScripts`). |
@@ -85,6 +97,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Sustain window | How long a need must stay past its threshold before it counts as a failure, so a spike at spawn has no consequence. |
 | Sweep | Running the same scenario over many seeds (a seed sweep) and collecting one balance CSV row per seed. |
 | Sync point | A named moment where several characters' sequences wait for each other, such as two crew working one cart. |
+| System switch | A scenario setting that turns one system (needs, events, contagion) off while the flight still runs, per pillar 6. |
 | Task board | The prioritized list of work (services, call buttons, checks) that crew claim. A higher-priority task can pre-empt a lower one. |
 | Test twin | The `tests/Sky.<X>.Tests` project paired with each `src/Sky.<X>` project. |
 | Tick | One fixed step of simulation time: 250 ms (ADR 0010). |
@@ -92,4 +105,4 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Utility scoring | How a passenger picks the next activity: each candidate scores itself from needs, traits and context, and the highest score wins. |
 | Verdict | The word the report gives each of the four outcomes (Smooth, Rough, Bad); there is no overall grade. |
 | View projection | One of the Session's two ways of building what the client sees: from crew observations, or from the true state. |
-| Wave | A group of plan lines in `docs/plans/MAIN.md` that share files and a gate; waves with disjoint files run side by side. |
+| Wave | A group of plan lines or subplan steps that share files and a gate; waves with disjoint files run side by side, and inside a wave a step waits only for the steps it consumes. |

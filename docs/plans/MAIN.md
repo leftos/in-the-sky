@@ -11,9 +11,7 @@ Every M0 wave has landed; only the push is left.
 
 ## Next: M1, the headless cabin flight
 
-- [ ] Write the M1 subplan: steps, each with its proving command, whose acceptance list is `docs/design/CONCEPT.md` section 7 (the concept pass and ADR 0010 have landed, so nothing blocks it).
-
-It is scoped in section 1 of the decisions doc: one narrowbody, seeded manifest, crew auto-resolving event choices, a few new Lua events, score and report, replay and fuzz, and the 64x performance test.
+- [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): 52 steps in 13 waves, its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled. Waves M1-D (design docs: game-designer, balance-analyst, event-writer), M1-A (engine foundations), M1-B (cabin geometry), M1-C (needs), M1-E (executor and crew) and M1-S (scripting) share no files and start together.
 
 ## Later milestones
 
