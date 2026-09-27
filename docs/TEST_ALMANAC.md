@@ -15,7 +15,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 1 | 1 | 0 | 1 |
-| Sky.Engine.Tests | 8 | 54 | 6 | 60 |
+| Sky.Engine.Tests | 9 | 68 | 9 | 77 |
 | Sky.Scripting.Tests | 1 | 1 | 0 | 1 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
@@ -35,6 +35,7 @@ Every class below reads the referenced assembly names from its project's compile
 | `SequenceExecutorTests` | 15 | `SequenceExecutor` runs one action per character: a higher priority interrupts and the old action's cleanup runs once before the new action's first tick; equal or lower priority does not interrupt; a finished action clears without cleanup; a start made during a tick first runs on the next tick whatever the character order, and survives its starter finishing. A `SyncPoint` releases every member on the tick after the last arrival, a withdrawn member holds it, and bad arguments are refused. |
 | `RngRootTests` | 18 | SplitMix64, xoshiro256** and FNV-1a-64 match their published reference vectors; a stream is seeded from the root seed and its name hashed together, so streams are independent (drawing from `crew/0` does not shift `passenger/0`) and a (seed, name) pair cannot stand in for another; `passenger/0`'s first draws under seed 1 are pinned; `NextInt`, `NextDouble` and `Chance` stay in range, consume one draw each, and refuse bad arguments. |
 | `RateMultiplierTests` | 15 | `RateMultiplier.Compose` is CONCEPT's rule, `clamp(1 + Σ_class (Π m − 1), 0.2, 2.5)`: the worked example caps at 2.5, two classes at 0.4 give the 0.2 floor, classes add as deltas, a zero factor zeroes its class even after an overflow (no NaN), and CsCheck properties keep any modifier set, extremes included, in [0.2, 2.5]; every invalid factor or class is refused. |
+| `NeedSetTests` | 25 | `NeedSet` over `NeedRates`: Refreshment at 25 an hour is full in 4 sim hours; a +15 pulse over 30 minutes is half landed at 15 and whole at 30; Unease closes half its gap to the baseline in one half-life; Boredom holds while asleep or on IFE; Rest rises awake and falls only asleep; multipliers scale the base changes and not the Unease pull; `Add` clamps, `Set` out of range throws, the pending pulse count falls to 0; bad multipliers, settings, values and needs are refused; a CsCheck property keeps every need in [0, 100], NaN caught. |
 | `ForbiddenApiTests` | 2 | `Sky.Engine`'s compiled metadata references no wall clock, unseeded or crypto randomness, threading, IO, network, console, process, environment (beyond `NewLine`), `Guid.NewGuid`/`CreateVersion7` or string hashing API (ADR 0001, R3); members of generic types are checked through their definition. A second test proves the scanner's reach on the test assembly itself: a type, a member and a generic type's member. |
 
 ## Sky.Content.Tests
