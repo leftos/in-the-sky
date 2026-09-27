@@ -5,7 +5,7 @@ Open work only, in working order: the next item is the first line from the top. 
 
 ## Now: M1, the headless cabin flight
 
-- [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled, and the triage's additions (new step F8, ruling R35). Landed: A1 to A3, B1 to B4, C1, C2, C2b, C3a, D1 to D4, E1 to E4, G1, G2, S1, S1b. Startable next: C3, F1, F2, K1, S2.
+- [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled, and the triage's additions (new step F8, ruling R35). Landed: A1 to A3, B1 to B4, C1, C2, C2b, C3a, D1 to D4, E1 to E4, G1, G2, S1, S1b. In flight: C3, F1. Next: S2 once F1 lands, then F2 and K1 (they consume S2's ids).
 
 ## Later milestones
 
