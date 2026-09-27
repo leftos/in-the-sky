@@ -1,0 +1,81 @@
+{
+  "rates": {
+    "refreshment_per_hour": 25,
+    "bladder_per_hour": 16.67,
+    "rest_rise_per_hour": 5,
+    "rest_fall_per_hour": 25,
+    "boredom_per_hour": 33.33,
+    "unease_half_life_minutes": 15
+  },
+  "cascade_rules": [
+    { "source": "Refreshment", "target": "Unease", "threshold": 70, "factor": 1.1, "condition": "None" },
+    { "source": "Rest", "target": "Unease", "threshold": 80, "factor": 1.2, "condition": "None" },
+    { "source": "Bladder", "target": "Unease", "threshold": 70, "factor": 1.3, "condition": "LavUnreachable" }
+  ],
+  "distress_terms": [
+    { "need": "Refreshment", "threshold": 65, "weight": 1.0 },
+    { "need": "Bladder", "threshold": 55, "weight": 1.2 },
+    { "need": "Rest", "threshold": 45, "weight": 0.8 },
+    { "need": "Unease", "threshold": 40, "weight": 1.5 },
+    { "need": "Boredom", "threshold": 50, "weight": 0.6 }
+  ],
+  "distress_bands": { "uneasy_from": 30, "distressed_from": 60 },
+  "starting": {
+    "refreshment": { "min": 10, "max": 40 },
+    "bladder": { "min": 0, "max": 20 },
+    "boredom": { "min": 5, "max": 25 },
+    "group_spread": 10
+  },
+  "gate_conditions": {
+    "closed_refreshment": 10,
+    "refreshment_per_minute_open": 0.05,
+    "refreshment_per_minute_closed": 0.25,
+    "refreshment_cap": 20,
+    "boredom_per_minute": 0.2,
+    "boredom_cap": 20,
+    "unease_grace_minutes": 15,
+    "unease_per_minute": 0.25,
+    "unease_cap": 15,
+    "late_and_fed_up_from_minutes": 30,
+    "late_and_fed_up_unease_factor": 1.1,
+    "starting_refreshment_cap": 70
+  },
+  "unease_pushes": {
+    "aboard_per_hour": 6,
+    "takeoff_and_landing_per_hour": 30,
+    "climb_and_descent_per_hour": 10,
+    "light_turbulence_per_hour": 30,
+    "moderate_turbulence_per_hour": 80,
+    "late_pushback_per_hour": 15,
+    "late_pushback_grace_minutes": 5,
+    "unanswered_call_per_hour": 20,
+    "unanswered_call_grace_minutes": 5,
+    "woken_pulse": 5,
+    "pulse_minutes": 2
+  },
+  "seat_comfort": {
+    "business": { "rest": 0.85, "unease": 0.9 },
+    "economy_middle": { "rest": 1.1, "unease": 1.1 },
+    "economy_window_or_aisle": { "rest": 1.0, "unease": 1.0 }
+  },
+  "contagion": {
+    "threshold": 40,
+    "beside_weight": 0.25,
+    "across_aisle_weight": 0.15,
+    "calming_threshold": 40,
+    "calming_beside_weight": 0.15,
+    "calming_across_aisle_weight": 0.1,
+    "witness_rows": 2,
+    "witness_raised_pulse": 8,
+    "witness_missed_pulse": 15
+  },
+  "incidents": [
+    { "id": "accident", "need": "Bladder", "threshold": 90, "window_minutes": 10, "deadline_minutes": 5 },
+    { "id": "panic", "need": "Unease", "threshold": 80, "window_minutes": 5, "deadline_minutes": 8 },
+    { "id": "food_demand", "need": "Refreshment", "threshold": 90, "window_minutes": 10, "deadline_minutes": 10 },
+    { "id": "noise_complaint", "need": "Rest", "threshold": 90, "window_minutes": 10, "deadline_minutes": 10, "awake_only": true },
+    { "id": "disruptive_passenger", "need": "Boredom", "threshold": 90, "window_minutes": 10, "deadline_minutes": 15 }
+  ],
+  "incident_reset_margin": 30,
+  "node_capacities": { "aisle_slot": 1, "seat": 1, "door": 1, "lav": 1, "lav_queue": 4, "galley": 4 }
+}

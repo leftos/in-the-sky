@@ -41,6 +41,16 @@ public sealed record ThoughtKindSpec
     /// <summary>Gets the sim minutes it lasts, or null for one that lasts until the passenger is first served; required either way.</summary>
     public required int? LastsMinutes { get; init; }
 
-    /// <summary>Gets the number the hook compares against, in the hook's own unit, or null when it compares none.</summary>
+    /// <summary>
+    /// Gets the number the hook compares against, or null when it compares none. The unit is the hook's own, so one field
+    /// holds unlike quantities by <see cref="Hook"/>, taken from <c>passengers.md</c> section 10's "Born when" clauses:
+    /// <c>decision_point</c> (<c>still_waiting_for_drinks</c>, <c>too_bright_to_sleep</c>, <c>scared_of_bumps</c> and
+    /// <c>bored_no_screen</c>) and <c>served</c> (<c>served_late</c>, <c>drink_welcome</c>) hold a need value, 0 to 100;
+    /// <c>lav_queue_joined</c> the people already ahead in the queue; <c>aisle_wait</c> and <c>call_light_on</c> the sim
+    /// minutes waited so far; <c>call_answered</c> the sim minutes the call waited; and <c>woke_naturally</c> the sim
+    /// minutes asleep. The other hooks of <see cref="Sky.Content.Validation.ThoughtCatalogueValidator.Hooks"/> —
+    /// <c>boarded</c>, <c>lav_visit_finished</c>, <c>witness_pulse</c>, <c>woken</c> and <c>unease_lowered_by_crew</c> —
+    /// compare none, so a kind born from one of them leaves this null.
+    /// </summary>
     public double? Threshold { get; init; }
 }

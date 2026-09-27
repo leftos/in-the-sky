@@ -20,4 +20,9 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+
+  <!-- The pinned layout dumps the shipped-content tests compare against, read from the test output. -->
+  <ItemGroup>
+    <None Update="Pinned\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

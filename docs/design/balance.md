@@ -12,7 +12,7 @@ How to read this doc: section 1 restates CONCEPT's targets (rates, the rate rule
 |---|---|---|
 | Refreshment | rises, full scale in 4 sim hours → **25.00 per hour** | a served drink −40, a meal −70, a call-button drink −30 (CONCEPT) |
 | Bladder | rises, full scale in 6 sim hours → **16.67 per hour** | any drink (served, or riding with a meal) adds +15 spread over the next 30 minutes — the drink-to-Bladder pulse (CONCEPT) |
-| Rest | rises by the body clock (passengers.md section 6: 5 per hour × a time-of-day factor, Trait class); falls only while asleep | falls 25 per hour with the cabin dimmed, 15 per hour with lights up (passengers.md `[D3]`) |
+| Rest | rises by the body clock (passengers.md section 6: 5 per hour × a time-of-day factor, Trait class); falls only while asleep | falls 25 per hour with the cabin dimmed, 15 per hour with lights up (passengers.md `[D3]`) — `needs.json`'s `rest_fall_per_hour` schema field carries only the single dimmed figure (25); the lights-up figure (15) is not a schema rate but a Phase-class modifier X3's `sleep` activity effects apply on top of it (confirmed X1, 2026-09-27) |
 | Unease | not a clock: pulled toward the passenger's baseline, half-life ≈15 sim minutes → pull constant λ = ln 2 / 0.25 h ≈ **2.773 per hour** (per-tick factor 0.5^(1/3600), since 15 min = 3,600 ticks at 250 ms) | pushed by push sources (section 2.2) |
 | Boredom | rises, full scale in 3 sim hours → **33.33 per hour** (children ×2.0, CONCEPT → 66.67 per hour); paused while asleep or on IFE | a drink pass −10, a meal pass −10, `stretch` −15, `chat` −20 per hour (passengers.md `[D3]`) |
 
@@ -518,7 +518,7 @@ OD2 sets the reference narrowbody's seat map (crew.md:23): rows 0-2 are 2-2 busi
 | Economy row pitch (rows 3-30) | 31 in | typical | full-service legacy-carrier economy pitch, industry range 30-32 in; a low-cost carrier's 28-29 in does not fit CONCEPT's "one drinks round and one meal" full-service reference flight |
 | Business seat width | 21 in | typical | 2-2 domestic business/first recliner seat, industry range 20-21 in |
 | Economy seat width | 18 in | typical | Airbus markets the A320 family's standard economy seat at 18 in wide; kept typical here since it is a marketing figure, not a certified spec |
-| Business seat-group left edge (both sides) | 21 in | judged | derived so the row is centred on the 73 in aisle: (146 − 2×21 − 20) / 2 |
+| Business seat-group left edge (both sides) | 21 in | judged | derived so the row is centred on the 73 in aisle: (146 − 2×21×2 − 20) / 2 |
 | Economy seat-group left edge (both sides) | 9 in | judged | same method: (146 − 2×18×3 − 20) / 2 |
 | Forward door distance | 40 in ahead of row 0's aisle slot | judged | a short boarding vestibule, no published figure found |
 | Forward lav distance | 70 in ahead of row 0's aisle slot | judged | beyond the door, in the same vestibule |

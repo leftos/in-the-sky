@@ -59,7 +59,7 @@ A class library referencing `Sky.Engine`. ADR 0001 governs its place. Built so f
 - `Schema/`: the records per file and `ContentJsonContext`, a source-generated `System.Text.Json` context: snake_case fields, an unknown or repeated field fails, a missing required field fails, enums only as their exact C# member names (`StrictEnumConverter`), and an omitted optional field takes its documented default.
 - `ContentLoadException`: every load failure, naming the file relative to the root, the JSON path, and what was expected (R10). A null list entry fails at its index.
 - `ContentSet.Hash`: the content hash, SHA-256 over every `.json` and `.lua` file under the root in ordinal order of its `/`-separated relative path (the path, a zero byte, the length, the bytes), so the same files hash alike on any machine and in any listing order.
-- `Data/**` is copied to the output of `Sky.Content` and every project that references it. No content ships yet.
+- `Data/**` is copied to the output of `Sky.Content` and every project that references it. Shipped so far (X1): `layouts/reference-narrowbody.json` (OD2's 180 seats in `balance.md` 3.7's inches), `needs.json`, `traits.json`, `manifest.json` and `thoughts.json`; crew, scenarios and activities ship with X2 and X3. The walking pace is not content: whoever builds the nav graph passes `balance.md` 3.7's `inches_per_tick` to `NavGraphBuilder.Build`.
 
 The loader checks shape, ids and the Engine's rules; references across files and value ranges are the validators':
 

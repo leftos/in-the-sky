@@ -1,0 +1,162 @@
+{
+  "id": "reference-narrowbody",
+  "cabin_width_inches": 146,
+  "rows": [
+    { "pitch_inches": 36, "groups": [
+      { "left_inches": 21, "seats": [ { "label": "A", "width_inches": 21 }, { "label": "C", "width_inches": 21 } ] },
+      { "left_inches": 83, "seats": [ { "label": "D", "width_inches": 21 }, { "label": "F", "width_inches": 21 } ] } ] },
+    { "pitch_inches": 36, "groups": [
+      { "left_inches": 21, "seats": [ { "label": "A", "width_inches": 21 }, { "label": "C", "width_inches": 21 } ] },
+      { "left_inches": 83, "seats": [ { "label": "D", "width_inches": 21 }, { "label": "F", "width_inches": 21 } ] } ] },
+    { "pitch_inches": 36, "groups": [
+      { "left_inches": 21, "seats": [ { "label": "A", "width_inches": 21 }, { "label": "C", "width_inches": 21 } ] },
+      { "left_inches": 83, "seats": [ { "label": "D", "width_inches": 21 }, { "label": "F", "width_inches": 21 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] },
+    { "pitch_inches": 31, "groups": [
+      { "left_inches": 9, "seats": [
+        { "label": "A", "width_inches": 18 }, { "label": "B", "width_inches": 18 }, { "label": "C", "width_inches": 18 } ] },
+      { "left_inches": 83, "seats": [
+        { "label": "D", "width_inches": 18 }, { "label": "E", "width_inches": 18 }, { "label": "F", "width_inches": 18 } ] } ] }
+  ],
+  "aisles": [ { "center_inches": 73, "width_inches": 20 } ],
+  "fixtures": [
+    { "id": "door-1L", "kind": "Door", "row_index": 0, "aisle_index": 0, "distance_inches": 40 },
+    { "id": "lav-fwd", "kind": "Lav", "row_index": 0, "aisle_index": 0, "distance_inches": 70 },
+    { "id": "galley-aft", "kind": "Galley", "row_index": 30, "aisle_index": 0, "distance_inches": 40 },
+    { "id": "lav-aft", "kind": "Lav", "row_index": 30, "aisle_index": 0, "distance_inches": 75 }
+  ]
+}

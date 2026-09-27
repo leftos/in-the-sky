@@ -14,7 +14,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 | Project | Classes | `[Fact]` | `[Theory]` | Total |
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
-| Sky.Content.Tests | 6 | 60 | 6 | 66 |
+| Sky.Content.Tests | 7 | 64 | 6 | 70 |
 | Sky.Engine.Tests | 23 | 228 | 37 | 265 |
 | Sky.Scripting.Tests | 4 | 31 | 25 | 56 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
@@ -61,6 +61,7 @@ Every class below reads the referenced assembly names from its project's compile
 | `ReferenceTests` | 1 | `ReferencesOnlyItsAllowedSkyProjects`: `Sky.Content` references `Sky.Engine` and no other Sky project. |
 | `ContentLoaderTests` | 35 | `ContentLoader` over fixture trees written by `ContentTree`: a minimal tree loads into Engine types with ids interned in declaration order; a malformed, unknown, missing or null field fails naming the file and JSON path; enums take only exact member names; omitted optional fields take their defaults; an unknown or duplicate id and a missing module fail naming them; an Engine refusal becomes a `ContentLoadException`; the hash changes with a byte or a rename, ignores listing order, root location and files other than `.json` and `.lua`; `manifest.json` and `traits.json` load into `ManifestRules`, and a missing manifest, a reversed range, a duplicate profession, no or two child traits, and a child-optional trait without an adult weight fail naming the file and path. |
 | `LayoutValidatorTests` | 20 | `LayoutValidator` over the minimal tree edited one rule at a time: an empty id, a zero or negative cabin, aisle, pitch or seat size, an aisle or seat group past a wall, a seat group over an aisle or another group, a duplicate fixture id, a missing door, lav or galley, and a seat with no walk to a fixture are refused at their JSON paths; spans that only touch are accepted, fractional widths included. |
+| `ShippedContentTests` | 4 | The shipped `Data/` tree, with the test fixtures standing in for the kinds not shipped yet (added only where the shipped tree lacks the path, and crew, scenario and fixture layout only while no scenario ships), loads and validates; the reference layout has 180 seats and matches its pinned `LayoutAscii` dump (`Pinned/reference-narrowbody.txt`); the shipped manifest rules book between the load factor's floor and 180 over seeds 1 to 20. |
 | `NeedsValidatorTests` | 8 | `NeedsValidator`: distress bands at 100, below 0, NaN or not ascending, and contagion thresholds at 100 or below 0 are refused at their JSON paths; `ContentValidator` runs the check. |
 | `ScenarioValidatorTests` | 20 | `ScenarioValidator`: an unknown layout, a gate delay outside 0 to 240 (both bounds accepted), a locked lav that is not a lav, a zone gap or overlap, a duplicate zone id, a zone without crew, a crew member listed twice in a zone, a crew id not in the roster, a crew count that does not match the zones, an unknown station, a cart span outside the layout, a cart crew member in no zone and a cart without two different crew are refused at their JSON paths; a member in two zones and one member covering every zone are accepted. |
 | `ThoughtCatalogueValidatorTests` | 4 | `ThoughtCatalogueValidator`: an unknown lever tag, neighbour lever tag or hook is refused; the whole minimal tree passes `ContentValidator.Validate`. |

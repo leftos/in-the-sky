@@ -1,0 +1,36 @@
+{
+  "load_factor": { "min": 0.9, "max": 1.0 },
+  "business_booked": { "min": 10, "max": 12 },
+  "business_row_count": 3,
+  "business_cabin_purposes": [
+    { "value": "Business", "weight": 70 }, { "value": "Leisure", "weight": 30 } ],
+  "economy_cabin_purposes": [
+    { "value": "Business", "weight": 20 }, { "value": "Leisure", "weight": 55 }, { "value": "Visiting", "weight": 25 } ],
+  "business_trip": {
+    "group_sizes": [ { "value": 1, "weight": 80 }, { "value": 2, "weight": 20 } ],
+    "family_share": 0, "wake_minutes": { "min": 300, "max": 390 } },
+  "leisure_trip": {
+    "group_sizes": [ { "value": 1, "weight": 20 }, { "value": 2, "weight": 45 }, { "value": 3, "weight": 15 },
+      { "value": 4, "weight": 15 }, { "value": 5, "weight": 5 } ],
+    "family_share": 0.6, "wake_minutes": { "min": 360, "max": 510 } },
+  "visiting_trip": {
+    "group_sizes": [ { "value": 1, "weight": 45 }, { "value": 2, "weight": 25 }, { "value": 3, "weight": 15 },
+      { "value": 4, "weight": 15 } ],
+    "family_share": 0.7, "wake_minutes": { "min": 330, "max": 480 } },
+  "family_minimum_size": 3,
+  "family_adults": 2,
+  "wake_spread_minutes": 15,
+  "adult_trait_counts": [
+    { "value": 0, "weight": 35 }, { "value": 1, "weight": 45 }, { "value": 2, "weight": 20 } ],
+  "child_extra_trait_share": 0.4,
+  "professions": [
+    { "id": "office_worker", "weight": 40, "on_business_trips": true },
+    { "id": "trades", "weight": 15, "on_business_trips": true },
+    { "id": "retired", "weight": 12, "on_business_trips": false },
+    { "id": "student", "weight": 10, "on_business_trips": false },
+    { "id": "teacher", "weight": 8, "on_business_trips": true },
+    { "id": "nurse", "weight": 3, "on_business_trips": true },
+    { "id": "doctor", "weight": 2, "on_business_trips": true },
+    { "id": "off_duty_crew", "weight": 1, "on_business_trips": true },
+    { "id": "other", "weight": 9, "on_business_trips": true } ]
+}

@@ -1,0 +1,29 @@
+{
+  "default_unease_baseline": 10,
+  "traits": [
+    { "id": "anxious", "modifiers": [ { "need": "Unease", "factor": 1.3 } ], "unease_baseline": 25, "adult_weight": 12,
+      "child_optional": true },
+    { "id": "nervous_flyer", "modifiers": [ { "need": "Unease", "factor": 1.5 } ], "unease_baseline": 15, "adult_weight": 10,
+      "business_trip_weight": 5 },
+    { "id": "frequent_flyer", "modifiers": [ { "need": "Unease", "factor": 0.8 } ], "unease_baseline": 5, "adult_weight": 8,
+      "business_trip_weight": 30 },
+    { "id": "small_bladder", "modifiers": [ { "need": "Bladder", "factor": 1.3 } ], "adult_weight": 10, "child_optional": true },
+    { "id": "big_appetite", "modifiers": [ { "need": "Refreshment", "factor": 1.25 } ], "adult_weight": 10 },
+    { "id": "restless", "modifiers": [ { "need": "Boredom", "factor": 1.4 } ], "adult_weight": 12, "child_optional": true },
+    { "id": "patient", "modifiers": [ { "need": "Boredom", "factor": 0.8 }, { "need": "Unease", "factor": 0.9 } ], "adult_weight": 10 },
+    { "id": "demanding", "modifiers": [ { "need": "Unease", "factor": 1.1 } ], "adult_weight": 8 },
+    { "id": "light_sleeper", "wake_chance_factor": 2, "adult_weight": 12, "child_optional": true },
+    { "id": "heavy_sleeper", "wake_chance_factor": 0.3, "adult_weight": 8, "child_optional": true },
+    { "id": "sociable", "modifiers": [ { "need": "Boredom", "factor": 0.9 } ], "adult_weight": 15 },
+    { "id": "child", "modifiers": [ { "need": "Boredom", "factor": 2 }, { "need": "Bladder", "factor": 1.2 },
+      { "need": "Refreshment", "factor": 1.1 } ], "unease_baseline": 10, "given_to_every_child": true },
+    { "id": "short_tempered", "adult_weight": 8 },
+    { "id": "sleep_kit", "wake_chance_factor": 0.5, "share": { "adults": 0.15, "business_trips": 0.25, "children": 0 } },
+    { "id": "own_device", "share": { "adults": 0.35, "business_trips": 0.6, "children": 0.4 } }
+  ],
+  "forbidden_pairs": [
+    { "first": "nervous_flyer", "second": "frequent_flyer" },
+    { "first": "light_sleeper", "second": "heavy_sleeper" },
+    { "first": "patient", "second": "demanding" }
+  ]
+}
