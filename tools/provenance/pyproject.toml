@@ -1,0 +1,54 @@
+[project]
+name = "provenance"
+version = "0.1.0"
+description = "The asset provenance ledger's checker: every asset needs an entry, and CREDITS.md is generated from the ledger."
+requires-python = ">=3.13"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.9.9,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["ruff==0.16.9", "ty==0.0.84", "pytest==9.1.1"]
+
+[tool.ruff]
+line-length = 150
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "COM812", # missing-trailing-comma: the formatter owns commas and the rule fights it
+  "ISC001", # single-line-implicit-string-concatenation: the formatter owns the join and the rule fights it
+  "D203",   # incorrect-blank-line-before-class: mutually exclusive with D211, which is the style kept here
+  "D213",   # multi-line-summary-second-line: mutually exclusive with D212, which is the style kept here
+  "CPY001", # missing-copyright-notice: no file in this repo carries a copyright header
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101",    # assert: a pytest assertion is an assert
+  "D1",      # undocumented-*: a test's name says what it proves
+  "PLR2004", # magic-value-comparison: the value a test asserts on is the test
+  "INP001",  # implicit-namespace-package: the tests are collected by pytest, never imported as a package
+  "S404",    # subprocess-import: each test builds its throwaway repository with git
+  "S603",    # subprocess-without-shell-equals-true: the command is a fixed argument list, never a shell string
+  "S607",    # start-process-with-partial-path: git is taken from the path
+]
+"src/provenance/repo.py" = [
+  "S404", # subprocess-import: this is the one module that asks git a question
+  "S603", # subprocess-without-shell-equals-true: the command is a fixed argument list, never a shell string
+  "S607", # start-process-with-partial-path: git is taken from the path
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# ty's strictest documented setting: "the keys are either rule names or `all` to set a default severity for all rules"
+# (ty docs, reference/configuration.md), and `error` is the severity that exits non-zero.
+[tool.ty.rules]
+all = "error"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

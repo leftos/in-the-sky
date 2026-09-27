@@ -1,0 +1,35 @@
+# The asset provenance ledger.
+#
+# One [[asset]] table for every asset file in the repository: anything git carries
+# (tracked, or untracked and not ignored) whose lowercase extension is one of
+#   .png .jpg .jpeg .webp .gif .bmp .tga .svg .exr .hdr
+#   .ogg .wav .mp3 .flac .opus
+#   .ttf .otf .woff .woff2
+#   .gdshader .gdshaderinc .glsl
+#   .onnx .gguf .safetensors
+# Lua, JSON and other authored content is MIT code, and not an asset.
+#
+# Every entry carries:
+#   path           the file's repository-relative path, with forward slashes
+#   origin         "original", "library" or "generated"
+#   license        an SPDX id from the allowlist: CC0-1.0, LicenseRef-PublicDomain,
+#                  CC-BY-3.0, CC-BY-4.0, CC-BY-SA-3.0, CC-BY-SA-4.0, OFL-1.1, MIT,
+#                  BSD-2-Clause, BSD-3-Clause
+#   author         who made or published the file
+#   source_url     where it came from; required when origin is "library" or "generated"
+#   retrieved      the TOML date it was fetched; required whenever source_url is set
+#   modifications  the edits made to it, as an array of strings; may be empty, never absent
+#   share_alike    true on a CC-BY-SA entry, because derivatives of it must stay CC-BY-SA,
+#                  and absent from every other entry
+#
+# An entry with origin = "generated" also carries:
+#   tool           the tool that made the file
+#   tool_version   the tool's version
+#   model          the model id
+#   prompt         the repository-relative path of the prompt file, which must exist
+#   created        the TOML date it was generated
+#
+# Gate this file against the repository with
+#   uv run --project tools/provenance python -m provenance check
+# and regenerate CREDITS.md from it with
+#   uv run --project tools/provenance python -m provenance credits

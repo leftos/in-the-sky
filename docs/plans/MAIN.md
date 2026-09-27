@@ -17,7 +17,7 @@ Grouped into waves by shared files. Waves run side by side where their files are
 ### Wave M0-C: skeleton, gates and CI (repo root config, `src/`, `tests/`, `tools/`, `assets/`, `.github/`; gate: `tools/gate.ps1` once it exists, `code-review`)
 
 - [ ] Gates, after the skeleton: `sky.ps1`, `tools/gate.ps1` with time ceilings, `tools/test-all.ps1`, prek (hygiene, CSharpier, a build with warnings as errors, doc drift, a secret scan, the provenance check) and a commit-msg docs check
-- [ ] Provenance gate: `assets/PROVENANCE.toml` schema (`docs/README.md` already names the file), the checker (license allowlist, a ledger entry for every asset, no entry pointing at a missing file), `CREDITS.md` generated from the ledger, wired into prek and CI
+- [ ] Wire the provenance check, after the gates: a prek hook running `uv run --project tools/provenance python -m provenance check`, a `sky.ps1 provenance [-Check]` subcommand, and a row in `tools/test-all.ps1`
 - [ ] CI on GitHub Actions (Linux), after the gates and the provenance checker: actionlint, zizmor, build, test, csharpier, `dotnet format`, the provenance check; dependabot
 
 ### Wave M0-D: agent docs and studio (`CLAUDE.md`, `docs/*.md` outside plans, `.claude/`; gate: `writing-for-agents` read-through)
