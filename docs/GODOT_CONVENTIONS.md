@@ -212,6 +212,12 @@ Source: `F:\Godot\docs\class-ref-xml\doc\classes\Control.xml` (`theme_type_varia
 `NotificationThemeChanged` reaches a parent before its children, so a parent that re-measures a child in its handler (a hand shrinking its cards to fit, a row summing its children's minimum sizes) reads the child's size in the old theme: the child has not yet remade its own theme reads. The parent defers the measurement (`CallDeferred`, or a flag read on the next frame) so every child has taken the new theme first. A red proof needs a theme whose change moves the measured size; with none, the immediate measurement stays green and the order is proven only by reading. Measured: a hand's shrink after a theme swap measured the old card faces until deferred.
 Source: `F:\Godot\docs\class-ref-xml\doc\classes\Control.xml` (`NOTIFICATION_THEME_CHANGED`: sent when the theme changes on the node or any ancestor); the parent-first order measured at runtime. Seen: 0 here (seeded from opening-hand, 2026-09-25).
 
+### Reset a control's size a frame after an autowrapping label joins it
+<!-- rule: reset-size-after-wrap-layout -->
+
+`ResetSize()` clamps a control to `GetCombinedMinimumSize()` as computed at that instant. An autowrapping `Label` just added to a container reports its minimum at its unlaid width (a few pixels, one letter a line) until the container's queued sort lays it at the column's width, so a reset in the same frame clamps the control to a height it keeps: a control never shrinks on its own when its minimum falls back. Defer the reset (`Callable.From(...).CallDeferred()`, guarded for liveness) to after the sort, or size the new label to the column's width before `AddChild`. Measured in another project: a card rebound twice in one frame grew from 192 to 296 px after its label was rewritten. A screenshot showing a "stray" or stretched node is checked against `GetCombinedMinimumSize()` before it is read as an extra node.
+Source: `F:\Godot\docs\class-ref-xml\doc\classes\Control.xml` (`reset_size`, `get_combined_minimum_size`), `Label.xml` (`autowrap_mode`). Seen: 0 here (seeded from opening-hand, 2026-09-27).
+
 ## Async and lifetime
 
 ### Godot API on the main thread, CPU and IO off it

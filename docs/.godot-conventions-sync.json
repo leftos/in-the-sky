@@ -172,6 +172,10 @@
       "repo": "60208ab6ab61579e",
       "user": "60208ab6ab61579e"
     },
+    "reset-size-after-wrap-layout": {
+      "repo": "facee56025fd8fc1",
+      "user": "5de160fd04ac584a"
+    },
     "resolve-node-once-hot-path": {
       "repo": "036f00f5680eb98f",
       "user": "036f00f5680eb98f"
@@ -245,5 +249,5 @@
       "user": "6edebf4c9ed57ef7"
     }
   },
-  "user_revision": 12
+  "user_revision": 13
 }
