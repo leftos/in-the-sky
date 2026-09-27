@@ -86,6 +86,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Golden flight | A seed whose end-state hash is pinned in a test, recorded on Windows, so a run on another OS shows whether replay is byte-identical across platforms. |
 | Hard condition | The one condition an event's trigger requires before it rolls its chance (compare soft condition). |
 | Hazard | A review finding that can break a build, a run or a player's session; after one is fixed, the reviewer does a last pass. |
+| Held peak | The highest distress a passenger stays at or above for a whole hold window (5 sim minutes): a spike shorter than the window does not set it (R36). |
 | Headless | Run without a window or Godot: `Sky.Sim` flies a whole flight headless, and M1 is a headless flight. |
 | Hold priority | The priority a running task defends: a new task pre-empts it only when the new task's claim priority is higher (a cart claims low but holds high). |
 | Incident | A situation that needs crew action within a window (a medical case, a dispute); it is handled or missed, and the report counts both. |
@@ -111,6 +112,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Moment | Two senses. (1) A surfaced situation the player or crew answers with a choice, as opposed to a policy ("decide at the level of a moment"; seat conflicts arrive as moments). (2) In the report, a journal record that moved an outcome: its tick, what happened, who was involved, the cause chain behind it, and its effect on each scoring outcome. The report is built from moments. |
 | Named stream | A random sequence handed out by the one seeded RNG root under a fixed name, so adding draws in one system never shifts another's. |
 | Nav graph | The graph the engine derives from a layout: aisle slots, seat nodes, galley, lav and door nodes, with capacity and reservations. |
+| Nearest rank | The percentile rule the scores use: the p-th percentile of n sorted values is the value at rank ceil(p × n ÷ 100), so it is always one of the values (R36). |
 | Need | One of the five meters a passenger carries (Refreshment, Bladder, Rest, Unease, Boredom), 0 to 100; each rises at a rate and a lever moves it. |
 | Need band | A need as crew learn it by interacting with a passenger: `fine`, `wants` or `urgent`, never the number. |
 | Need read | A need band recorded by a crew interaction (a call answered, a service pass), stamped with the tick and the reader; crew act on what they read (`docs/design/passengers.md` section 9). |
