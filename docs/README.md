@@ -32,6 +32,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Belonging | Something a passenger carries aboard (`sleep_kit`, `own_device`), modelled as a trait drawn on its own roll that blunts a lever or event for its owner (`docs/design/passengers.md` section 4). |
 | Bin help | A crew task standing at a row where a passenger has been stowing or retrieving a bag too long, cutting their remaining bin time (`docs/design/crew.md`). |
 | Body clock | The rule that sets a passenger's Rest from their wake time and the origin-local time of day, including the post-lunch dip (`docs/design/passengers.md` section 6). |
+| Booking | One party the manifest draws: its trip purpose, its size, whether it is a family, and its wake time, shared by its passengers, who are seated together where a seat group holds them. |
 | Bridge | The code the godot MCP server injects into a running client through an `override.cfg` beside `project.godot`, so an agent can drive the game; it is removed when the run stops and never tracked. |
 | Brief | The written instructions for one implementer run: the plan steps it carries, the files each touches and the command that proves each. |
 | Cabin ready | The tick at which boarding is complete, bins are closed and every passenger is seated and belted: the part of an on-time door the cabin controls. |
@@ -144,6 +145,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Salience | A thought kind's weight, 1 to 3: a new thought replaces a passenger's current one only when its salience is at least as high or the current one has expired. |
 | Scenario | A file naming a flight's setup (aircraft, manifest seed, crew, service plan, levers) that `Sky.Sim` runs. |
 | Scratch scene | A Debug-only Godot scene under `src/Sky.Client/Scratch/` that shows one piece of the client in isolation; no export carries it. |
+| Seat group | A run of seats in one row between an aisle and a wall or between two aisles (a 3-3 row has two); the unit the manifest seats a booking in. |
 | Secure check | A crew task walking a zone until every passenger in it is seated; the last zone's check at boarding is cabin ready, and the landing check stows any cart still out. |
 | Sequence executor | The one runner for passenger and crew actions: it orders them by priority, interrupts a lower one for a higher, runs cleanup on interrupt, and holds sync points. |
 | Service plan | The lever listing a flight's rounds in order, each with its start time and direction (front to back or back to front). |

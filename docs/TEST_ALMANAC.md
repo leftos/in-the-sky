@@ -15,7 +15,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 2 | 15 | 2 | 17 |
-| Sky.Engine.Tests | 20 | 186 | 27 | 213 |
+| Sky.Engine.Tests | 21 | 206 | 27 | 233 |
 | Sky.Scripting.Tests | 3 | 21 | 12 | 33 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
@@ -46,6 +46,7 @@ Every class below reads the referenced assembly names from its project's compile
 | `CascadeTests` | 12 | `Cascades` with D3's three rules: Refreshment strictly above 70 adds ×1.1 on Unease; the Bladder rule fires only with the lav unreachable; all three compose by multiplying in one class to 1.1 × 1.2 × 1.3; another target gets none; a buffer sized for what fires is accepted and a shorter one refused; a threshold of 100, a factor of 0, negative or NaN, a rule driving its own need and a null rule are refused. |
 | `DistressTests` | 8 | `Distress` with D3's terms: Unease alone at 60 gives 30; needs at or below their thresholds give 0; everything at 100 clamps to 100; a missing, repeated or null term and an out-of-range threshold or weight are refused; a CsCheck property keeps distress in [0, 100] and never lowers it when a need rises. |
 | `StageMachineTests` | 12 | `StageMachine`: a feed jump from taxi-out to cruise starts takeoff, climb and cruise in order on one tick; the first advance enters pre-boarding first; a missing or null handler fails at construction naming the stage; an earlier or equal stage starts nothing and the next later one resumes from the current stage; an undefined stage is refused before any handler runs; a handler re-entering `Advance` neither regresses nor double-starts; a throwing handler leaves its stage entered and is not retried; the eleven stages are pinned in order, contiguous from 0. |
+| `ManifestGeneratorTests` | 20 | `ManifestGenerator` on the reference layout (built by its internal `ReferenceLayout()`) with passengers.md's shares: one seed gives one manifest and seed 1's is pinned (a change there breaks replays); no seat is booked twice; load factor and business count stay in range over seeds, and a full load seats 180 with 12 in business; everyone sits in their class; a group of three lands in one seat group; a split family leaves no child without an adult it could have had; forbidden trait pairs never meet, children carry `child` and only allowed extras, no child has a sleep kit or a profession; business trips carry no children, retirees or students; families have their adults; wake times fall in range; bad rules and a mismatched layout and graph are refused naming the field. |
 | `IdTests` | 2 | `ActivityId` and `TraitId` refuse a negative value. |
 | `ForbiddenApiTests` | 2 | `Sky.Engine`'s compiled metadata references no wall clock, unseeded or crypto randomness, threading, IO, network, console, process, environment (beyond `NewLine`), `Guid.NewGuid`/`CreateVersion7` or string hashing API (ADR 0001, R3); members of generic types are checked through their definition. A second test proves the scanner's reach on the test assembly itself: a type, a member and a generic type's member. |
 

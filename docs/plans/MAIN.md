@@ -7,7 +7,7 @@ Open work only, in working order: the next item is the first line from the top. 
 
 - [ ] Reorganize this index so it gives a sense of detailed progress, within the `plan-doc-hygiene` rules (owner, 2026-09-27)
 
-- [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled, and the triage's additions (new step F8, ruling R35). Landed: A1 to A3, B1 to B4, C1, C2, C2b, C3, C3a, D1 to D4, E1 to E4, F1, G1, G2, K1, S1, S1b, S2. Startable next: F2, K2, S3.
+- [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled, and the triage's additions (new step F8, ruling R35). Landed: A1 to A3, B1 to B4, C1, C2, C2b, C3, C3a, D1 to D4, E1 to E4, F1, F2, G1, G2, K1, S1, S1b, S2. Startable next: F2b, K1b, K2, S3.
 
 ## Later milestones
 
