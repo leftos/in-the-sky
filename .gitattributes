@@ -1,0 +1,17 @@
+* text=auto eol=lf
+
+# Godot writes LF; keep hand-edited scene, resource and import files from picking up CRLF on Windows
+*.tscn text eol=lf
+*.tres text eol=lf
+*.import text eol=lf
+*.gd text eol=lf
+*.gdshader text eol=lf
+*.uid text eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.wav binary
+*.ogg binary
+*.docx binary

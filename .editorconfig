@@ -1,0 +1,101 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+max_line_length = 150
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.{csproj,props,targets,slnx}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+indent_size = 4
+
+# Namespaces and usings
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_style_namespace_match_folder = true
+dotnet_diagnostic.IDE0161.severity = warning
+dotnet_diagnostic.IDE0130.severity = warning
+
+# Braces are always required, even for single-statement bodies
+csharp_prefer_braces = true:warning
+dotnet_diagnostic.IDE0011.severity = warning
+
+# var only when the type is apparent from the right-hand side
+csharp_style_var_when_type_is_apparent = true:warning
+csharp_style_var_for_built_in_types = false:warning
+csharp_style_var_elsewhere = false:warning
+dotnet_diagnostic.IDE0007.severity = warning
+dotnet_diagnostic.IDE0008.severity = warning
+
+# Modern language features
+csharp_style_expression_bodied_methods = when_on_single_line:warning
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_prefer_primary_constructors = true:warning
+csharp_prefer_simple_using_statement = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+dotnet_style_readonly_field = true:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+# A named tuple local keeps its name: deconstructing it turns the element names into locals and drops the meaning
+csharp_style_deconstructed_variable_declaration = false
+dotnet_diagnostic.IDE0022.severity = warning
+dotnet_diagnostic.IDE0290.severity = warning
+dotnet_diagnostic.IDE0300.severity = warning
+dotnet_diagnostic.IDE0301.severity = warning
+dotnet_diagnostic.IDE0305.severity = warning
+dotnet_diagnostic.ASP0027.severity = warning
+
+# Naming: interfaces start with I, types and members are PascalCase
+# A naming rule's own severity is read only by the IDE; this key is what the build honours, for every naming rule below
+dotnet_diagnostic.IDE1006.severity = warning
+dotnet_naming_rule.interfaces_start_with_i.symbols = interface_symbols
+dotnet_naming_rule.interfaces_start_with_i.style = i_prefixed
+dotnet_naming_rule.interfaces_start_with_i.severity = warning
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_style.i_prefixed.required_prefix = I
+dotnet_naming_style.i_prefixed.capitalization = pascal_case
+
+dotnet_naming_rule.types_are_pascal_case.symbols = type_symbols
+dotnet_naming_rule.types_are_pascal_case.style = pascal_case
+dotnet_naming_rule.types_are_pascal_case.severity = warning
+dotnet_naming_symbols.type_symbols.applicable_kinds = class, struct, enum, delegate
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Private constants and static readonly fields are PascalCase; other private fields are camelCase with no prefix
+dotnet_naming_rule.private_constants_are_pascal_case.symbols = private_constant_symbols
+dotnet_naming_rule.private_constants_are_pascal_case.style = pascal_case
+dotnet_naming_rule.private_constants_are_pascal_case.severity = warning
+dotnet_naming_symbols.private_constant_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_constant_symbols.applicable_accessibilities = private
+dotnet_naming_symbols.private_constant_symbols.required_modifiers = const
+
+dotnet_naming_rule.private_static_readonly_are_pascal_case.symbols = private_static_readonly_symbols
+dotnet_naming_rule.private_static_readonly_are_pascal_case.style = pascal_case
+dotnet_naming_rule.private_static_readonly_are_pascal_case.severity = warning
+dotnet_naming_symbols.private_static_readonly_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_static_readonly_symbols.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_readonly_symbols.required_modifiers = static, readonly
+
+dotnet_naming_rule.private_fields_are_camel_case.symbols = private_field_symbols
+dotnet_naming_rule.private_fields_are_camel_case.style = camel_case
+dotnet_naming_rule.private_fields_are_camel_case.severity = warning
+dotnet_naming_symbols.private_field_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_field_symbols.applicable_accessibilities = private
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+# Cyclomatic complexity ceiling (the threshold lives in CodeMetricsConfig.txt), enforced as a build error
+dotnet_diagnostic.CA1502.severity = error

@@ -17,7 +17,6 @@ Grouped into waves by shared files. Waves run side by side where their files are
 
 ### Wave M0-C: skeleton, gates and CI (repo root config, `src/`, `tests/`, `tools/`, `assets/`, `.github/`; gate: `tools/gate.ps1` once it exists, `code-review`)
 
-- [ ] Repo skeleton: `InTheSky.slnx`, the `src/Sky.*` and `tests/Sky.*.Tests` projects in the decisions doc's table, `global.json`, `Directory.Build.props` (warnings as errors, `AnalysisLevel=latest-recommended`, EnforceCodeStyleInBuild, Deterministic), `Directory.Packages.props`, `.editorconfig`, CSharpier pinned in `.config/dotnet-tools.json`, `CodeMetricsConfig.txt`, `.gitattributes`, `.gitignore`, MIT `LICENSE`
 - [ ] Gates, after the skeleton: `sky.ps1`, `tools/gate.ps1` with time ceilings, `tools/test-all.ps1`, prek (hygiene, CSharpier, a build with warnings as errors, doc drift, a secret scan, the provenance check) and a commit-msg docs check
 - [ ] Provenance gate: `assets/PROVENANCE.toml` schema (`docs/README.md` already names the file), the checker (license allowlist, a ledger entry for every asset, no entry pointing at a missing file), `CREDITS.md` generated from the ledger, wired into prek and CI
 - [ ] CI on GitHub Actions (Linux), after the gates and the provenance checker: actionlint, zizmor, build, test, csharpier, `dotnet format`, the provenance check; dependabot

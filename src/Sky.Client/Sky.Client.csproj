@@ -1,0 +1,21 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <PropertyGroup>
+    <!-- Godot overwrites a TargetFramework supplied by Directory.Build.props (godot#103545), so it is set here. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>Sky.Client</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sky.Client.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sky.Session/Sky.Session.csproj" />
+  </ItemGroup>
+
+  <!-- Scratch scenes compile into the Debug assembly alone; no export carries them. -->
+  <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+    <Compile Remove="Scratch/**" />
+  </ItemGroup>
+</Project>

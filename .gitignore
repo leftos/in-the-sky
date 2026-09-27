@@ -1,1 +1,31 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+
+# Godot (import settings in *.import files are versioned; only the import cache is not)
+.godot/
+mono_crash.*.json
+
+# Python (uv tools under tools/)
+.venv/
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+
+# Local scratch and secrets
 .tmp/
+.env
+.env.*
+!.env.example
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+
+# Visual Studio per-user launch profiles
+src/*/Properties/launchSettings.json
+.claude/scheduled_tasks.lock

@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Sky.Engine/Sky.Engine.csproj" />
+    <Project Path="src/Sky.Content/Sky.Content.csproj" />
+    <Project Path="src/Sky.Scripting/Sky.Scripting.csproj" />
+    <Project Path="src/Sky.Session/Sky.Session.csproj" />
+    <Project Path="src/Sky.Sim/Sky.Sim.csproj" />
+    <Project Path="src/Sky.SimConnect/Sky.SimConnect.csproj" />
+    <Project Path="src/Sky.Voice/Sky.Voice.csproj" />
+    <Project Path="src/Sky.Client/Sky.Client.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sky.Engine.Tests/Sky.Engine.Tests.csproj" />
+    <Project Path="tests/Sky.Content.Tests/Sky.Content.Tests.csproj" />
+    <Project Path="tests/Sky.Scripting.Tests/Sky.Scripting.Tests.csproj" />
+    <Project Path="tests/Sky.Session.Tests/Sky.Session.Tests.csproj" />
+    <Project Path="tests/Sky.Sim.Tests/Sky.Sim.Tests.csproj" />
+    <Project Path="tests/Sky.SimConnect.Tests/Sky.SimConnect.Tests.csproj" />
+    <Project Path="tests/Sky.Voice.Tests/Sky.Voice.Tests.csproj" />
+    <Project Path="tests/Sky.Client.Tests/Sky.Client.Tests.csproj" />
+  </Folder>
+</Solution>
