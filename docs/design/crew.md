@@ -70,7 +70,7 @@ Every task carries a **claim priority** (its place on the board) and a **hold pr
 | Catch-up drink | 55 | 55 | 1 | An interaction reads the passenger's Refreshment as `urgent`, unless they have a `refreshment` call open or a round will reach their row within 10 min (FV) | The seat's | Galley round trip, then the drink a `refreshment` call gives (passengers.md (D1)) |
 | Boarding help, deboarding help (bin help) | 50 | 50 | 1 | A passenger has stood stowing or retrieving for 30 s (FV) | The row's | Stand at that row's slot; the passenger's remaining bin time is cut by 40% (FV) |
 | Door station | 50 | 50 | purser | Boarding and deboarding start | F | Stand at the forward crew station; observes every passenger through the door |
-| Galley break, when due | 45 | 35 | 1 (self) | Strain at or above 50 and 30 min since the last break (FV) | Galley | See strain below |
+| Galley break, when due | 45 | 50 **(ruled 13)** | 1 (self) | Strain at or above 50 and 30 min since the last break (FV) | Galley | See strain below |
 | Catch-up service | 45 | 45 | 1 | A round ends with passengers it skipped (asleep, away) | The seat's | Hand service from the galley; same need effect as the round |
 | Business hand service | 42 | 60 | purser | Round start minus 3 min (FV) | F | One galley trip, then rows 0-2 by hand: drinks 60 s, meal 120 s per row (FV) |
 | Drinks round, meal (cart) | 40 | 75 | 2 per cart | The round's start time, once the previous round's carts are back | The cart span | See the service plan below |
@@ -80,13 +80,14 @@ Every task carries a **claim priority** (its place on the board) and a **hold pr
 
 Consequences of the hold priorities, which are the point of them:
 - A call button (60) does not break a cart (hold 75); it waits for a crew member who is free. Only a severe incident or a secure check pulls a crew member off a cart.
-- A call button (60) does break a galley break (hold 35), so a crew member on break is interrupted and the break's strain relief stops.
+- A cart posting (40), business hand service (42), catch-up service (45) and bin help (50) do not break a due galley break (hold 50), so a strained crew member who went on break ahead of a round stays on it and the round waits for its crew **(ruled 13)**. A routine break (hold 35) still gives way to a cart.
+- A call button (60) does break a galley break of either kind, but only as the last choice: crew on a break are pre-empted only when no one else the task may pre-empt is available (see "Who claims"). Then the break's strain relief stops, and it counts as cut short (see strain below). The owner's words: "passengers come first."
 - Event work (70), "back to your seat" (62), minor incidents (65) and the read-driven follow-up (57) and catch-up drink (55) wait behind a cart. That is CONCEPT section 6's traced miss: "both aft crew were on the cart; the task waited 14 minutes behind a lower-priority service task".
 - A secure check (90) does break a cart, which is how a round still running in descent ends (see "Rounds in descent").
 
 **Event work that nobody starts.** Event work sits at 70, above call buttons and minor incidents and below the cart's hold, so an event's crew task is the first thing a free crew member takes but never strips a cart. If no crew member has started it 10 min (FV) after it was posted, the task is withdrawn and the event's "Leave it for now" effects apply instead, as if that had been the choice. That is a moment naming the event, the choice that was picked, and what kept crew away ("nobody came: fa5 and fa6 were on cart 2, the task waited 10 min"). The 10 min runs from posting, so an event noticed late (ruled 2) can take up to 20 min from firing to its fallback.
 
-**Who claims.** An idle crew member may claim a task in their own zone at once, and one outside it once it has waited the **spill time**, 3 min (FV). Severe incidents and secure checks have no spill time. Among the crew who may claim, the nearest by path cost claims, ties to the lower crew id. Among tasks, the highest claim priority goes first, then the oldest (E2). A pre-emption picks, among the zone's crew whose running task holds below the new task's claim, the one whose task holds lowest, ties to the nearest.
+**Who claims.** An idle crew member may claim a task in their own zone at once, and one outside it once it has waited the **spill time**, 3 min (FV). Severe incidents and secure checks have no spill time. Among the crew who may claim, the nearest by path cost claims, ties to the lower crew id. Among tasks, the highest claim priority goes first, then the oldest (E2). A pre-emption picks among the zone's crew whose running task holds below the new task's claim, in this order **(ruled 13)**: first any crew member not on a galley break, before any on one; then, within each of those two groups, the one whose task holds lowest; then the nearest. So a crew member on a break is the last one a task takes: the others jump in so they can stay on it, and a break is cut only when no one else can take the task.
 
 **Pre-emption and cleanup.** The pre-empted task returns to the board with its original posted tick and its progress. A cart that loses one of its two crew stops where it is with its brake on (the cleanup) and still fills its slot; the other crew member waits at it. A check-in walk or secure check resumes from the row it reached. A call button is re-posted.
 
@@ -171,14 +172,14 @@ Strain (FV throughout) accumulates from the sources CONCEPT section 6 names, plu
 
 | Source | Change |
 |---|---|
-| Time on task (any claimed task except a break; not while seated) | +0.45 per sim minute × (1 + F / 100); ×1.5 once 60 min have passed since the last break |
+| Time on task (any claimed task except a break; not while seated) | +0.45 per sim minute × (1 + F / 100); ×1.5 once 60 min have passed since the end of the last full break (one that ran its 10-minute minimum; **ruled 14**) |
 | Pre-emption | +5; a second within 10 min adds +8 more (the "double pre-emption" moment) |
 | Backlog in own zone | +0.1 per sim minute for each task in the crew member's zone waiting over 3 min, at most +0.3 |
 | Arriving at a severe incident | +6 |
 | Idle, not on break | -0.2 per sim minute |
-| Galley break | -3 per sim minute |
+| Galley break | -3 per sim minute for every minute it runs, a break cut short included |
 
-**Galley breaks.** A break is taken only at the galley (there is no forward galley), so crew forward of a cart in the aisle cannot reach one until the carts return. A break lasts at least 10 min and ends at 15 min or when strain falls to 15. At most 2 crew are on break at once with six crew, 1 with four. Breaks are never posted during boarding, the seated phases, or descent.
+**Galley breaks.** A break is taken only at the galley (there is no forward galley), so crew forward of a cart in the aisle cannot reach one until the carts return. A break that nobody interrupts runs at least 10 min, and ends at 15 min or when strain falls to 15, whichever comes first after the 10. The 10 minutes are the break's own minimum, not protection: a task whose claim is above the break's hold (35 routine, 50 due) can still cut it, and does so only when no crew member off break can take that task (ruled 13). A break that runs its 10 minutes is a **full break**, and only a full break restarts the 60-minute no-break clock of the time-on-task row; a break cut short still lowers strain for the minutes it ran (ruled 14). A crew member whose breaks keep being cut therefore stays on the ×1.5 rate, and the redline moment names the cut breaks. At most 2 crew are on break at once with six crew, 1 with four. Breaks are never posted during boarding, the seated phases, or descent.
 
 **The redline** is 70. Over it, a crew member's task durations are x1.15 and their fatigue rises twice as fast (which lowers focus, so a strained crew member makes worse event calls later). The strain outcome (CONCEPT section 6) reads each crew member's peak and the minutes any of them spent over the redline. Each crossing is a moment naming what drove it: the last break, the pre-emptions, the round.
 
@@ -324,7 +325,7 @@ Crew needs (crew do not eat, sleep or use the lavs); crew names, voices and anno
 
 Ruled by the owner on 2026-09-26 from the ranked options below (ruling 12 came without options); the first option listed was the recommendation. The body of the doc describes the ruled option.
 
-1. **Hold priority.** **Ruled (owner, 2026-09-26): option 1, yes;** only the cart, the business hand service and the galley break hold above their claim.
+1. **Hold priority.** **Ruled (owner, 2026-09-26): option 1, yes;** only the cart, the business hand service and the galley break hold above their claim. The due break's hold was amended to 50 by ruling 13.
 2. **Event resolution.** **Ruled (owner, 2026-09-26): option 1,** by the first crew member to notice, else the zone lead after 10 minutes.
 3. **Service "order".** **Ruled (owner, 2026-09-26): option 1,** the order of the rounds (drinks first or meal first).
 4. **Cabin ready.** **Ruled (owner, 2026-09-26): option 1,** the last zone's secure check completing.
@@ -336,6 +337,8 @@ Ruled by the owner on 2026-09-26 from the ranked options below (ruling 12 came w
 10. **Misread direction.** **Ruled (owner, 2026-09-26): option 1,** a misread errs toward fine. Also ruled with it: fatigue does not blur reads, and the distress band seen by sight is exact.
 11. **Carts giving way in descent.** **Ruled (owner, 2026-09-26): option 1,** no extra give-way rule; timing and the landing-check stow keep it rare, and blocked passengers pay through the cascade.
 12. **Read-driven crew decisions.** **Ruled (owner, 2026-09-26):** besides `lav_permission`, a catch-up drink after a Refreshment read of `urgent` and a check-in follow-up after an Unease read of `urgent` consult a need read; their tasks and priorities are in the task table.
+13. **A due break and pre-emption.** **Ruled (owner, 2026-09-26, from the E2 and E3 review):** the due galley break holds 50 (claim 45), amending ruling 1's first value of 35 so that the break holds above its claim as ruling 1 says; and a crew member on a break is the last choice for a pre-emption: any crew member the task may pre-empt who is not on a break goes first, then lowest hold, then nearest. A call button still cuts a break when nobody else can take it. The owner's words: "Crew prioritize taking care of passengers, if a due break is interrupted it is what it is, and it impacts the staff member, and other staff members should generally try to jump in so that the crew member on break can remain on break, but at the end of the day, passengers come first." Not taken: a cart posting waiting for a break to end (worst case: a special rule for one pair of tasks that the board's priorities cannot explain, with hand service and catch-ups still cutting the break).
+14. **What resets the no-break clock.** **Ruled (owner, 2026-09-26, from the E2 and E3 review):** only a full break, one that ran its 10-minute minimum, restarts the 60-minute clock; a break cut short still lowers strain for the minutes it ran. Accepted worst case: a crew member in a call-heavy zone whose breaks keep being cut stays on the ×1.5 rate and can cross the redline. Not taken: any break tick resets the clock (worst case: a 30-second sit-down wipes the 60 minutes and call-button pressure on crew stays hidden).
 
 Also ruled in passengers.md (D1) and carried here: a crew interaction reveals a need as a band whose accuracy depends on the crew member (more experienced and more empathetic crew read more accurately), which gave the crew model empathy and "Need reads"; a "back to your seat" task exists for a passenger up with the sign on (Bladder 85 or more, cruise only); an event whose crew task is never started times out after a waiting limit (10 min, FV) into its "Leave it for now" effects, with a moment that nobody came.
 
@@ -402,4 +405,4 @@ Measurable in `Sky.Sim` sweeps (Z6) unless marked otherwise.
 
 ## Terms this doc coins
 
-For the glossary: **claim priority**, **hold priority**, **zone**, **zone lead**, **cart span**, **spill time**, **focus**, **notice cap**, **crew station**, **jumpseat**, **catch-up service**, **lav condition**, **galley break**, **bin help**, **empathy**, **need read**, **read accuracy**, **back to your seat**, **catch-up drink**, **check-in follow-up**, **stow** (a cart's return to the galley as its cleanup).
+For the glossary: **claim priority**, **hold priority**, **zone**, **zone lead**, **cart span**, **spill time**, **focus**, **notice cap**, **crew station**, **jumpseat**, **catch-up service**, **lav condition**, **galley break**, **full break**, **bin help**, **empathy**, **need read**, **read accuracy**, **back to your seat**, **catch-up drink**, **check-in follow-up**, **stow** (a cart's return to the galley as its cleanup).

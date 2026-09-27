@@ -8,6 +8,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Which engineering decisions stand? | [decisions/README.md](./decisions/README.md) (the ADRs) |
 | What is the game, and what did the owner rule? | [design/CONCEPT.md](./design/CONCEPT.md) |
 | How do passengers, crew and cabin events work? | [design/passengers.md](./design/passengers.md) (needs, activities, traits, manifest, incidents, observation), [design/crew.md](./design/crew.md) (tasks, zones, service, strain, auto-resolve), [design/events.md](./design/events.md) (the event module shape and the M1 events) |
+| What are the sim's first-value numbers, targets and sweep results? | [design/balance.md](./design/balance.md) |
 | Where does code live, and what may reference what? | [ARCHITECTURE.md](./ARCHITECTURE.md) (projects, dependency edges, task index) |
 | How do I build, test, run the hooks and set up a clone? | [DEVELOPMENT.md](./DEVELOPMENT.md) (toolchain, `sky.ps1` commands and ceilings, hooks, provenance, the godot MCP server) |
 | Which tests exist, and where does a new one go? | [TEST_ALMANAC.md](./TEST_ALMANAC.md) |
@@ -28,12 +29,14 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Auto-resolve | Crew make an event's choice on their own, weighted by competence, traits and fatigue. It is used when no player is making the choice. |
 | Back to your seat | The crew task posted when a passenger leaves their seat with the seatbelt sign on in cruise (only at Bladder 85 or more); `docs/design/crew.md`. |
 | Balance CSV | `Sky.Sim`'s output from a sweep: one row per seed with the four outcome measures, read by `balance-analyst`. |
+| Belonging | Something a passenger carries aboard (`sleep_kit`, `own_device`), modelled as a trait drawn on its own roll that blunts a lever or event for its owner (`docs/design/passengers.md` section 4). |
 | Bin help | A crew task standing at a row where a passenger has been stowing or retrieving a bag too long, cutting their remaining bin time (`docs/design/crew.md`). |
 | Body clock | The rule that sets a passenger's Rest from their wake time and the origin-local time of day, including the post-lunch dip (`docs/design/passengers.md` section 6). |
 | Bridge | The code the godot MCP server injects into a running client through an `override.cfg` beside `project.godot`, so an agent can drive the game; it is removed when the run stops and never tracked. |
 | Brief | The written instructions for one implementer run: the plan steps it carries, the files each touches and the command that proves each. |
 | Cabin ready | The tick at which boarding is complete, bins are closed and every passenger is seated and belted: the part of an on-time door the cabin controls. |
 | Call reason | Why a passenger pressed the call button (`refreshment`, `reassurance` or `lav_permission`): it decides what answering does and which need the answer reveals. |
+| Calming source | An awake, calm off-duty crew passenger, whose Event-class modifier below 1 damps the Unease pushes of the neighbours in contagion reach (`docs/design/passengers.md` section 7). |
 | Cart span | The rows one service cart serves in a round, set with the crew zones as one lever (`docs/design/crew.md`). |
 | Cascade | One system's effect setting off another's, such as a drinks round filling the lav queue that then blocks the cart. |
 | Catch-up drink | A crew task posted when a crew member reads a passenger's Refreshment as `urgent`, bringing them the drink an answered call would. |
@@ -43,6 +46,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Check-in follow-up | A crew task posted some minutes after a crew member reads a passenger's Unease as `urgent`: a return visit that calms them and reads Unease again. |
 | Check-in walk | A crew task walking a zone's rows at a set cadence in cruise, observing every seat and stopping at passengers who look uneasy or distressed. |
 | Claim priority | A task's place on the task board, which decides who claims it first and whether it can pre-empt a running task (compare hold priority). |
+| Comfort threshold | The level above which a need starts contributing to a passenger's distress; the weights and thresholds are `balance-analyst`'s first values (`docs/design/balance.md`). |
 | Competence | A crew member's experience and skill, 0 to 1: it sharpens event choices (focus) and, with empathy, need reads. |
 | Concept pass | The short design sitting before any code that produces `docs/design/CONCEPT.md`. |
 | Consequence kind | One of the four shapes an event's delayed consequence takes: a need change, an incident, a seat move, or a line (`docs/design/events.md` section 1). |
@@ -50,6 +54,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Content hash | A SHA-256 over every content file's path and bytes, written in a journal's header so a replay against changed content is refused. |
 | Crew station | A nav graph node beside the forward door, off the passenger path, where the purser stands for boarding and deboarding. |
 | Crew-observed view | The player's picture of the cabin, built from what crew have seen, which ages and goes stale. A setting switches it to the true state. |
+| Crewless flight | A flight with passengers and no cabin crew, scored on flight smoothness instead of the four crewed outcomes; from M5 (`docs/design/CONCEPT.md` section 8, T7). |
 | Decision log | The flight's record of every passenger decision with its top three candidate scores, which the dev inspector and `Sky.Sim decisions` read. |
 | Decision point | A moment when Lua runs: a character choosing its next activity, or an event's `trigger`, `describe`, `choices` or `effects` being evaluated (ADR 0010). |
 | Decision round | The step of the `/nextup` loop where every choice a brief needs is settled before dispatch: technical ones by the orchestrator, design, player-facing and public ones by the owner. |
@@ -74,8 +79,10 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Flight emulator | The standalone-mode `ISimFeed` in `Sky.Session`: it plays a scenario's phase timeline, seatbelt sign and turbulence, and its output is journaled so a replay never runs it. |
 | Flight phase | A stage of a flight from boarding to deboarding (boarding, taxi, climb, cruise, descent, deboarding and so on); the stage machine enters each in order. |
 | Focus | The number, from competence, fatigue and crew traits, that decides how sharply a crew member picks an event's best choice in auto-resolve. |
+| Full break | A galley break that ran its 10-minute minimum; only a full break restarts a crew member's 60-minute no-break clock (`docs/design/crew.md`, strain). |
 | Galley break | A crew task at the galley that lowers strain; it is posted when strain or time since the last break runs high, and call buttons can interrupt it. |
 | Gate | A check that must pass before work lands (a build, a test run, a format check, a hook), run under `tools/gate.ps1`; `tools/test-all.ps1` is the whole gate. |
+| Gate conditions | The two scenario fields describing the wait before boarding, `gate_delay_minutes` and `concessions_open`, which add to passengers' starting needs (`docs/design/passengers.md` section 2). |
 | Golden flight | A seed whose end-state hash is pinned in a test, recorded on Windows, so a run on another OS shows whether replay is byte-identical across platforms. |
 | Hard condition | The one condition an event's trigger requires before it rolls its chance (compare soft condition). |
 | Hazard | A review finding that can break a build, a run or a player's session; after one is fixed, the reviewer does a last pass. |
@@ -91,10 +98,12 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Keep-current bias | The bonus utility scoring gives a passenger's current activity, so they do not flip between activities with nearly equal scores. |
 | Landing note | The `Landed YYYY-MM-DD: …` text a finished plan line carries into `docs/plans/archive/`: what landed, test counts, the red proof and review findings. |
 | Last pass | A reviewer's final read of a diff after a hazard was fixed, checking only that the fix holds and broke nothing. |
+| Late and fed up | The Unease Context-class modifier every passenger carries after a gate delay of 30 minutes or more, until they are first served (`docs/design/passengers.md` section 2). |
 | Lav condition | A lav's uses since its last check: past about 20 it is untidy, so visits take longer and push Unease, until a lav check resets it. |
 | Lav wave | The rise in lav visits some 30 to 60 minutes after a drinks round or meal, from the drink's Bladder pulse. |
 | Leave it for now | The crew-free choice every event offers, with the id `leave`; its effects also apply when a crew task for the event times out unstarted. |
 | Lever | Something the player (from M3) or a policy (in M1) sets that changes the conditions the cabin plays out in: a service schedule, a crew zone, the lighting plan. A lever is never an order to one passenger. |
+| Lever tag | The lever or moment a thought kind points at (`service_plan`, `lavs`, `lighting_plan`, `crew_staffing`, `check_in_cadence`, `announcement_policy`, `moment`); a kind without one fails the content validator. |
 | Lever variant | A scenario file that differs from the reference scenario in exactly one lever, swept against it to show the lever matters. |
 | Line consequence | An event consequence that journals a sentence as a moment tied to the event and a passenger, changing no state, so the report has words for it. |
 | Milestone | A numbered stage of the roadmap (M0 to M6) in `docs/plans/MAIN.md`; each has a definition of done. |
@@ -112,6 +121,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Pillar | One of the design principles in `docs/design/CONCEPT.md` section 2 that every feature is tested against. |
 | Policy | A standing decision that applies to a class of people or situations (a service plan, a crew zone), as opposed to a moment. |
 | Port | An interface the Engine defines and another project implements (`IClockSource`, `ISimFeed`, `IBehaviorScripts`). |
+| Preset | A saved, shareable set of lever values and of which moments reach the player, standing for a way to play (Captain, Lead Flight Attendant) of the one stage-manager role; from M3. |
 | Profile | A project's `<project>-nextup` skill (here `sky-nextup`), which supplies the user-level `/nextup` loop with this repo's plan convention, agents, reviewers, gates, docs map and landing path. |
 | Provenance gate | The prek hook and CI job that fail the build on an asset without a ledger entry, a license outside the allowlist, or an entry pointing at a missing file. |
 | Provenance ledger | `assets/PROVENANCE.toml`, one entry per asset recording origin, license, author and source. The gate checks it, and `CREDITS.md` is generated from it. |
@@ -124,8 +134,10 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Redline | The strain level (70 as a first value) above which a crew member slows and tires faster; minutes over it are part of the strain outcome. |
 | Reference flight | M1's baseline flight: a narrowbody day departure of about 2.5 hours with one drinks round and one meal. |
 | Replay equality | Replaying a seed and its journal gives the same end-state hash and the same report text as the original run. |
+| Resource budget | The memory, VRAM and CPU ceiling In the Sky keeps to beside MSFS, stated in pillar 6 (`docs/design/CONCEPT.md` section 2). |
 | RNG root | The one seeded random source of a flight, which hands out named streams. |
 | Round | One pass of service through the cabin, a drinks round or a meal, run by carts in economy and by hand in business, as the service plan sets. |
+| Salience | A thought kind's weight, 1 to 3: a new thought replaces a passenger's current one only when its salience is at least as high or the current one has expired. |
 | Scenario | A file naming a flight's setup (aircraft, manifest seed, crew, service plan, levers) that `Sky.Sim` runs. |
 | Scratch scene | A Debug-only Godot scene under `src/Sky.Client/Scratch/` that shows one piece of the client in isolation; no export carries it. |
 | Secure check | A crew task walking a zone until every passenger in it is seated; the last zone's check at boarding is cabin ready, and the landing check stows any cart still out. |
@@ -133,6 +145,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Service plan | The lever listing a flight's rounds in order, each with its start time and direction (front to back or back to front). |
 | Session | `Sky.Session`'s `ISkySession`: the client pulls views from it and pushes commands to it. |
 | Slice | The plan items one `/nextup` session explores and builds: the first cluster of lines plus the next ones with disjoint files, up to three implementers. |
+| Smoothness | How gently a crewless flight was flown (G-rates, turbulence met, prompt departure and arrival), its scoring direction; the shape is open until M5 (`docs/design/CONCEPT.md` section 8). |
 | Soft condition | A condition that multiplies an event trigger's chance (a trait, a busy board) without being required (compare hard condition). |
 | Source class | The origin a rate modifier is grouped by: modifiers from the same source multiply, different sources add. |
 | Spike | A short, throwaway experiment on its own branch that measures something a decision depends on. |
@@ -150,6 +163,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Target selector | How an event consequence names who it hits, resolved by the host: `"subject"`, `"neighbours"` (the contagion reach), or a passenger id from the facts. |
 | Task board | The prioritized list of work (services, call buttons, checks) that crew claim. A higher-priority task can pre-empt a lower one. |
 | Test twin | The `tests/Sky.<X>.Tests` project paired with each `src/Sky.<X>` project. |
+| Thought | What one passenger is thinking for a while (a kind with a valence, salience, duration and lever tag), born from engine hooks, read by no system, and shown in the observed view only once a crew interaction or a check-in walk reveals it (`docs/design/passengers.md` section 10). |
 | Tick | One fixed step of simulation time: 250 ms (ADR 0010). |
 | Time warp | Running the sim faster than real time (up to 64x) in standalone mode; in MSFS mode the sim's own rate drives it. |
 | Trip purpose | Why a passenger's booking is flying (`business`, `leisure`, `visiting`); it shapes group size, children, traits and wake time. |

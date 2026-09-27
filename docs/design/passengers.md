@@ -1,6 +1,6 @@
 # Passengers
 
-Status: M1 step D1, drafted by `game-designer` 2026-09-26 and approved by the owner the same day; its eight open questions were ruled by the owner on 2026-09-26 (section "Owner rulings", P1 to P8), and the doc follows them. It builds on the ruled concept ([CONCEPT.md](./CONCEPT.md), sections 2 to 8), the kickoff decisions ([the decisions doc](../plans/2026-09-26-rewrite-decisions.md)) and the owner decisions OD3 and OD6 at the foot of [the M1 subplan](../plans/2026-09-26-m1-headless-cabin-flight.md). Crew-side behaviour (task priorities, zones, the service plan's shape, the phase timeline, observation reach, the wake rule for service) is `crew.md (D2)`'s, written alongside this doc. Terms are in the glossary in [docs/README.md](../README.md).
+Status: M1 step D1, drafted by `game-designer` 2026-09-26 and approved by the owner the same day; its eight open questions were ruled by the owner on 2026-09-26 (section "Owner rulings", P1 to P8), and the doc follows them. Amended 2026-09-26 by `game-designer` for the owner's triage of the OpenPax goals (CONCEPT section 8, T9 to T12): starting needs from the gate (section 2), belongings (section 4), off-duty crew as a calming source (section 7), and thoughts (section 10); the design choices made for those are P9 to P12, and the owner's follow-up answers on thoughts (which interactions reveal one, and the report) are in P12. It builds on the ruled concept ([CONCEPT.md](./CONCEPT.md), sections 2 to 8), the kickoff decisions ([the decisions doc](../plans/2026-09-26-rewrite-decisions.md)) and the owner decisions OD3 and OD6 at the foot of [the M1 subplan](../plans/2026-09-26-m1-headless-cabin-flight.md). Crew-side behaviour (task priorities, zones, the service plan's shape, the phase timeline, observation reach, the wake rule for service) is `crew.md (D2)`'s, written alongside this doc. Terms are in the glossary in [docs/README.md](../README.md).
 
 **Numbers.** Every number here marked **[D3]** is a first value for balance-analyst's D3 (`balance.md`): unmeasured, to be computed there and tuned in Z7. A number marked **(CONCEPT)** is quoted from CONCEPT section 4 and is not this doc's to change. Ids in `code` are content strings (ruling R9), interned at load.
 
@@ -25,15 +25,30 @@ Drawn once by the manifest generator (F2) from the `manifest` stream, and fixed 
 | Age band | `adult`, `child` (2 to 11) | the `child` trait, activity availability |
 | Seat class | `business` (the 3 rows of 2-2), `economy` (the 28 rows of 3-3) (OD2) | seat comfort, service order (crew.md (D2)) |
 | Profession | see section 5 | events only in M1 |
-| Traits | 0 to 2 from the trait list, plus `child` for children | rate modifiers, Unease baseline, activity scoring |
+| Traits | 0 to 2 from the trait list, plus `child` for children, plus any belongings drawn on their own roll (section 4) | rate modifiers, Unease baseline, activity scoring |
 | Wake time | origin-local clock time | the Rest body clock (section 6) |
-| Starting needs | see section 2 | |
+| Starting needs | see section 2, including the scenario's gate conditions | |
+| Thought | at most one at a time, section 10 | the observed view only; nothing in the sim |
 
 ### 2. Needs as a passenger carries them
 
 Base rates, the drink pulse, the half-life and the service deltas are CONCEPT's (section 4). This section adds only what the passenger side needs.
 
-**Starting values at boarding [D3].** Refreshment drawn 10 to 40; Bladder 0 to 20 (most used the terminal); Rest from the body clock (section 6); Unease at the passenger's baseline; Boredom 5 to 25 (the gate wait). Group members draw Refreshment and Boredom within 10 of each other.
+**Starting values at boarding [D3].** Refreshment drawn 10 to 40; Bladder 0 to 20 (most used the terminal); Rest from the body clock (section 6); Unease at the passenger's baseline; Boredom 5 to 25 (the gate wait). Group members draw Refreshment and Boredom within 10 of each other. The gate conditions below are added on top of the draw.
+
+**Gate conditions (CONCEPT T11; P9).** Two required scenario fields, with no default, say what the cabin went through before boarding:
+- `gate_delay_minutes`, an integer from 0 to 240: how long passengers waited past the scheduled boarding time. The scenario's boarding start is the actual one, so the wait is already in hours awake and the Rest body clock needs no change; the timeline and the cabin-ready plan are not moved, so on-time doors are unaffected (CONCEPT question 9).
+- `concessions_open`, true or false: whether the airside food and drink outlets were open during the wait.
+
+Their effect on each passenger's starting needs, with D the delay in minutes, every number [D3]:
+
+| Need | Added at boarding | Worked: 0 min, open (the reference) | Worked: 60 min, closed |
+|---|---|---|---|
+| Refreshment | +10 if the outlets were closed; plus min(D × r, 20), with r = 0.05 per minute if open and 0.25 if closed | +0 (draw 10 to 40) | +10 + 15 = +25 (35 to 65) |
+| Boredom | min(0.2 × D, 20) | +0 | +12 |
+| Unease | min(0.25 × max(D − 15, 0), 15) above the baseline, which the half-life then pulls back | +0 | +11 (a `nervous_flyer` boards at about 26) |
+
+**Late and fed up.** When D is 30 or more, every passenger carries an Unease ×1.1 Context-class modifier [D3] from boarding until they are first served a drink or a meal (a round, a catch-up or an answered `refreshment` call). The starting Unease offset is gone about 15 minutes after boarding, but this modifier lasts until service reaches the passenger, which is what ties the gate to the service plan lever: on a delayed flight with the outlets shut, a drinks-first plan served front to back leaves the aft rows hungry, amplified and calling, and the report can say so. Starting Refreshment is never above 70, so nobody boards inside a failure window.
 
 **How Unease moves.** Unease is not a clock (CONCEPT): it is pulled toward the passenger's baseline with a half-life of about 15 sim minutes (CONCEPT), and pushed up by push sources. The rate multiplier of the rule scales the sum of the pushes active this tick, so Trait, Cascade, Context and Event modifiers amplify whatever is pushing and create nothing from nothing. Push sources **[D3]**: being aboard, 6 per hour; takeoff and landing, +30 per hour; climb and descent, +10; light turbulence, +30; moderate turbulence, +80; a delay past the planned pushback, +15 per hour once more than 5 minutes late; the passenger's own call button unanswered for more than 5 minutes, +20. One-off pushes land as pulses spread over 2 minutes: woken from sleep +5, an incident seen nearby (section 7). A passenger with several Unease traits takes the highest baseline among them, not the sum.
 
@@ -99,6 +114,15 @@ Pairs that never co-occur: `nervous_flyer` with `frequent_flyer`, `light_sleeper
 
 Traits an event needs as a trigger condition (a heart condition for a medical event, say) are added by event-writer in D4 with no rate modifier; this list holds only traits the need system reads. One is ruled now: **`short_tempered`** (owner, 2026-09-26), an event-only trait with no rate modifier and no behaviour hook here, read by event triggers (a fight, say). Adult weight 8 [D3]; never on a child; it may co-occur with any other trait.
 
+**Belongings (CONCEPT T9; P10).** What a passenger carries aboard is a trait of its own kind, a **belonging**: it lives in the trait list and the rate rule like any trait, but is drawn on its own roll (section 5), so it never crowds out the 0 to 2 personality traits. A belonging earns its place only by blunting a lever or an event for its owner; OpenPax's amenity kits and sanitizing wipes touched nothing and are not carried.
+
+| Id | Effect [D3] | Blunts | Share [D3] |
+|---|---|---|---|
+| `sleep_kit` (earplugs and a mask) | `sleep` is not halved with lights up (a `light_sleeper` with one is halved instead of zeroed); wake chances ×0.5; a lit reading light beside does not halve `sleep` | the lighting plan, and neighbours climbing past | 15% of adults, 25% on `business` trips; never a child |
+| `own_device` (a tablet or laptop) | `screen` stays available when an outage event takes the seat's IFE away | the IFE outage events, and Boredom on a flight that loses IFE | 35% of adults, 60% on `business` trips, 40% of children |
+
+Each passenger rolls each belonging independently. Belongings stack with any trait, and `sleep_kit` with `light_sleeper` is allowed on purpose: it is the light sleeper who packed for it.
+
 ### 5. The manifest
 
 Every share and range is [D3]. The generator draws bookings (a booking is a group) until the load is reached, then seats them by the scenario's fixed default order (F2: groups together, then by class), a child always beside an adult of their group when a seat group allows.
@@ -109,7 +133,8 @@ Every share and range is [D3]. The generator draws bookings (a booking is a grou
 - **Group size** (per booking): `business` trips 1 at 80%, 2 at 20%; `leisure` 1 at 20%, 2 at 45%, 3 at 15%, 4 at 15%, 5 at 5%; `visiting` 1 at 45%, 2 at 25%, 3 at 15%, 4 at 15%.
 - **Children:** a `leisure` booking of 3 or more is a family at 60% and a group of adults otherwise; a `visiting` one at 70%. A family has 2 adults and the rest children. `business` bookings have no children. By hand from these shares, about 11% of passengers are children (about 20 on a full flight), unmeasured.
 - **Traits:** an adult draws 0 traits at 35%, 1 at 45%, 2 at 20%, by the weights in section 4 without replacement and skipping forbidden pairs; a child has `child` plus one more at 40%.
-- **Professions** (adults): `office_worker` 40%, `trades` 15%, `retired` 12%, `student` 10%, `teacher` 8%, `nurse` 3%, `doctor` 2%, `off_duty_crew` 1%, `other` 9%; `business` trips never draw `retired` or `student`. Professions carry no modifier in M1: they exist for events ("is there a doctor on board?") and the report's words (P6).
+- **Belongings:** after the traits, each passenger rolls each belonging at its share in section 4.
+- **Professions** (adults): `office_worker` 40%, `trades` 15%, `retired` 12%, `student` 10%, `teacher` 8%, `nurse` 3%, `doctor` 2%, `off_duty_crew` 1%, `other` 9%; `business` trips never draw `retired` or `student`. `off_duty_crew` covers cabin crew and pilots flying as passengers. Professions carry no rate modifier of their own: they exist for events ("is there a doctor on board?", CONCEPT T10) and the report's words (P6), with one exception, `off_duty_crew` as a calming source of contagion (section 7; P11).
 
 ### 6. The Rest body clock (day departure)
 
@@ -126,6 +151,8 @@ The shape this gives: on a day flight most passengers do not sleep; after the me
 ### 7. Unease contagion and witnessing
 
 **Contagion (CONCEPT section 8, question 7: Unease only, adjacent seats and across the aisle, Event class).** Reach, for each passenger: the seats beside them in their own seat group, and the seat directly across the aisle in the same row. Rows ahead and behind are not in reach (P3). Each neighbour n in reach whose Unease is above 40 contributes an Event-class modifier on this passenger's Unease of 1 + w × (U_n − 40) / 60, with w = 0.25 beside, 0.15 across the aisle [D3]; the modifiers multiply within the Event class. Two neighbours at 100 give 1.5625, before the cap of 2.5. Because the multiplier scales pushes (section 2; P2), contagion amplifies a shared cause (turbulence, a delay) and fades in calm cruise: a panic in a calm cabin unsettles a row, and a panic in turbulence tips it. Asleep neighbours neither spread nor take contagion.
+
+**Calming source (CONCEPT T10; P11).** An awake `off_duty_crew` passenger whose own Unease is under 40 gives each passenger in their contagion reach an Event-class modifier of 1 − w_calm on Unease, with w_calm = 0.15 beside and 0.10 across the aisle [D3]. It composes with contagion in the same class by multiplication: a nervous flyer beside both a panicking passenger at 100 (×1.25) and a calm off-duty pilot (×0.85) takes ×1.06. Like contagion, it scales pushes, so an off-duty crew member steadies a row in turbulence and does nothing in a calm cruise; one who is themselves at 40 or more stops calming anyone. At 1% of adults, about 1.6 passengers a flight carry it, so it is a local story ("22D's turbulence was easier with an off-duty captain beside her"), not a cabin-wide number. Doctors and nurses stay event content (the `feeling-faint` event reads them; events.md). The calming source is under the contagion switch.
 
 **Witnessing (P2, P3).** When an incident is raised at a seat, every awake passenger within 2 rows ahead or behind takes a one-off Unease pulse of +8; when an incident is missed and its consequence fires, +15 [D3]. This is what carries a panic "two rows away" (CONCEPT section 4's Unease story) without letting contagion chain the length of the cabin. Witnessing is under the contagion system switch.
 
@@ -167,8 +194,9 @@ The five need values are never captured by sight.
 | Call button answered | the call's reason need (`refreshment` → Refreshment, `reassurance` → Unease, `lav_permission` → Bladder), and Unease |
 | Crew reaching an incident | the failing need, and Unease |
 | An event's crew task | the needs the event module declares it reveals (event-writer, D4), and Unease |
+| Check-in stop or check-in follow-up (crew.md (D2)) | Unease |
 
-A sleeping passenger passed over reveals nothing beyond "asleep". The check-in walk reveals by sight only, which is what makes staleness honest: a walk shows that 23F looks uneasy, not why.
+Every interaction in this table also reveals the passenger's current thought (section 10; P12). A sleeping passenger passed over reveals nothing beyond "asleep". A check-in walk passing a row reveals by sight, plus the thought of every awake passenger in that row; it reveals a need only where it stops, at a passenger seen as uneasy or distressed. That is what makes staleness honest: a walk shows that 23F looks uneasy and is thinking about the lav queue, not what her Bladder reads.
 
 **The read rule (P5).** The owner's words: "A band based on experience, more experienced / empathetic crew get a more accurate value than junior / apathetic crew." This is the one statement of the rule; crew.md (D2) carries the attributes and points here.
 - **Who reads well.** A crew member's read accuracy is `a = min(0.3 + 0.35 × c + 0.35 × e, 0.95)` [D3], where c is competence and e is empathy, both 0 to 1 from crew.md (D2). Nothing else enters it: not fatigue, strain or crew traits (owner, 2026-09-26).
@@ -182,11 +210,54 @@ Worked, with crew.md (D2)'s roster: the purser (c 0.85, e 0.70) is right 84% of 
 
 The observation stores the band read, never the true one. The true band, and whether the read was a misread, go to the dev surface only; a misread that precedes a missed incident for the same passenger is a moment ("fa4 read 23F's Bladder as `wants` at 01:12; `accident` missed at 01:40").
 
+### 10. Thoughts (CONCEPT T12; P12)
+
+The owner's words: "I definitely want passenger thoughts for that rollercoaster tycoon / planet coaster feel, and they could also be fog-of-war'ed with crew checkins revealing them." The aim is a cabin the player can overhear, where what passengers grumble about names the lever that would fix it. Prior art: RollerCoaster Tycoon's guest thoughts ("I'm thirsty", "This path is disgusting") and Planet Coaster's thoughts panel, which groups them by kind with a count; the grouping is what lets thoughts pass pillar 2 here.
+
+**What a thought is.** A passenger holds at most one thought at a time: a kind (a content id from the catalogue below), a subject when the kind has one (a lav, the cart, a crew member, a neighbour's seat), the tick it was born and the tick it expires. The kind carries its valence (a grumble or praise), its salience (1 to 3), its duration, and its **lever tag**: the lever or moment that would change it. A kind with no lever tag fails the content validator, which is pillar 5 made a load rule. Lever tags: `service_plan`, `lavs`, `lighting_plan`, `crew_staffing` (crew count, zones and who answers what), `check_in_cadence`, `announcement_policy`, and `moment` (a situation an event surfaces, such as a seat swap or an IFE outage).
+
+**How one is born.** From hooks at points the engine already passes, never from a scan of the cabin each tick and never from Lua (R8): the passenger's own decision points (F4), which check the need thresholds below, and the engine events the table names. A new thought replaces the current one when its salience is at least the current one's or the current one has expired; otherwise it is dropped. No random draw is taken, so which thought a passenger holds is a pure function of what happened to them, costs no stream, and cannot shift a replay. An asleep passenger forms no thought and keeps the one they had until it expires.
+
+The M1 catalogue. Every threshold, salience and duration is [D3]; the words players read are event-writer's, written when thoughts are first drawn (M2), and the catalogue carries none in M1.
+
+| Kind | Valence | Born when | Subject | Lever tag | Salience | Lasts |
+|---|---|---|---|---|---|---|
+| `lav_queue_long` | grumble | joins a lav queue with 3 or more ahead, or overflows into the aisle | the lav | `lavs` | 2 | 20 min |
+| `stuck_behind_cart` | grumble | waits 2 min or more in the aisle behind a cart | the cart | `service_plan` | 2 | 20 min |
+| `still_waiting_for_drinks` | grumble | a decision point finds Refreshment at 65 or more and no round has reached the row | | `service_plan` | 2 | 30 min |
+| `served_late` | grumble | served a drink or meal with Refreshment at 70 or more | | `service_plan` | 3 | 30 min |
+| `drink_welcome` | praise | served with Refreshment under 70 | | `service_plan` | 1 | 15 min |
+| `late_and_fed_up` | grumble | boards carrying the late-and-fed-up modifier (section 2) | | `service_plan` | 2 | until first served |
+| `call_ignored` | grumble | own call light on for 5 min | | `crew_staffing` | 3 | 30 min |
+| `call_answered_fast` | praise | own call answered within 2 min | the crew member | `crew_staffing` | 1 | 15 min |
+| `lav_untidy` | grumble | finishes a visit to an untidy lav (crew.md's lav condition) | the lav | `crew_staffing` | 2 | 20 min |
+| `saw_incident` | grumble | takes a witness pulse (section 7) | the incident's seat | `crew_staffing` | 3 | 30 min |
+| `woken_up` | grumble | woken by a neighbour crossing, by crew, or by turbulence | who woke them, if anyone | `moment` when a neighbour woke them, else `lighting_plan` | 2 | 30 min |
+| `too_bright_to_sleep` | grumble | a decision point finds Rest at 60 or more with `sleep` halved or zeroed by the lights | | `lighting_plan` | 2 | 30 min |
+| `good_nap` | praise | wakes on their own after 40 min or more asleep | | `lighting_plan` | 1 | 20 min |
+| `scared_of_bumps` | grumble | a decision point in turbulence finds Unease at 55 or more | | `check_in_cadence` | 3 | 20 min |
+| `reassured` | praise | a check-in stop, a follow-up or an answered `reassurance` call lowers their Unease | the crew member | `check_in_cadence` | 2 | 30 min |
+| `bored_no_screen` | grumble | a decision point finds Boredom at 60 or more and `screen` unavailable | | `moment` | 2 | 30 min |
+
+`announcement_policy` has no M1 kind because M1 has no announcements; its first kinds (the delay nobody explained, the announcement that woke the cabin) come with the lever at M3 and M4.
+
+**Fog of war: how a thought is revealed.** Every crew interaction reveals a thought (owner, 2026-09-26; P12): the interactions of section 9's table (the boarding greeting, a round's pass whether served or declined, tray collection, an answered call, crew reaching an incident, an event's crew task, a check-in stop or follow-up) each reveal the current thought of the passenger they touch, and a check-in walk reveals the current thought of every awake passenger in each row it passes, both sides of the aisle. The walk's reach is its own row whatever the lighting, because a thought is heard, not seen. An interaction's own hooks fire before its reveal, so a passenger served a drink is heard thinking `drink_welcome`, and one reached late is heard thinking `call_ignored`. The seat's `ObservationStore` entry records the thought as revealed (kind, subject, born tick), the reveal tick and the crew member. An awake passenger with no thought records `nothing to report`, which differs from never asked. A thought is exact, never misread: section 9's read rule is for need bands. A sleeper reveals nothing, and their entry keeps its last revealed thought, ageing.
+
+**Staleness.** A revealed thought ages like the rest of the entry, and once its kind's duration has passed since it was born, the observed view marks it `stale`: the passenger may have moved on, and only another interaction will say. The fog is therefore thin during service and thick between rounds. A round's pass hears every awake passenger it serves or offers to, so for the length of a round the observed cabin is nearly fresh (the owner accepted this thinner fog, 2026-09-26). Between rounds, in quiet cruise and in a dimmed cabin, the check-in walk is almost the only thing that hears a row that is not calling, so the check-in cadence (a lever from M3) is what keeps the quiet stretches fresh: at the reference cadence of 30 minutes (crew.md), a zone's thoughts are at most about half an hour old there; at 60 minutes, the stretch after the meal reads as a cabin of stale thoughts. The call-button zones are the exception, since answering is itself a reveal: the rows that call are heard, and the rows that suffer quietly are heard only by a walk.
+
+**Information only.** Nothing in the simulation reads a thought: no utility score, crew rule, event trigger or scoring outcome. Thoughts sit outside the end-state hash and the outcome records, and a `thoughts` system switch turns generation off with no other effect. Pillar 3 asks a new system to change two others; thoughts are not a system but a readout of the observation layer, like the distress band, and they earn their place under pillar 5 by pointing at a lever each. Keeping them out of the loop is what lets them be added without retuning a flight.
+
+**Not in M1.** An event cannot raise a thought (a new consequence kind, event-writer's to propose when thoughts are drawn at M2). The M1 text report does not quote thoughts (owner, 2026-09-26; P12); the balance CSV counts the grumbles born by lever tag, one column a tag, for balance-analyst.
+
 ## Player-facing feedback
 
 **Player surface (M3 onward, nothing in M1).** The crew-observed view of section 9: position, activity, call light, distress band, revealed need bands as the crew member read them, each with its age. No need number reaches the player (pillar 5): the band tells the player whether to act, and the lever is the action.
 
-**Dev surface (M1).** The decision log (top three candidates per decision, R16) through `Sky.Sim decisions`; the balance CSV's columns come from D3. Moments this doc feeds to the report (G3): a passenger's peak with its dominant need and driving classes; wake-ups with who crossed; a declined meal; a call light's wait; an incident with its target, its handler or why it was missed; a lav overflow into the aisle and what it blocked; a misread band before a missed incident; a passenger up with the sign on in cruise.
+Thoughts on the player surface (section 10):
+- **M2, the cabin view.** A small glyph over each seat with a revealed thought: its shape from the lever tag, its tint from the valence, fading as it ages and hollow once `stale`; `nothing to report` draws nothing. Hovering a glyph shows the passenger's line in event-writer's words and how long ago crew heard it. This is the RollerCoaster Tycoon feel: glance at the aft cabin and see it bristling with lav-queue glyphs.
+- **M3, the thoughts panel.** Revealed, fresh thoughts grouped by kind and zone with a count and the age of the newest ("Aft: lav queue too long, 9, 4 min ago"), grumbles first by count × salience. Each group opens the lever its tag names, so reading the panel and pulling the lever are one move. Pillar 2: the panel is never a list of passengers. Pillar 4: thoughts never alert, badge or sound; the panel is opened by the player, and a quiet flight's panel is mostly praise and `nothing to report`.
+
+**Dev surface (M1).** The decision log (top three candidates per decision, R16) through `Sky.Sim decisions`; the balance CSV's columns come from D3, plus the count of grumbles born by lever tag (section 10). The true view carries every passenger's current thought, and from M2 the dev inspector shows the true thought beside the revealed one. Moments this doc feeds to the report (G3): a passenger's peak with its dominant need and driving classes; wake-ups with who crossed; a declined meal; a call light's wait; an incident with its target, its handler or why it was missed; a lav overflow into the aisle and what it blocked; a misread band before a missed incident; a passenger up with the sign on in cruise.
 
 ## Interactions
 
@@ -200,6 +271,8 @@ The observation stores the band read, never the true one. The true band, and whe
 | Events (event-writer, D4) | trait, profession, group and need facts for triggers | delayed consequences on needs and incidents; the seat-conflict event (OD5) moves group adjacency, and so `chat`, child escort and split-group Unease |
 | Feed (phase, sign, turbulence) | | Unease pushes; seatbelt limits on activities; the last lav rush |
 | Scoring | distress series (experience), incidents (handled or missed), moments | |
+| Scenario gate conditions (section 2) | | starting Refreshment, Boredom and Unease; the late-and-fed-up Unease modifier until first served |
+| Observation (thoughts, section 10) | the current thought, revealed by any crew interaction or a check-in walk passing the row | nothing: thoughts are read by no system |
 
 A split group (a seat-conflict event unresolved, or seating that could not keep a family together) gives a child with no adult of their group beside them Unease ×1.3 and those adults Unease ×1.2, Context class [D3]. That is what makes OD5's event matter after boarding.
 
@@ -208,6 +281,11 @@ A split group (a seat-conflict event unresolved, or seating that could not keep 
 - **Needs switched off:** needs hold at their starting values and never fail; activities still score on the frozen values, so passengers board, sit, take service and deboard; distress is computed from the frozen values. No need incident raises.
 - **Contagion switched off:** no Event-class contagion modifier and no witnessing pulses; the split-group and disruption modifiers stay (they are Context class, about seating and noise, not mood spreading).
 - **Events switched off:** need incidents still raise (they are not events); nothing changes group adjacency after boarding.
+- **Thoughts switched off:** no thought is born and every observed entry's thought stays `unknown`; the end-state hash and every outcome record are the same as with thoughts on.
+- **Needs switched off, thoughts on:** kinds born at need thresholds never fire (the needs hold still); kinds born from engine events (a queue, a cart, a call, a wake-up) still do.
+- **Check-in walks never run** (four crew and a busy board, or a zone never quiet): thoughts are still heard at every round, answered call and incident, so the observed view hears the passengers who were served or who called, and stays `unknown` or `stale` for the ones who suffered quietly between rounds, which is the honest picture and the argument for the cadence lever.
+- **Gate fields at their extremes:** a 240-minute delay with the outlets closed boards Refreshment 40 to 70, never above 70, and Boredom +20; the Unease offset is capped at +15 and decays by the half-life, so no passenger boards inside a sustain window.
+- **Contagion switched off:** the `off_duty_crew` calming source goes with it (section 7).
 - **A throwing activity module:** that activity scores as unavailable for the flight (S2); `idle` must never be the one to throw, so the engine falls back to `idle` if every module is disabled.
 - **Asleep when the cart passes:** skipped, not woken; served later by crew.md (D2)'s rule. If they wake first with Refreshment high, their `refreshment` call is the other way back.
 - **Up with the sign on in cruise (P8):** the passenger keeps going to the lav; the "back to your seat" task (crew.md (D2)) meeting them before they reach it sends them back, and their Bladder keeps its Unease cascade.
@@ -240,6 +318,12 @@ Ruled by the owner on 2026-09-26 from ranked options; options not taken are reco
 - **P7. A child's lav visit takes an adult from their group along, through a sync point.** Not taken: children go alone.
 - **P8. A passenger leaves their seat with the sign on only at Bladder 85 or more and only in cruise; crew then get a "back to your seat" task, which crew.md (D2) owns.** Not taken: never leaving with the sign on (worst case: long turbulence turns into `accident` incidents the cabin cannot prevent).
 
+Amendments for the owner's triage of the OpenPax goals (CONCEPT section 8, T9 to T12, owner, 2026-09-26). The owner ruled the direction; these entries record how this doc carries each, by `game-designer`, and are open to the owner's read-through:
+- **P9. Starting needs from the gate (T11):** two required scenario fields, `gate_delay_minutes` and `concessions_open`, add to starting Refreshment, Boredom and Unease, and a delay of 30 minutes or more adds an Unease Context-class modifier until the passenger is first served (section 2).
+- **P10. Belongings are traits on their own roll (T9):** `sleep_kit` and `own_device`, each blunting a lever or event for its owner; OpenPax's other items are not carried (section 4).
+- **P11. Off-duty crew calm their neighbours (T10):** an Event-class modifier below 1 in contagion reach, the one profession with an effect outside events, amending P6 for `off_duty_crew` only (section 7).
+- **P12. Thoughts (T12):** one current thought per passenger, born from engine hooks with no random draw, each kind tagged with a lever, revealed by crew interactions, and read by no system (section 10). This overrides the recommendation to drop them. Follow-up rulings (owner, 2026-09-26): **every interaction reveals a thought** (section 9's table and the check-in walk), overriding the recommendation to reveal by check-ins only; the owner accepted that worst case, a thin fog during service. **The M1 report does not quote thoughts**; the balance CSV counts grumbles born by lever tag. Not taken: check-ins only (worst case: the observed view hears almost nothing during service); quotes in the M1 report (worst case: the pinned report changes shape before it has a player).
+
 Rulings from crew.md (D2) that this doc follows: with the cabin dimmed, crew observation narrows to their own row, and a passenger with a reading light on stays visible from further (section 3, section 9); the cart does not wake sleepers, who are skipped and served later (section 3).
 
 ## Success criteria
@@ -252,4 +336,9 @@ Measured with `Sky.Sim` on the reference scenario over seeds 1 to 500 unless nam
 - Traits are legible: `nervous_flyer` passengers' mean peak Unease during takeoff and climb is at least 15 above passengers with no Unease trait.
 - Contagion does not avalanche: with contagion off, the 10th-percentile experience moves by no more than 5 points against contagion on over the baseline seeds.
 - Observation: every revealed need in an `ObservationStore` entry traces to an interaction of the section 9 table at its tick (F5's test).
+- Thoughts are fog-of-war: every thought in an observed entry was revealed at a tick when a section 9 interaction touched that passenger or a check-in walk passed that row, and with crew held in the galley an observed thought never appears while the true view shows thoughts (H4's test).
+- Thoughts are information only: over seeds 1 to 16, a flight with thoughts switched off gives the same end-state hash and the same outcome records as with them on.
+- A competent flight sounds content: on the reference scenario, at least 60% of thoughts revealed in cruise are praise or `nothing to report`.
+- Thoughts point at the right lever: over seeds 1 to 200 against the reference, `one-lav-locked` at least doubles `lav_queue_long` born, `lights-up` raises `too_bright_to_sleep`, `four-crew` raises `call_ignored`, and `service-back-to-front` moves `served_late` from the aft rows toward the front.
+- The gate matters: a scenario differing from the reference only in a 60-minute delay with the outlets closed raises mean starting Refreshment by at least 20, and at least doubles `refreshment` calls in the first hour after the seatbelt sign goes off, over seeds 1 to 200.
 - Read accuracy is legible: over seeds 1 to 200, in misreadable ranges, crew with accuracy over 0.8 read the true band more often than those under 0.6 by more than the spread; no misread is ever upward; and at least one missed incident across the sweep follows a misread of the same passenger's failing need.
