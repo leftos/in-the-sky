@@ -159,6 +159,54 @@ public sealed class BoardingFlowTests
         Assert.True(waitedBehind, "The row-9 passenger never reached the slot behind the stower.");
     }
 
+    /// <summary>With the stow draw pinned to one tick, the stower reads as stowing at the end of the draw tick.</summary>
+    [Fact]
+    public void AStowDrawOfOneReadsAsStowingForOneTick()
+    {
+        FlightWorld flight = StowPinnedFlight(1);
+        Passenger stower = flight.Passengers[0];
+        int stowingTicks = 0;
+        while (flight.AllSeatedTick is null)
+        {
+            Assert.True(flight.Tick < TickLimit, "Boarding never finished.");
+            flight.Step(1);
+            if (flight.Movement.StateOf(stower.CharacterId) == MoverState.Stowing)
+            {
+                stowingTicks++;
+            }
+        }
+
+        Assert.Equal(1, stowingTicks);
+    }
+
+    /// <summary>With the stow draw pinned to zero ticks, the stower never reads as stowing, and boarding still finishes.</summary>
+    [Fact]
+    public void AStowDrawOfZeroHoldsNoTick()
+    {
+        List<int> stowing = StowingTickEnds(StowerTickEnds(StowPinnedFlight(0)));
+
+        Assert.Empty(stowing);
+    }
+
+    /// <summary>
+    /// With the stow draw pinned to five ticks, the stower reads as stowing at the end of five consecutive ticks, and has left
+    /// the state on the tick after.
+    /// </summary>
+    [Fact]
+    public void AStowDrawOfFiveHoldsTheStowingStateForFiveTicks()
+    {
+        List<MoverState> tickEnds = StowerTickEnds(StowPinnedFlight(5));
+        List<int> stowing = StowingTickEnds(tickEnds);
+        MoverState after = tickEnds[stowing[0] + 5];
+
+        Assert.True(
+            after is MoverState.Standing or MoverState.Walking or MoverState.Seated,
+            $"The tick after the fifth stowing tick reads as {after}."
+        );
+        Assert.Equal(5, stowing.Count);
+        Assert.Equal(stowing[0] + 4, stowing[^1]);
+    }
+
     /// <summary>A crew member walking up the aisle passes a stowing passenger by squeeze, arriving the squeeze's ticks later.</summary>
     [Fact]
     public void CrewPassAStowingPassenger()
@@ -442,6 +490,54 @@ public sealed class BoardingFlowTests
         Assert.Equal(nameof(FlightSetup.Layout), error.ParamName);
     }
 
+    /// <summary>
+    /// A two-passenger flight of one booking, in row 5's and row 9's window seats, with the stow draw pinned to the same number
+    /// of ticks at both ends.
+    /// </summary>
+    /// <param name="stowTicks">The stow draw.</param>
+    /// <returns>The flight, before the boarding stage starts.</returns>
+    private static FlightWorld StowPinnedFlight(int stowTicks)
+    {
+        NavGraph graph = Graph();
+        return new FlightWorld(
+            Setup(
+                ManifestOf(
+                    graph,
+                    [
+                        [SeatIn(graph, 5, 0), SeatIn(graph, 9, 0)],
+                    ]
+                ),
+                Seed
+            ) with
+            {
+                Movement = Rules() with { StowTicks = new IntRange(stowTicks, stowTicks) },
+            }
+        );
+    }
+
+    /// <summary>The flight's first passenger's state at the end of every tick, tick 0 first, running until every passenger is seated.</summary>
+    /// <param name="flight">The flight.</param>
+    /// <returns>The tick ends, in order.</returns>
+    private static List<MoverState> StowerTickEnds(FlightWorld flight)
+    {
+        Passenger stower = flight.Passengers[0];
+        List<MoverState> states = [];
+        while (flight.AllSeatedTick is null)
+        {
+            Assert.True(flight.Tick < TickLimit, "Boarding never finished.");
+            flight.Step(1);
+            states.Add(flight.Movement.StateOf(stower.CharacterId));
+        }
+
+        return states;
+    }
+
+    /// <summary>The ticks at whose end the stower reads as stowing, among its per-tick states.</summary>
+    /// <param name="tickEnds">The stower's state at the end of every tick, tick 0 first.</param>
+    /// <returns>The ticks, in order.</returns>
+    private static List<int> StowingTickEnds(IReadOnlyList<MoverState> tickEnds) =>
+        [.. tickEnds.Select((state, tick) => (state, tick)).Where(entry => entry.state == MoverState.Stowing).Select(entry => entry.tick)];
+
     /// <summary>The movement numbers the tests use: stowing 8 to 24 ticks, retrieval 4 to 12, a 4-tick squeeze, four-row zones.</summary>
     /// <returns>The rules.</returns>
     internal static MovementRules Rules() =>
@@ -542,7 +638,24 @@ public sealed class BoardingFlowTests
     private static int SeatRow(FlightWorld flight, Passenger passenger) => flight.Graph.Nodes[passenger.Manifest.SeatNode].RowIndex;
 
     private static int AisleCost(FlightWorld flight, Passenger passenger) =>
-        flight.Paths.Cost(passenger.Manifest.SeatNode, flight.Graph.AisleSlot(SeatRow(flight, passenger), 0));
+        flight.Paths.Cost(passenger.Manifest.SeatNode, BoardingSlot(flight, passenger.Manifest.SeatNode));
+
+    /// <summary>The aisle slot a seat's row boards and leaves through: the first aisle slot on the cheapest walk from the seat to the door.</summary>
+    private static int BoardingSlot(FlightWorld flight, int seat)
+    {
+        int door = flight.Graph.FixtureNode("door-1L");
+        int node = seat;
+        while (flight.Graph.Nodes[node].Kind != NodeKind.AisleSlot)
+        {
+            node = flight.Paths.NextHop(node, door);
+            if (node < 0 || node == door)
+            {
+                throw new InvalidOperationException($"Seat node {seat} has no aisle slot on its way to the door.");
+            }
+        }
+
+        return node;
+    }
 
     private static IEnumerable<long> EntryTicksWhere(FlightWorld flight, long[] entryTicks, Func<Passenger, bool> predicate) =>
         flight.Passengers.Where(predicate).Select(passenger => entryTicks[passenger.Id]);

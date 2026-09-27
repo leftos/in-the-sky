@@ -353,7 +353,11 @@ internal sealed class Movement(FlightWorld world, MovementRules rules, int chara
         }
     }
 
-    /// <summary>Holds a character in a bin state for ticks drawn on the first tick.</summary>
+    /// <summary>
+    /// Holds a character in a bin state for a draw of N ticks, drawn on the first tick: the character reads as in that state at
+    /// the end of each of the N ticks from the draw tick, and stands again on the tick after the last, so a draw of zero holds
+    /// for no tick at all.
+    /// </summary>
     private sealed class HoldAction(Movement mover, int character, MoverState state, IntRange range, SimRandom stream)
         : CharacterAction(ActionPriority)
     {
@@ -363,18 +367,21 @@ internal sealed class Movement(FlightWorld world, MovementRules rules, int chara
         {
             if (remaining < 0)
             {
-                mover.states[character] = state;
                 remaining = range.Min + stream.NextInt(range.Max - range.Min + 1);
             }
-
-            remaining = Math.Max(0, remaining - 1);
-            if (remaining > 0)
+            else
             {
-                return ActionStatus.Running;
+                remaining--;
             }
 
-            mover.states[character] = MoverState.Standing;
-            return ActionStatus.Done;
+            if (remaining <= 0)
+            {
+                mover.states[character] = MoverState.Standing;
+                return ActionStatus.Done;
+            }
+
+            mover.states[character] = state;
+            return ActionStatus.Running;
         }
 
         public override void Cleanup(long tick) => mover.states[character] = MoverState.Standing;
