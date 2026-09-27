@@ -23,6 +23,7 @@ public sealed class CrewStrainTests
         SevereIncidentStep = 6,
         IdleDecayPerMinute = 0.2,
         BreakDecayPerMinute = 3,
+        MinimumBreakMinutes = 10,
         Redline = 70,
     };
 
@@ -90,7 +91,10 @@ public sealed class CrewStrainTests
         Assert.Equal(30.0, driver.Strain.Peak, Tolerance);
     }
 
-    /// <summary>The on-task rate is 0.45 a minute for the first hour without a break, 1.5 times that after, and back to 0.45 after a break.</summary>
+    /// <summary>
+    /// The on-task rate is 0.45 a minute for the first hour without a break, 1.5 times that after, and back to 0.45 after
+    /// a full break.
+    /// </summary>
     [Fact]
     public void OnTaskRateRisesAfterNoBreakThreshold()
     {
@@ -103,10 +107,55 @@ public sealed class CrewStrainTests
         driver.Run(CrewActivity.OnTask, Minute, fatigue: 0, backlog: 0);
         Assert.Equal(27.675, driver.Strain.Value, Tolerance);
 
+        driver.Run(CrewActivity.OnBreak, 10 * Minute, fatigue: 0, backlog: 0);
+        Assert.Equal(0, driver.Strain.TicksSinceBreak);
+        Assert.Equal(0.0, driver.Strain.Value, Tolerance);
+        driver.Run(CrewActivity.OnTask, Minute, fatigue: 0, backlog: 0);
+        Assert.Equal(0.45, driver.Strain.Value, Tolerance);
+    }
+
+    /// <summary>
+    /// A 30-second break after 50 minutes on task lowers strain for the ticks it ran but leaves the clock running: the
+    /// 1.5 factor starts at the tick 60 minutes after the flight's start, the last full break.
+    /// </summary>
+    [Fact]
+    public void CutShortBreakDoesNotResetTheClock()
+    {
+        Driver driver = new(new CrewStrain(FirstValues, 1.0, 1.0));
+
+        driver.Run(CrewActivity.OnTask, 50 * Minute, fatigue: 0, backlog: 0);
+        driver.Run(CrewActivity.OnBreak, Minute / 2, fatigue: 0, backlog: 0);
+        Assert.Equal((50L * Minute) + (Minute / 2), driver.Strain.TicksSinceBreak);
+        Assert.Equal(22.5 - 1.5, driver.Strain.Value, Tolerance);
+
+        driver.Run(CrewActivity.OnTask, (9 * Minute) + (Minute / 2) - 1, fatigue: 0, backlog: 0);
+        Assert.Equal((60L * Minute) - 1, driver.Strain.TicksSinceBreak);
+        AssertNextOnTaskTickAdds(driver, 0.45 / Minute);
+        Assert.Equal(60L * Minute, driver.Strain.TicksSinceBreak);
+        AssertNextOnTaskTickAdds(driver, 0.675 / Minute);
+    }
+
+    /// <summary>
+    /// A break restarts the clock on the tick it has run 10 minutes, and holds it at 0 while it goes on; the 1.5 factor
+    /// then starts 60 minutes after the break ends.
+    /// </summary>
+    [Fact]
+    public void FullBreakResetsTheClock()
+    {
+        Driver driver = new(new CrewStrain(FirstValues, 1.0, 1.0));
+
+        driver.Run(CrewActivity.OnTask, 30 * Minute, fatigue: 0, backlog: 0);
+        driver.Run(CrewActivity.OnBreak, (10 * Minute) - 1, fatigue: 0, backlog: 0);
+        Assert.Equal((40L * Minute) - 1, driver.Strain.TicksSinceBreak);
         driver.Run(CrewActivity.OnBreak, 1, fatigue: 0, backlog: 0);
         Assert.Equal(0, driver.Strain.TicksSinceBreak);
-        driver.Run(CrewActivity.OnTask, Minute, fatigue: 0, backlog: 0);
-        Assert.Equal(27.675 - (3.0 / Minute) + 0.45, driver.Strain.Value, Tolerance);
+        driver.Run(CrewActivity.OnBreak, Minute, fatigue: 0, backlog: 0);
+        Assert.Equal(0, driver.Strain.TicksSinceBreak);
+
+        driver.Run(CrewActivity.OnTask, (60 * Minute) - 1, fatigue: 0, backlog: 0);
+        Assert.Equal((60L * Minute) - 1, driver.Strain.TicksSinceBreak);
+        AssertNextOnTaskTickAdds(driver, 0.45 / Minute);
+        AssertNextOnTaskTickAdds(driver, 0.675 / Minute);
     }
 
     /// <summary>Fatigue scales the on-task rate by 1 + fatigue / 100, and the Brisk trait's factor scales it too.</summary>
@@ -206,6 +255,7 @@ public sealed class CrewStrainTests
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstValues with { Redline = -1 });
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstValues with { OnTaskPerMinute = double.NaN });
         Assert.Throws<ArgumentOutOfRangeException>(() => FirstValues with { BreakDecayPerMinute = double.PositiveInfinity });
+        Assert.Throws<ArgumentOutOfRangeException>(() => FirstValues with { MinimumBreakMinutes = -1 });
         Assert.Throws<ArgumentOutOfRangeException>(() => new CrewStrain(FirstValues, 0.0, 1.0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new CrewStrain(FirstValues, 1.0, double.NaN));
 
@@ -217,6 +267,59 @@ public sealed class CrewStrainTests
         Assert.Throws<ArgumentOutOfRangeException>(() => strain.Tick(0, CrewActivity.Idle, 0, 0));
         strain.Preempted(5);
         Assert.Throws<ArgumentOutOfRangeException>(() => strain.Preempted(4));
+    }
+
+    /// <summary>
+    /// Three 4-minute breaks, a minute on task between each, never add up to a full break: the clock counts every tick
+    /// run and never reads 0.
+    /// </summary>
+    [Fact]
+    public void RepeatedShortBreaksNeverResetTheClock()
+    {
+        Driver driver = new(new CrewStrain(FirstValues, 1.0, 1.0));
+        (CrewActivity Activity, int Ticks)[] stretches =
+        [
+            (CrewActivity.OnBreak, 4 * Minute),
+            (CrewActivity.OnTask, Minute),
+            (CrewActivity.OnBreak, 4 * Minute),
+            (CrewActivity.OnTask, Minute),
+            (CrewActivity.OnBreak, 4 * Minute),
+        ];
+        long ticksRun = 0;
+
+        foreach ((CrewActivity activity, int ticks) in stretches)
+        {
+            for (int count = 0; count < ticks; count++)
+            {
+                driver.Run(activity, 1, fatigue: 0, backlog: 0);
+                ticksRun++;
+                Assert.Equal(ticksRun, driver.Strain.TicksSinceBreak);
+            }
+        }
+    }
+
+    /// <summary>
+    /// With no minimum, one break tick is a full break: after an hour on task a single break tick resets the clock, and
+    /// the next on-task tick adds the base 0.45 a minute. Ticks off break never reset it.
+    /// </summary>
+    [Fact]
+    public void ZeroMinimumBreakResetsOnOneBreakTick()
+    {
+        Driver driver = new(new CrewStrain(FirstValues with { MinimumBreakMinutes = 0 }, 1.0, 1.0));
+
+        driver.Run(CrewActivity.OnTask, 60 * Minute, fatigue: 0, backlog: 0);
+        Assert.Equal(60L * Minute, driver.Strain.TicksSinceBreak);
+
+        driver.Run(CrewActivity.OnBreak, 1, fatigue: 0, backlog: 0);
+        Assert.Equal(0, driver.Strain.TicksSinceBreak);
+        AssertNextOnTaskTickAdds(driver, 0.45 / Minute);
+    }
+
+    private static void AssertNextOnTaskTickAdds(Driver driver, double expected)
+    {
+        double before = driver.Strain.Value;
+        driver.Run(CrewActivity.OnTask, 1, fatigue: 0, backlog: 0);
+        Assert.Equal(expected, driver.Strain.Value - before, Tolerance);
     }
 
     private sealed class Driver(CrewStrain strain)

@@ -4,7 +4,7 @@ namespace Sky.Engine.Crew;
 
 /// <summary>
 /// One crew member's strain, 0 to 100: it rises with time on task (faster with fatigue and once too long has passed
-/// since a break), pre-emptions, a zone backlog and severe incidents, and decays when idle, less the zone backlog, and faster on a galley break.
+/// since a full break), pre-emptions, a zone backlog and severe incidents, and decays when idle, less the zone backlog, and faster on a galley break.
 /// It tracks its peak and counts the ticks it ends strictly above the redline. Per-minute settings are turned into
 /// per-tick constants once, at construction.
 /// </summary>
@@ -23,9 +23,11 @@ public sealed class CrewStrain
     private readonly double severeIncidentStep;
     private readonly double idleDecayPerTick;
     private readonly double breakDecayPerTick;
+    private readonly double minimumBreakTicks;
     private readonly double redline;
     private long? lastTick;
     private long? lastPreemptionTick;
+    private long consecutiveBreakTicks;
 
     /// <summary>Creates a crew member's strain at 0.</summary>
     /// <param name="settings">The strain numbers.</param>
@@ -48,6 +50,7 @@ public sealed class CrewStrain
         severeIncidentStep = settings.SevereIncidentStep;
         idleDecayPerTick = settings.IdleDecayPerMinute / SimTime.TicksPerSimMinute;
         breakDecayPerTick = settings.BreakDecayPerMinute / SimTime.TicksPerSimMinute;
+        minimumBreakTicks = settings.MinimumBreakMinutes * SimTime.TicksPerSimMinute;
         redline = settings.Redline;
     }
 
@@ -58,8 +61,8 @@ public sealed class CrewStrain
     public double Peak { get; private set; }
 
     /// <summary>
-    /// Ticks since the last tick spent on break (or since construction): 0 after a break tick, one more after every
-    /// other tick.
+    /// Ticks since the last full break (or since construction): 0 from the tick a break has run its minimum through the
+    /// break's end, one more after every other tick, the ticks of a break cut short included.
     /// </summary>
     public long TicksSinceBreak { get; private set; }
 
@@ -74,7 +77,7 @@ public sealed class CrewStrain
 
     /// <summary>
     /// Runs one tick: the activity's change, plus the backlog's in every activity but a break, clamped to 0 to 100. A
-    /// break restarts the time since the last break; every other tick advances it.
+    /// break restarts the time since the last break once it has run its minimum; every other tick advances it.
     /// </summary>
     /// <param name="tick">The tick being run, later than the previous call's.</param>
     /// <param name="activity">What the crew member is doing this tick.</param>
@@ -89,7 +92,7 @@ public sealed class CrewStrain
             change += Math.Min(backlogPerTaskPerTick * backlogTasks, backlogCapPerTick);
         }
 
-        TicksSinceBreak = activity == CrewActivity.OnBreak ? 0 : TicksSinceBreak + 1;
+        AdvanceBreakClock(activity);
         lastTick = tick;
         Add(change);
         if (Value > redline)
@@ -155,6 +158,13 @@ public sealed class CrewStrain
             CrewActivity.Seated => 0.0,
             _ => throw new ArgumentOutOfRangeException(nameof(activity), activity, $"Crew activity {activity} is not defined."),
         };
+
+    private void AdvanceBreakClock(CrewActivity activity)
+    {
+        consecutiveBreakTicks = activity == CrewActivity.OnBreak ? consecutiveBreakTicks + 1 : 0;
+        bool fullBreakTick = consecutiveBreakTicks > 0 && consecutiveBreakTicks >= minimumBreakTicks;
+        TicksSinceBreak = fullBreakTick ? 0 : TicksSinceBreak + 1;
+    }
 
     private void Add(double change)
     {

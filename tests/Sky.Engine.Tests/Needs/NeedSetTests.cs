@@ -25,11 +25,11 @@ public sealed class NeedSetTests
         UneaseHalfLifeMinutes = 15.0,
     };
 
-    private static readonly NeedContext Awake = new(IsAsleep: false, OnIfe: false);
+    private static readonly NeedContext Awake = new(IsAsleep: false, OnIfe: false, UneasePushPerHour: 0.0);
 
-    private static readonly NeedContext Asleep = new(IsAsleep: true, OnIfe: false);
+    private static readonly NeedContext Asleep = new(IsAsleep: true, OnIfe: false, UneasePushPerHour: 0.0);
 
-    private static readonly NeedContext OnIfe = new(IsAsleep: false, OnIfe: true);
+    private static readonly NeedContext OnIfe = new(IsAsleep: false, OnIfe: true, UneasePushPerHour: 0.0);
 
     /// <summary>Refreshment at 25 an hour is a quarter full after one sim hour and full after four.</summary>
     [Fact]
@@ -127,11 +127,11 @@ public sealed class NeedSetTests
         Assert.Equal(50.0, needs[Need.Refreshment], Precision);
     }
 
-    /// <summary>The Rest multiplier scales its fall while asleep, and the Unease multiplier leaves the pull to baseline alone.</summary>
+    /// <summary>The Rest multiplier scales its rise while awake, and the Unease multiplier leaves the pull to baseline alone.</summary>
     [Fact]
-    public void MultiplierScalesRestFallAndLeavesUneasePull()
+    public void MultiplierScalesRestRiseAndLeavesUneasePull()
     {
-        NeedRates rates = new(ZeroRates with { RestFallPerHour = 20.0, UneaseHalfLifeMinutes = 15.0 });
+        NeedRates rates = new(ZeroRates with { RestRisePerHour = 20.0, UneaseHalfLifeMinutes = 15.0 });
         NeedSet needs = new(uneaseBaseline: 20.0);
         needs.Set(Need.Rest, 80.0);
         needs.Set(Need.Unease, 60.0);
@@ -139,10 +139,118 @@ public sealed class NeedSetTests
         multipliers[(int)Need.Rest] = 2.0;
         multipliers[(int)Need.Unease] = 2.5;
 
-        Run(needs, rates, 15 * SimTime.TicksPerSimMinute, Asleep, multipliers);
+        Run(needs, rates, 15 * SimTime.TicksPerSimMinute, Awake, multipliers);
 
-        Assert.Equal(70.0, needs[Need.Rest], Precision);
+        Assert.Equal(90.0, needs[Need.Rest], Precision);
         Assert.Equal(40.0, needs[Need.Unease], Precision);
+    }
+
+    /// <summary>
+    /// A steady push P with Unease multiplier m holds Unease at baseline + m × P ÷ k, where k is the pull rate ln 2 ÷ half-life
+    /// (CONCEPT's worked example: baseline 20, P = 60 an hour, m = 2.5, half-life 15 minutes). The per-tick update's fixed
+    /// point sits about m × P_t ÷ 2 under the continuous one, P_t being the push per tick: about 0.005 here.
+    /// </summary>
+    [Fact]
+    public void SteadyPushHoldsUneaseAtMultiplierTimesPushOverPullRate()
+    {
+        NeedRates rates = new(ZeroRates with { UneaseHalfLifeMinutes = 15.0 });
+        NeedSet needs = new(uneaseBaseline: 20.0);
+        double[] multipliers = Ones();
+        multipliers[(int)Need.Unease] = 2.5;
+        NeedContext pushed = Awake with { UneasePushPerHour = 60.0 };
+
+        Run(needs, rates, 4 * SimTime.TicksPerSimHour, pushed, multipliers);
+
+        double pullRatePerHour = Math.Log(2.0) / 0.25;
+        Assert.Equal(20.0 + (2.5 * 60.0 / pullRatePerHour), needs[Need.Unease], 0.05);
+    }
+
+    /// <summary>A −20 relief lowers Unease by exactly 20, and the pull after it runs the same, whatever the Unease multiplier.</summary>
+    /// <param name="multiplier">The Unease multiplier in the ticks after the relief.</param>
+    [Theory]
+    [InlineData(0.5)]
+    [InlineData(1.0)]
+    [InlineData(2.5)]
+    public void ReliefIsUnscaled(double multiplier)
+    {
+        NeedRates rates = new(ZeroRates with { UneaseHalfLifeMinutes = 15.0 });
+        NeedSet needs = new(uneaseBaseline: 20.0);
+        double[] multipliers = Ones();
+        multipliers[(int)Need.Unease] = multiplier;
+        needs.Set(Need.Unease, 60.0);
+        Run(needs, rates, 1, Awake, multipliers);
+        double beforeRelief = needs[Need.Unease];
+
+        needs.Add(Need.Unease, -20.0);
+        Assert.Equal(beforeRelief - 20.0, needs[Need.Unease], ExactTolerance);
+
+        needs.Set(Need.Unease, 60.0);
+        needs.Add(Need.Unease, -20.0);
+        Assert.Equal(40.0, needs[Need.Unease], ExactTolerance);
+
+        Run(needs, rates, 15 * SimTime.TicksPerSimMinute, Awake, multipliers);
+        Assert.Equal(30.0, needs[Need.Unease], Precision);
+    }
+
+    /// <summary>A sleeper's Rest falls at the flight's rate exactly, the same at a Rest multiplier of 0.5 and of 2.0.</summary>
+    [Fact]
+    public void RestFallIsUnscaled()
+    {
+        NeedRates rates = new(ZeroRates with { RestFallPerHour = 20.0 });
+
+        Assert.Equal(60.0, RestAfterOneHourAsleep(rates, 0.5), Precision);
+        Assert.Equal(60.0, RestAfterOneHourAsleep(rates, 2.0), Precision);
+    }
+
+    /// <summary>A one-off push on Unease lands as its amount times the multiplier, and stops at 100.</summary>
+    [Fact]
+    public void PushUneaseScalesByMultiplier()
+    {
+        NeedSet needs = new(uneaseBaseline: 20.0);
+
+        needs.PushUnease(10.0, 2.5);
+        Assert.Equal(45.0, needs[Need.Unease], ExactTolerance);
+
+        needs.PushUnease(10.0, 0.0);
+        Assert.Equal(45.0, needs[Need.Unease], ExactTolerance);
+
+        needs.PushUnease(40.0, 2.0);
+        Assert.Equal(100.0, needs[Need.Unease], ExactTolerance);
+    }
+
+    /// <summary>A positive <c>Add</c> on Unease is rejected, pointing at <c>PushUnease</c>, and leaves Unease alone.</summary>
+    [Fact]
+    public void PositiveAddOnUneaseThrows()
+    {
+        NeedSet needs = new(uneaseBaseline: 20.0);
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(() => needs.Add(Need.Unease, 5.0));
+
+        Assert.Equal("delta", exception.ParamName);
+        Assert.Contains(nameof(NeedSet.PushUnease), exception.Message, StringComparison.Ordinal);
+        Assert.Equal(20.0, needs[Need.Unease], ExactTolerance);
+    }
+
+    /// <summary>
+    /// With the Unease multiplier at 2.5, a −20 pulse on Unease lands as −20 and a +10 pulse lands as +25, while a Bladder pulse ignores
+    /// the Bladder multiplier. The half-life is long enough that the pull does not move Unease within the window.
+    /// </summary>
+    [Fact]
+    public void NegativePulseSliceOnUneaseIsUnscaled()
+    {
+        NeedRates rates = new(ZeroRates with { UneaseHalfLifeMinutes = 1e12 });
+        NeedSet needs = new(uneaseBaseline: 60.0);
+        double[] multipliers = Ones();
+        multipliers[(int)Need.Unease] = 2.5;
+        multipliers[(int)Need.Bladder] = 2.0;
+        needs.AddPulse(Need.Unease, -20.0, 10);
+        needs.AddPulse(Need.Unease, 10.0, 10);
+        needs.AddPulse(Need.Bladder, 15.0, 10);
+
+        Run(needs, rates, 10, Awake, multipliers);
+
+        Assert.Equal(65.0, needs[Need.Unease], Precision);
+        Assert.Equal(15.0, needs[Need.Bladder], ExactTolerance);
     }
 
     /// <summary>A multiplier span that is not one per need is rejected, naming the parameter.</summary>
@@ -209,10 +317,14 @@ public sealed class NeedSetTests
         Assert.Equal("multipliers", exception.ParamName);
     }
 
-    /// <summary>NaN is rejected by <c>Set</c>, <c>Add</c> and <c>AddPulse</c>, and <c>Set</c> rejects a value outside [0, 100].</summary>
+    /// <summary>
+    /// NaN is rejected by <c>Set</c>, <c>Add</c> and <c>AddPulse</c>, <c>Set</c> rejects a value outside [0, 100], and a
+    /// negative or non-finite Unease push is rejected by <c>PushUnease</c> and by <c>Tick</c>'s context.
+    /// </summary>
     [Fact]
     public void InvalidValueThrows()
     {
+        NeedRates rates = new(ZeroRates);
         NeedSet needs = new(uneaseBaseline: 0.0);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => needs.Set(Need.Rest, double.NaN));
@@ -220,7 +332,14 @@ public sealed class NeedSetTests
         Assert.Throws<ArgumentOutOfRangeException>(() => needs.AddPulse(Need.Rest, double.NaN, 10));
         Assert.Throws<ArgumentOutOfRangeException>(() => needs.Set(Need.Rest, 100.5));
         Assert.Throws<ArgumentOutOfRangeException>(() => needs.Set(Need.Rest, -0.5));
+        Assert.Throws<ArgumentOutOfRangeException>(() => needs.PushUnease(-1.0, 1.0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => needs.PushUnease(double.PositiveInfinity, 1.0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => needs.PushUnease(1.0, -0.5));
+        Assert.Throws<ArgumentOutOfRangeException>(() => needs.PushUnease(1.0, double.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => needs.Tick(rates, Ones(), Awake with { UneasePushPerHour = -1.0 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => needs.Tick(rates, Ones(), Awake with { UneasePushPerHour = double.NaN }));
         Assert.Equal(0.0, needs[Need.Rest], Precision);
+        Assert.Equal(0.0, needs[Need.Unease], Precision);
     }
 
     /// <summary>Reading a value past the last defined need is rejected.</summary>
@@ -289,17 +408,17 @@ public sealed class NeedSetTests
                     UneaseHalfLifeMinutes = halfLife,
                 }
         );
+        var contexts = Gen.Select(Gen.Bool, Gen.Bool, Gen.Double[0.0, 200.0], (asleep, onIfe, push) => new NeedContext(asleep, onIfe, push));
         var steps = Gen.Select(
             Gen.Double[RateMultiplier.Floor, RateMultiplier.Cap].Array[NeedSet.NeedCount],
-            Gen.Bool,
-            Gen.Bool,
+            contexts,
             Gen.Int[0, NeedSet.NeedCount - 1],
             Gen.Double[-150.0, 150.0],
             Gen.Int[1, 600],
             Gen.Int[1, 3000],
             Gen.Double[-150.0, 150.0],
-            (multipliers, asleep, onIfe, need, amount, pulseTicks, ticks, addAmount) =>
-                new Step(multipliers, new NeedContext(asleep, onIfe), (Need)need, amount, pulseTicks, ticks, addAmount)
+            (multipliers, context, need, amount, pulseTicks, ticks, addAmount) =>
+                new Step(multipliers, context, (Need)need, amount, pulseTicks, ticks, addAmount)
         );
 
         Gen.Select(settings, Gen.Double[0.0, 100.0], steps.Array[1, 4])
@@ -311,7 +430,15 @@ public sealed class NeedSetTests
         foreach (Step step in steps)
         {
             needs.AddPulse(step.PulseNeed, step.PulseAmount, step.PulseTicks);
-            needs.Add(step.PulseNeed, step.AddAmount);
+            if (step.PulseNeed == Need.Unease && step.AddAmount > 0.0)
+            {
+                needs.PushUnease(step.AddAmount, step.Multipliers[(int)Need.Unease]);
+            }
+            else
+            {
+                needs.Add(step.PulseNeed, step.AddAmount);
+            }
+
             if (!AllInRange(needs))
             {
                 return false;
@@ -349,6 +476,16 @@ public sealed class NeedSetTests
         {
             needs.Tick(rates, multipliers, context);
         }
+    }
+
+    private static double RestAfterOneHourAsleep(NeedRates rates, double restMultiplier)
+    {
+        NeedSet needs = new(uneaseBaseline: 0.0);
+        needs.Set(Need.Rest, 80.0);
+        double[] multipliers = Ones();
+        multipliers[(int)Need.Rest] = restMultiplier;
+        Run(needs, rates, SimTime.TicksPerSimHour, Asleep, multipliers);
+        return needs[Need.Rest];
     }
 
     private static double[] Ones() => [1.0, 1.0, 1.0, 1.0, 1.0];

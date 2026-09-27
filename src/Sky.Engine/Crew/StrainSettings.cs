@@ -86,6 +86,16 @@ public sealed record StrainSettings
         init => field = NonNegative(value, nameof(BreakDecayPerMinute));
     }
 
+    /// <summary>
+    /// Sim minutes a break must run, in one unbroken stretch, before it restarts the time since the last break; a shorter
+    /// break still lowers strain for the ticks it ran.
+    /// </summary>
+    public required double MinimumBreakMinutes
+    {
+        get;
+        init => field = NonNegative(value, nameof(MinimumBreakMinutes));
+    }
+
     /// <summary>The strain a crew member is over only when strictly above it.</summary>
     public required double Redline
     {
