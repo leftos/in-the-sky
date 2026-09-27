@@ -146,10 +146,11 @@ public sealed record ManifestRules
 
     /// <summary>
     /// Checks what one field's own check cannot see: <see cref="ChildTrait"/> is not a drawable trait, no belonging is the
-    /// child trait or a drawable trait, and no trait, belonging or profession is listed twice.
+    /// child trait or a drawable trait, and no trait, belonging or profession is listed twice. Public because the content
+    /// loader calls it once the rules are built from content, and turns its failure into a load error (R10).
     /// </summary>
     /// <exception cref="ArgumentException">An id clashes; the parameter name is the field that holds the clash.</exception>
-    internal void CheckAcrossFields()
+    public void CheckAcrossFields()
     {
         HashSet<TraitId> traits = [];
         foreach (TraitRule rule in Traits)

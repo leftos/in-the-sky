@@ -1,4 +1,5 @@
 using Sky.Engine.Cabin;
+using Sky.Engine.Manifest;
 using Sky.Engine.Passengers;
 
 namespace Sky.Content.Tests;
@@ -26,8 +27,8 @@ public sealed class ContentLoaderTests
         Assert.Equal(ContentTree.SleepModule, content.ActivityModules[1].Source);
         Assert.Equal(new ActivityId(1), content.ActivityIds["sleep"]);
         Assert.Equal(new TraitId(0), content.TraitIds["anxious"]);
-        Assert.Equal(new TraitId(2), content.TraitIds["sleep_kit"]);
-        Assert.NotNull(content.Traits.Traits[2].Share);
+        Assert.Equal(new TraitId(3), content.TraitIds["sleep_kit"]);
+        Assert.NotNull(content.Traits.Traits[3].Share);
         Assert.Equal((true, true, true, false), SystemsOf(content.Scenarios["ref"]));
         Assert.Equal("steady", content.Crew.Roster[0].Trait);
         Assert.Null(content.Thoughts.Kinds[1].LastsMinutes);
@@ -269,6 +270,132 @@ public sealed class ContentLoaderTests
 
         Assert.Equal(file, error.File);
         Assert.Equal(jsonPath, error.JsonPath);
+    }
+
+    /// <summary>The manifest file's shares become the generator's rules, and the trait parts come from <c>traits.json</c>.</summary>
+    [Fact]
+    public void ManifestLoadsIntoManifestRules()
+    {
+        using var tree = ContentTree.Minimal();
+
+        ContentSet content = tree.Load();
+        ManifestRules manifest = content.Manifest;
+
+        Assert.Equal(new ShareRange(0.82, 0.95), manifest.LoadFactor);
+        Assert.Equal(3, manifest.BusinessRowCount);
+        Assert.Equal(0.5, manifest.LeisureTrip.FamilyShare);
+        Assert.Equal(2, manifest.Professions.Count);
+        Assert.Equal(manifest.Professions[1].Profession, content.ProfessionIds["retired"]);
+        Assert.Equal(content.TraitIds["child"], manifest.ChildTrait);
+        Assert.Equal([content.TraitIds["anxious"], content.TraitIds["calm"]], manifest.Traits.Select(rule => rule.Trait));
+        TraitRule calm = Assert.Single(manifest.Traits, rule => rule.Trait == content.TraitIds["calm"]);
+        Assert.Equal(calm.AdultWeight, calm.BusinessTripWeight);
+        Assert.Equal(5, calm.AdultWeight);
+        BelongingRule kit = Assert.Single(manifest.Belongings);
+        Assert.Equal(content.TraitIds["sleep_kit"], kit.Belonging);
+        Assert.Equal((0.15, 0.25, 0.0), (kit.AdultShare, kit.BusinessTripShare, kit.ChildShare));
+        Assert.Equal(new TraitPair(content.TraitIds["anxious"], content.TraitIds["calm"]), Assert.Single(manifest.ForbiddenPairs));
+    }
+
+    /// <summary>Without <c>manifest.json</c> the load fails naming the missing file.</summary>
+    [Fact]
+    public void MissingManifestFileFailsNamingIt()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Delete("manifest.json");
+
+        ContentLoadException error = Assert.Throws<ContentLoadException>(tree.Load);
+
+        Assert.Equal("manifest.json", error.File);
+    }
+
+    /// <summary>A load factor whose minimum is above its maximum fails naming the manifest file and the field's path.</summary>
+    [Fact]
+    public void ReversedLoadFactorFailsNamingItsPath()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace("manifest.json", "\"load_factor\": { \"min\": 0.82, \"max\": 0.95 }", "\"load_factor\": { \"min\": 0.95, \"max\": 0.82 }");
+
+        ContentLoadException error = Assert.Throws<ContentLoadException>(tree.Load);
+
+        Assert.Equal("manifest.json", error.File);
+        Assert.Equal("$.load_factor", error.JsonPath);
+    }
+
+    /// <summary>A profession id declared twice fails at the second declaration, as an activity id does.</summary>
+    [Fact]
+    public void DuplicateProfessionFailsNamingIt()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(
+            "manifest.json",
+            "{ \"id\": \"retired\", \"weight\": 10, \"on_business_trips\": false }",
+            "{ \"id\": \"office_worker\", \"weight\": 10, \"on_business_trips\": false }"
+        );
+
+        ContentLoadException error = Assert.Throws<ContentLoadException>(tree.Load);
+
+        Assert.Equal("manifest.json", error.File);
+        Assert.Equal("$.professions[1].id", error.JsonPath);
+        Assert.Contains("office_worker", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>With no trait given to every child there is nothing for a child to carry, so the load stops on the traits file.</summary>
+    [Fact]
+    public void NoChildTraitFails()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace("traits.json", "{ \"id\": \"child\", \"given_to_every_child\": true }", "{ \"id\": \"child\" }");
+
+        ContentLoadException error = Assert.Throws<ContentLoadException>(tree.Load);
+
+        Assert.Equal("traits.json", error.File);
+        Assert.Equal("$.traits", error.JsonPath);
+        Assert.Contains("Expected exactly one trait with given_to_every_child; found 0.", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Two traits given to every child leave the child trait undecided, so the load stops on the traits file.</summary>
+    [Fact]
+    public void TwoChildTraitsFail()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(
+            "traits.json",
+            "{ \"id\": \"child\", \"given_to_every_child\": true }",
+            "{ \"id\": \"child\", \"given_to_every_child\": true }, { \"id\": \"baby\", \"given_to_every_child\": true }"
+        );
+
+        ContentLoadException error = Assert.Throws<ContentLoadException>(tree.Load);
+
+        Assert.Equal("traits.json", error.File);
+        Assert.Equal("$.traits", error.JsonPath);
+        Assert.Contains("Expected exactly one trait with given_to_every_child; found 2.", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A child-optional trait with no adult weight has no draw to take, so the load names its field.</summary>
+    [Fact]
+    public void ChildOptionalTraitWithoutAdultWeightFails()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace("traits.json", "\"adult_weight\": 12,", "\"adult_weight\": null,");
+
+        ContentLoadException error = Assert.Throws<ContentLoadException>(tree.Load);
+
+        Assert.Equal("traits.json", error.File);
+        Assert.Equal("$.traits[0].adult_weight", error.JsonPath);
+    }
+
+    /// <summary>The hash covers <c>manifest.json</c> like every other JSON file.</summary>
+    [Fact]
+    public void HashChangesWhenTheManifestChanges()
+    {
+        using var tree = ContentTree.Minimal();
+        string before = tree.Load().Hash;
+        tree.Replace("manifest.json", "\"business_row_count\": 3", "\"business_row_count\": 4");
+
+        string after = tree.Load().Hash;
+
+        Assert.NotEqual(before, after);
     }
 
     private static (bool Needs, bool Events, bool Contagion, bool Thoughts) SystemsOf(Schema.ScenarioFile scenario) =>

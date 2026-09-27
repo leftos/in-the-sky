@@ -74,9 +74,42 @@ internal sealed class ContentTree : IDisposable
             { "id": "anxious", "modifiers": [ { "need": "Unease", "factor": 1.3 } ], "unease_baseline": 25, "adult_weight": 12,
               "child_optional": true },
             { "id": "calm", "adult_weight": 5 },
+            { "id": "child", "given_to_every_child": true },
             { "id": "sleep_kit", "wake_chance_factor": 0.5, "share": { "adults": 0.15, "business_trips": 0.25, "children": 0 } }
           ],
           "forbidden_pairs": [ { "first": "anxious", "second": "calm" } ]
+        }
+        """;
+
+    /// <summary>The manifest file: every share and range the generator draws by, and two professions.</summary>
+    public const string Manifest = """
+        {
+          "load_factor": { "min": 0.82, "max": 0.95 },
+          "business_booked": { "min": 8, "max": 12 },
+          "business_row_count": 3,
+          "business_cabin_purposes": [
+            { "value": "Business", "weight": 70 }, { "value": "Leisure", "weight": 20 }, { "value": "Visiting", "weight": 10 } ],
+          "economy_cabin_purposes": [
+            { "value": "Business", "weight": 20 }, { "value": "Leisure", "weight": 55 }, { "value": "Visiting", "weight": 25 } ],
+          "business_trip": {
+            "group_sizes": [ { "value": 1, "weight": 85 }, { "value": 2, "weight": 15 } ],
+            "family_share": 0, "wake_minutes": { "min": 300, "max": 420 } },
+          "leisure_trip": {
+            "group_sizes": [ { "value": 1, "weight": 30 }, { "value": 2, "weight": 40 }, { "value": 3, "weight": 15 },
+              { "value": 4, "weight": 15 } ],
+            "family_share": 0.5, "wake_minutes": { "min": 360, "max": 540 } },
+          "visiting_trip": {
+            "group_sizes": [ { "value": 1, "weight": 50 }, { "value": 2, "weight": 30 }, { "value": 3, "weight": 20 } ],
+            "family_share": 0.4, "wake_minutes": { "min": 360, "max": 540 } },
+          "family_minimum_size": 3,
+          "family_adults": 1,
+          "wake_spread_minutes": 30,
+          "adult_trait_counts": [
+            { "value": 0, "weight": 30 }, { "value": 1, "weight": 50 }, { "value": 2, "weight": 20 } ],
+          "child_extra_trait_share": 0.5,
+          "professions": [
+            { "id": "office_worker", "weight": 30, "on_business_trips": true },
+            { "id": "retired", "weight": 10, "on_business_trips": false } ]
         }
         """;
 
@@ -170,6 +203,7 @@ internal sealed class ContentTree : IDisposable
     public static IReadOnlyList<KeyValuePair<string, string>> MinimalFiles { get; } =
     [
         new("layouts/tiny.json", Layout),
+        new("manifest.json", Manifest),
         new("needs.json", Needs),
         new("traits.json", Traits),
         new("activities.json", Activities),

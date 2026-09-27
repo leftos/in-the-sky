@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Sky.Content.Schema;
 using Sky.Engine.Cabin;
+using Sky.Engine.Manifest;
 using Sky.Engine.Needs;
 using Sky.Engine.Passengers;
 
@@ -22,6 +23,12 @@ public sealed class ContentSet
 
     /// <summary>Gets the needs content, validated by the Engine.</summary>
     public required NeedsContent Needs { get; init; }
+
+    /// <summary>Gets the manifest rules the generator draws by, validated by the Engine.</summary>
+    public required ManifestRules Manifest { get; init; }
+
+    /// <summary>Gets each profession's interned id, by content id.</summary>
+    public required IReadOnlyDictionary<string, ProfessionId> ProfessionIds { get; init; }
 
     /// <summary>Gets the traits file; the trait at index i is <c>new TraitId(i)</c>.</summary>
     public required TraitsFile Traits { get; init; }

@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Sky.Engine.Cabin;
 using Sky.Engine.Flight;
 using Sky.Engine.Needs;
+using Sky.Engine.Passengers;
 
 namespace Sky.Content.Schema;
 
@@ -26,6 +27,7 @@ namespace Sky.Content.Schema;
         typeof(StrictEnumConverter<RoundKind>),
         typeof(StrictEnumConverter<ServiceDirection>),
         typeof(StrictEnumConverter<Valence>),
+        typeof(StrictEnumConverter<TripPurpose>),
     ],
     UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     RespectRequiredConstructorParameters = true,
@@ -39,4 +41,5 @@ namespace Sky.Content.Schema;
 [JsonSerializable(typeof(CrewFile))]
 [JsonSerializable(typeof(ScenarioFile))]
 [JsonSerializable(typeof(ThoughtsFile))]
+[JsonSerializable(typeof(ManifestFile))]
 internal sealed partial class ContentJsonContext : JsonSerializerContext;

@@ -3,22 +3,25 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Sky.Content.Schema;
 using Sky.Engine.Cabin;
+using Sky.Engine.Manifest;
 using Sky.Engine.Needs;
 using Sky.Engine.Passengers;
 using Sky.Engine.Time;
+using ManifestTraitPair = Sky.Engine.Manifest.TraitPair;
 
 namespace Sky.Content;
 
 /// <summary>
 /// Loads a content tree into a <see cref="ContentSet"/>. Under the content root: <c>layouts/&lt;id&gt;.json</c>,
-/// <c>needs.json</c>, <c>traits.json</c>, <c>activities.json</c> with <c>activities/&lt;id&gt;.lua</c> per activity,
-/// <c>crew.json</c>, <c>scenarios/&lt;id&gt;.json</c> and <c>thoughts.json</c>. Every failure stops the load with a
-/// <see cref="ContentLoadException"/> naming the file and the JSON path (R10); ranges and cross-file references are the
+/// <c>manifest.json</c>, <c>needs.json</c>, <c>traits.json</c>, <c>activities.json</c> with <c>activities/&lt;id&gt;.lua</c>
+/// per activity, <c>crew.json</c>, <c>scenarios/&lt;id&gt;.json</c> and <c>thoughts.json</c>. Every failure stops the load with
+/// a <see cref="ContentLoadException"/> naming the file and the JSON path (R10); ranges and cross-file references are the
 /// validators' to check.
 /// </summary>
 public static class ContentLoader
 {
     private const string NeedsFileName = "needs.json";
+    private const string ManifestFileName = "manifest.json";
     private const string TraitsFileName = "traits.json";
     private const string ActivitiesFileName = "activities.json";
     private const string CrewFileName = "crew.json";
@@ -53,11 +56,15 @@ public static class ContentLoader
         CheckActivityLists(activities);
         ThoughtsFile thoughts = Read(root, ThoughtsFileName, json.ThoughtsFile);
         _ = Intern(ThoughtsFileName, "$.kinds", thoughts.Kinds, kind => kind.Id);
+        ManifestFile manifest = Read(root, ManifestFileName, json.ManifestFile);
+        Dictionary<string, int> professionIndex = Intern(ManifestFileName, "$.professions", manifest.Professions, profession => profession.Id);
 
         return new ContentSet
         {
             Layouts = ReadDirectory(root, LayoutsDirectory, json.CabinLayout, layout => layout.Id, CheckLayout),
             Needs = MapNeeds(Read(root, NeedsFileName, json.NeedsFile)),
+            Manifest = MapManifest(manifest, traits, traitIndex),
+            ProfessionIds = professionIndex.ToDictionary(pair => pair.Key, pair => new ProfessionId(pair.Value), StringComparer.Ordinal),
             Traits = traits,
             TraitIds = traitIndex.ToDictionary(pair => pair.Key, pair => new TraitId(pair.Value), StringComparer.Ordinal),
             Activities = activities,
@@ -263,7 +270,7 @@ public static class ContentLoader
         for (int position = 0; position < traits.ForbiddenPairs.Count; position++)
         {
             string path = $"$.forbidden_pairs[{position}]";
-            TraitPair pair =
+            Schema.TraitPair pair =
                 traits.ForbiddenPairs[position] ?? throw new ContentLoadException(TraitsFileName, path, "Expected a pair; got null.", null);
             RequireKnown(TraitsFileName, $"{path}.first", pair.First, traitIndex, Expected);
             RequireKnown(TraitsFileName, $"{path}.second", pair.Second, traitIndex, Expected);
@@ -335,16 +342,16 @@ public static class ContentLoader
     {
         NoNulls(NeedsFileName, "$.cascade_rules", file.CascadeRules);
         NoNulls(NeedsFileName, "$.distress_terms", file.DistressTerms);
-        NeedRates rates = Engine("$.rates", () => new NeedRates(file.Rates));
-        Cascades cascades = Engine("$.cascade_rules", () => new Cascades(file.CascadeRules));
-        Distress distress = Engine("$.distress_terms", () => new Distress(file.DistressTerms));
-        NodeCapacities capacities = Engine("$.node_capacities", () => ToEngine(file.NodeCapacities));
+        NeedRates rates = Engine(NeedsFileName, "$.rates", () => new NeedRates(file.Rates));
+        Cascades cascades = Engine(NeedsFileName, "$.cascade_rules", () => new Cascades(file.CascadeRules));
+        Distress distress = Engine(NeedsFileName, "$.distress_terms", () => new Distress(file.DistressTerms));
+        NodeCapacities capacities = Engine(NeedsFileName, "$.node_capacities", () => ToEngine(file.NodeCapacities));
         _ = Intern(NeedsFileName, "$.incidents", file.Incidents, incident => incident.Id);
         for (int position = 0; position < file.Incidents.Count; position++)
         {
             IncidentKindSpec incident = file.Incidents[position];
             long windowTicks = (long)incident.WindowMinutes * SimTime.TicksPerSimMinute;
-            _ = Engine($"$.incidents[{position}]", () => new SustainGate(incident.Threshold, windowTicks, file.IncidentResetMargin));
+            _ = Engine(NeedsFileName, $"$.incidents[{position}]", () => new SustainGate(incident.Threshold, windowTicks, file.IncidentResetMargin));
         }
 
         return new NeedsContent(file, rates, cascades, distress, capacities);
@@ -361,7 +368,7 @@ public static class ContentLoader
             Galley = spec.Galley,
         };
 
-    private static T Engine<T>(string path, Func<T> build)
+    private static T Engine<T>(string file, string path, Func<T> build)
     {
         try
         {
@@ -369,7 +376,206 @@ public static class ContentLoader
         }
         catch (ArgumentException exception)
         {
-            throw new ContentLoadException(NeedsFileName, path, $"Expected a value the Engine accepts; {exception.Message}", exception);
+            throw new ContentLoadException(file, path, $"Expected a value the Engine accepts; {exception.Message}", exception);
         }
     }
+
+    private static ManifestRules MapManifest(ManifestFile file, TraitsFile traits, Dictionary<string, int> traitIndex)
+    {
+        ManifestRules rules = BuildManifest(file, ManifestTraitParts(traits, traitIndex));
+        CheckAcrossFields(rules);
+        return rules;
+    }
+
+    /// <summary>
+    /// Builds the rules from both files. One <see cref="Engine{T}"/> call wraps the whole construction, because each field
+    /// is checked by its own <c>init</c> accessor, which runs as the initializer assigns it: the parameter name the check
+    /// reports is the field, and the field's JSON path is that name as the schema spells it, snake_case.
+    /// </summary>
+    /// <param name="file">The manifest file.</param>
+    /// <param name="traitParts">The trait-side parts, read from <c>traits.json</c>.</param>
+    /// <returns>The rules.</returns>
+    /// <exception cref="ContentLoadException">A value the Engine refuses, named by its file and JSON path.</exception>
+    private static ManifestRules BuildManifest(ManifestFile file, ManifestTraits traitParts)
+    {
+        try
+        {
+            return new ManifestRules
+            {
+                LoadFactor = new ShareRange(file.LoadFactor.Min, file.LoadFactor.Max),
+                BusinessBooked = new IntRange(file.BusinessBooked.Min, file.BusinessBooked.Max),
+                BusinessRowCount = file.BusinessRowCount,
+                BusinessCabinPurposes = ToOptions(file.BusinessCabinPurposes),
+                EconomyCabinPurposes = ToOptions(file.EconomyCabinPurposes),
+                BusinessTrip = BuildTrip(file.BusinessTrip, "$.business_trip"),
+                LeisureTrip = BuildTrip(file.LeisureTrip, "$.leisure_trip"),
+                VisitingTrip = BuildTrip(file.VisitingTrip, "$.visiting_trip"),
+                FamilyMinimumSize = file.FamilyMinimumSize,
+                FamilyAdults = file.FamilyAdults,
+                WakeSpreadMinutes = file.WakeSpreadMinutes,
+                AdultTraitCounts = ToOptions(file.AdultTraitCounts),
+                ChildTrait = traitParts.Child,
+                ChildExtraTraitShare = file.ChildExtraTraitShare,
+                Traits = traitParts.Traits,
+                ForbiddenPairs = traitParts.Pairs,
+                Belongings = traitParts.Belongings,
+                Professions = ToProfessions(file.Professions),
+            };
+        }
+        catch (ArgumentException exception)
+        {
+            (string source, string path) = Location(exception.ParamName);
+            throw new ContentLoadException(source, path, $"Expected a value the Engine accepts; {exception.Message}", exception);
+        }
+    }
+
+    private static TripPurposeRules BuildTrip(TripSpec trip, string path) =>
+        Engine(
+            ManifestFileName,
+            path,
+            () =>
+                new TripPurposeRules
+                {
+                    GroupSizes = ToOptions(trip.GroupSizes),
+                    FamilyShare = trip.FamilyShare,
+                    WakeMinutes = new IntRange(trip.WakeMinutes.Min, trip.WakeMinutes.Max),
+                }
+        );
+
+    /// <summary>Finds the file and JSON path a refused field belongs to, from the parameter name its check reports.</summary>
+    /// <param name="field">The field's name, as the Engine's check reports it.</param>
+    /// <returns>The file the field was read from, and its path in that file.</returns>
+    private static (string File, string Path) Location(string? field) =>
+        field switch
+        {
+            nameof(ManifestRules.Traits)
+            or nameof(ManifestRules.Belongings)
+            or nameof(ManifestRules.ForbiddenPairs)
+            or nameof(ManifestRules.ChildTrait) => (TraitsFileName, "$.traits"),
+            null => (ManifestFileName, "$"),
+            _ => (ManifestFileName, $"$.{JsonName(field)}"),
+        };
+
+    /// <summary>Spells a member's name the way the schema's files do: snake_case, the serializer context's naming policy.</summary>
+    /// <param name="member">The member's name.</param>
+    /// <returns>The JSON property name.</returns>
+    private static string JsonName(string member)
+    {
+        StringBuilder name = new(member.Length + 4);
+        foreach (char character in member)
+        {
+            if (char.IsAsciiLetterUpper(character) && name.Length > 0)
+            {
+                name.Append('_');
+            }
+
+            name.Append(char.ToLowerInvariant(character));
+        }
+
+        return name.ToString();
+    }
+
+    private static IReadOnlyList<WeightedOption<T>> ToOptions<T>(IReadOnlyList<WeightedOptionSpec<T>> options) =>
+        [.. options.Select(option => new WeightedOption<T>(option.Value, option.Weight))];
+
+    private static IReadOnlyList<ProfessionRule> ToProfessions(IReadOnlyList<ProfessionSpec> professions) =>
+        [
+            .. professions.Select(
+                (profession, position) => new ProfessionRule(new ProfessionId(position), profession.Weight, profession.OnBusinessTrips)
+            ),
+        ];
+
+    /// <summary>
+    /// Maps the trait parts of the manifest rules, which <c>traits.json</c> carries: the one trait every child is given,
+    /// the traits an adult draws, the belongings and the forbidden pairs. Their ids are the file's interned indices.
+    /// </summary>
+    /// <param name="traits">The traits file.</param>
+    /// <param name="traitIndex">Each trait's interned index, by content id.</param>
+    /// <returns>The trait-side rules.</returns>
+    /// <exception cref="ContentLoadException">
+    /// The file has no child trait, or more than one, or a child-optional trait with no adult weight.
+    /// </exception>
+    private static ManifestTraits ManifestTraitParts(TraitsFile traits, Dictionary<string, int> traitIndex)
+    {
+        (IReadOnlyList<TraitRule> rules, IReadOnlyList<BelongingRule> belongings) = TraitParts(traits);
+        IReadOnlyList<ManifestTraitPair> pairs =
+        [
+            .. traits.ForbiddenPairs.Select(pair => new ManifestTraitPair(new TraitId(traitIndex[pair.First]), new TraitId(traitIndex[pair.Second]))),
+        ];
+        return new ManifestTraits(ChildTrait(traits), rules, belongings, pairs);
+    }
+
+    private static TraitId ChildTrait(TraitsFile traits)
+    {
+        int found = 0;
+        int position = 0;
+        for (int index = 0; index < traits.Traits.Count; index++)
+        {
+            if (traits.Traits[index].GivenToEveryChild)
+            {
+                found++;
+                position = index;
+            }
+        }
+
+        if (found != 1)
+        {
+            string expected = $"Expected exactly one trait with given_to_every_child; found {found}.";
+            throw new ContentLoadException(TraitsFileName, "$.traits", expected, null);
+        }
+
+        return new TraitId(position);
+    }
+
+    private static (IReadOnlyList<TraitRule> Traits, IReadOnlyList<BelongingRule> Belongings) TraitParts(TraitsFile traits)
+    {
+        List<TraitRule> rules = [];
+        List<BelongingRule> belongings = [];
+        for (int position = 0; position < traits.Traits.Count; position++)
+        {
+            TraitSpec spec = traits.Traits[position];
+            if (spec.ChildOptional && spec.AdultWeight is null)
+            {
+                string expected = "Expected an adult_weight on a child_optional trait; a child's extra trait is drawn by it.";
+                throw new ContentLoadException(TraitsFileName, $"$.traits[{position}].adult_weight", expected, null);
+            }
+
+            TraitId id = new(position);
+            if (spec.Share is { } share)
+            {
+                belongings.Add(new BelongingRule(id, share.Adults, share.BusinessTrips, share.Children));
+            }
+            else if (!spec.GivenToEveryChild && spec.AdultWeight is { } weight)
+            {
+                rules.Add(new TraitRule(id, weight, spec.BusinessTripWeight ?? weight, spec.ChildOptional));
+            }
+        }
+
+        return (rules, belongings);
+    }
+
+    private static void CheckAcrossFields(ManifestRules rules)
+    {
+        try
+        {
+            rules.CheckAcrossFields();
+        }
+        catch (ArgumentException exception)
+        {
+            (string source, string path) = Location(exception.ParamName);
+            throw new ContentLoadException(source, path, $"Expected a value the Engine accepts; {exception.Message}", exception);
+        }
+    }
+
+    /// <summary>The trait-side parts of the manifest rules, all read from <c>traits.json</c>.</summary>
+    /// <param name="Child">The one trait every child is given.</param>
+    /// <param name="Traits">The traits an adult draws.</param>
+    /// <param name="Belongings">The belongings, each rolled on its own after the traits.</param>
+    /// <param name="Pairs">The pairs of traits no passenger carries together.</param>
+    private sealed record ManifestTraits(
+        TraitId Child,
+        IReadOnlyList<TraitRule> Traits,
+        IReadOnlyList<BelongingRule> Belongings,
+        IReadOnlyList<ManifestTraitPair> Pairs
+    );
 }
