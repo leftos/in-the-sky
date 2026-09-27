@@ -1,11 +1,11 @@
 # Main Plan
-<!-- plan-doc-hygiene: 2026-09-26 f38edb6 -->
+<!-- plan-doc-hygiene: 2026-09-26 67fedc5 -->
 
 Open work only, in working order: the next item is the first line from the top. One line an item: the action, the files, who asked and when. Designs and decisions live in `docs/design/` and `docs/decisions/` once they exist; until then, the kickoff decisions are [2026-09-26-rewrite-decisions.md](./2026-09-26-rewrite-decisions.md). A landed line moves, ticked with its landing note, to `archive/YYYY-MM-done.md`. A fresh session reads the root `CLAUDE.md` first.
 
 ## Now: M1, the headless cabin flight
 
-- [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): 52 steps in 13 waves, its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled. Waves M1-D (design docs: game-designer, balance-analyst, event-writer), M1-A (engine foundations), M1-B (cabin geometry), M1-C (needs), M1-E (executor and crew) and M1-S (scripting) share no files and start together.
+- [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): 52 steps in 13 waves, its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled. 8 of 52 landed (A1 to A3, B1, B2, C1, E1, D4); D1 and D2 are drafted and wait on the owner's read-through. Open and startable now: B3, B4, C2, E2, E3, S1; waves M1-B, M1-C, M1-E and M1-S share no files.
 
 - [ ] Owner triage of the goals `docs/research/2026-09-26-openpax-avsim-goals.md` finds CONCEPT missing (a memory and CPU budget beside MSFS, automation profiles and the Captain or Lead Flight Attendant ways to play, SimBrief, GSX, cargo and weight limits, other sims, crewless flights, player-written announcements with live weather, belongings and relationships, helpful passengers, airport-set starting needs, overrides of the automatic layout work): adopt into CONCEPT, defer to a milestone, or drop (owner, 2026-09-26)
 
