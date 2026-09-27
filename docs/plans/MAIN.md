@@ -17,8 +17,5 @@ Open work only, in working order: the next item is the first line from the top. 
 
 ## Backlog
 
-- [ ] Tooling tidy (review findings, 2026-09-26): `tools/test-all.ps1` comments above the build step still say "both checks" and name only the format check and the tests; the ceiling comment near the top of `sky.ps1` omits the analysis and provenance runs; `prek.toml`'s builtin `check-merge-conflict` and `detect-private-key` also run at the commit-msg stage (give the builtins `stages = ["pre-commit"]`); `test-all.ps1` and `sky.ps1 provenance` call uv without the `--locked` CI uses
-
-- [ ] `tools/test-all.ps1` does not run prek's `line-length` (150) check, so a green whole gate still fails at commit (found landing A1+A3, 2026-09-26): add the line-length check to the whole gate, or have implementer briefs run `prek run --files <changed>`
 - [ ] AirlineOps: crew auto-resolve for many flights at once, the booking market as the manifest source
 - [ ] Saves and progression

@@ -64,10 +64,10 @@ $ErrorActionPreference = 'Stop'
 
 $script:Root = $PSScriptRoot
 $script:Tmp = Join-Path $script:Root '.tmp'
-# Every build, test and format run this script makes on the caller's behalf goes through tools/gate.ps1: the whole
-# output to a log, the tail on the screen, the command's own exit status, and 124 when the ceiling below killed it and
-# its children. A ceiling is a few times what the command takes today, so a run that reaches one has hung rather than
-# slowed - read its log, do not raise it.
+# Every build, test, format, analysis, provenance, Godot import and Godot build-solutions run this script makes on the
+# caller's behalf goes through tools/gate.ps1: the whole output to a log, the tail on the screen, the command's own exit
+# status, and 124 when the ceiling below killed it and its children. A ceiling is a few times what the command takes
+# today, so a run that reaches one has hung rather than slowed - read its log, do not raise it.
 $script:GateScript = Join-Path $script:Root 'tools\gate.ps1'
 $script:BuildSeconds = 300
 $script:FormatSeconds = 180
@@ -257,8 +257,9 @@ function Get-UvProject {
 # uv is given --directory rather than --project: --project picks the project uv resolves but leaves the working
 # directory where the caller stands, and ruff, ty and pytest each read their configuration from the directory they run
 # in or above it (ty's --project defaults to the working directory and walks up from there, ty docs reference/cli.md).
-# From the repo root, which holds no pyproject.toml, a project's pyproject.toml would then never be read. Each project
-# gets its own logs.
+# From the repo root, which holds no pyproject.toml, a project's pyproject.toml would then never be read. uv is given
+# --locked, as CI gives it, here and in the provenance subcommand below: a uv.lock that no longer resolves fails the
+# gate instead of being rewritten to a resolution nobody reviews. Each project gets its own logs.
 function Invoke-Analysis {
     $check = (Split-Rest -Switches 'Check').Options['Check']
     $format = if ($check) { @('ruff', 'format', '--check', '.') } else { @('ruff', 'format', '.') }
@@ -270,15 +271,15 @@ function Invoke-Analysis {
         exit 0
     }
     foreach ($project in $projects) {
-        $uv = @('uv', 'run', '--directory', $project)
+        $uv = @('uv', 'run', '--locked', '--directory', $project)
         $name = $project -replace '^tools/', ''
-        Invoke-Gate -Title "uv run --directory $project $($format -join ' ')" `
+        Invoke-Gate -Title "uv run --locked --directory $project $($format -join ' ')" `
             -Log (Join-Path $script:Tmp "$name-format.log") -Seconds $script:AnalysisSeconds -Gate ($uv + $format)
-        Invoke-Gate -Title "uv run --directory $project $($lint -join ' ')" `
+        Invoke-Gate -Title "uv run --locked --directory $project $($lint -join ' ')" `
             -Log (Join-Path $script:Tmp "$name-lint.log") -Seconds $script:AnalysisSeconds -Gate ($uv + $lint)
-        Invoke-Gate -Title "uv run ty check $project" -Log (Join-Path $script:Tmp "$name-types.log") `
+        Invoke-Gate -Title "uv run --locked ty check $project" -Log (Join-Path $script:Tmp "$name-types.log") `
             -Seconds $script:AnalysisSeconds -Gate ($uv + @('ty', 'check', '.'))
-        Invoke-Gate -Title "uv run pytest $project -q" -Log (Join-Path $script:Tmp "$name-tests.log") `
+        Invoke-Gate -Title "uv run --locked pytest $project -q" -Log (Join-Path $script:Tmp "$name-tests.log") `
             -Seconds $script:AnalysisSeconds -Gate ($uv + @('pytest', '.', '-q'))
     }
 }
@@ -288,13 +289,13 @@ function Invoke-Analysis {
 # --directory: the checker finds the repository root from the working directory, so it must run from the repo root.
 function Invoke-Provenance {
     $check = (Split-Rest -Switches 'Check').Options['Check']
-    $uv = @('uv', 'run', '--project', 'tools/provenance', 'python', '-m', 'provenance')
+    $uv = @('uv', 'run', '--locked', '--project', 'tools/provenance', 'python', '-m', 'provenance')
     if (-not $check) {
-        Invoke-Gate -Title 'uv run --project tools/provenance python -m provenance credits' `
+        Invoke-Gate -Title 'uv run --locked --project tools/provenance python -m provenance credits' `
             -Log (Join-Path $script:Tmp 'provenance-credits.log') -Seconds $script:ProvenanceSeconds `
             -Gate ($uv + @('credits'))
     }
-    Invoke-Gate -Title 'uv run --project tools/provenance python -m provenance check' `
+    Invoke-Gate -Title 'uv run --locked --project tools/provenance python -m provenance check' `
         -Log (Join-Path $script:Tmp 'provenance-check.log') -Seconds $script:ProvenanceSeconds `
         -Gate ($uv + @('check'))
 }

@@ -1,21 +1,21 @@
 #requires -Version 7
 <#
 .SYNOPSIS
-Builds the solution once, then runs the format check, the tests, the Python analysis and the provenance checks side by
-side under a ceiling each and ends on one verdict.
+Builds the solution once, then runs the format check, the tests, the Python analysis, the provenance check and the
+150-character line check side by side under a ceiling each and ends on one verdict.
 
 .DESCRIPTION
-The build runs alone and first, because every check after it reads the binaries it writes and the tests are told
---no-build: a run that carried on past a failed build would report on the last binaries that did compile. It runs under
-tools/gate.ps1, so it cannot hang the run, and the whole of its output is in .tmp/test-all-build.log.
+The build runs alone and first, because the tests and the format check read the binaries it writes and the tests are
+told --no-build: a run that carried on past a failed build would report on the last binaries that did compile. It runs
+under tools/gate.ps1, so it cannot hang the run, and the whole of its output is in .tmp/test-all-build.log.
 
 The checks then run as jobs. Each job's output is held back and printed whole under its own heading once they have all
 finished: two checks writing to one console interleave into something unreadable exactly when one of them fails. None
-waits on another, so the run costs what its longest one costs, the format check today.
+waits on another, so the run costs what its longest one costs.
 
 Every check carries a ceiling of its own, a few times what it takes on this machine today, and the run carries -Ceiling
-over both of them. A check that reaches its ceiling is stopped where it stands with every process it started, and its
-row reads `timed out after <n> s` with the verdict failed while the other is left to finish. A red `timed out` row is a
+over all of them. A check that reaches its ceiling is stopped where it stands with every process it started, and its
+row reads `timed out after <n> s` with the verdict failed while the rest are left to finish. A red `timed out` row is a
 hang and not a slow machine: read the check's log under .tmp rather than raise the ceiling.
 
 MSBuild switches are written in dash form (-warnaserror): Git Bash's path conversion rewrites /warnaserror into a
@@ -47,14 +47,15 @@ New-Item -ItemType Directory -Force $tmp | Out-Null
 $startedAt = Get-Date
 
 # Every check's ceiling in seconds, against what it took on a machine like this: build seconds, format tens of seconds,
-# tests seconds, the Python analysis seconds, the provenance check seconds. A ceiling is a few times that, so a check
-# that reaches one has hung rather than slowed.
+# tests seconds, the Python analysis seconds, the provenance check seconds, the line check a second or two. A ceiling is
+# a few times that, so a check that reaches one has hung rather than slowed.
 $ceilings = [ordered]@{
-    build      = 300
-    format     = 180
-    tests      = 180
-    analysis   = 120
-    provenance = 60
+    build         = 300
+    format        = 180
+    tests         = 180
+    analysis      = 120
+    provenance    = 60
+    'line-length' = 60
 }
 
 # Starts one check as a job of its own. Its commands are handed over as arrays rather than as a line to parse, so an
@@ -201,8 +202,9 @@ function Complete-Check {
     return [pscustomobject]@{ Check = $Check.Label; Verdict = 'passed'; Seconds = $seconds; Note = '' }
 }
 
-# Both checks below read what the build writes, and the tests are told --no-build, so the build is the one step that
-# runs on its own and the run ends here when it fails.
+# The checks below read what the build writes or the tree it was built from - the tests are told --no-build, the
+# analysis, provenance and line checks read the tree - so the build is the one step that runs on its own and the run ends
+# here when it fails.
 Write-Host '=== build ===' -ForegroundColor Cyan
 $buildLog = Join-Path $tmp 'test-all-build.log'
 pwsh tools/gate.ps1 -Log $buildLog -TimeoutSeconds $ceilings['build'] -- dotnet build InTheSky.slnx -c Release -warnaserror
@@ -210,7 +212,7 @@ $buildStatus = $LASTEXITCODE
 $buildSeconds = [math]::Round(((Get-Date) - $startedAt).TotalSeconds)
 $results = @()
 if ($buildStatus -ne 0) {
-    $why = "the format check and the tests read what it writes, and a red build is the run's verdict whatever the rest would say"
+    $why = "the tests and the format check read what it writes, and a red build is the run's verdict whatever the rest would say"
     Write-Host "The build failed, so no check was started: $why; the whole output is in $buildLog" -ForegroundColor Red
     $results += [pscustomobject]@{ Check = 'build'; Verdict = 'failed'; Seconds = $buildSeconds; Note = "see $buildLog" }
     Write-Host ''
@@ -242,9 +244,17 @@ $checks += Start-Check 'format' $formatCommands $ceilings['format']
 # It reads the tree the build reads rather than the build's output, so it runs beside the other checks with no order of
 # its own. The leading comma keeps the one command an array of arrays, as above.
 $provenanceCommands = @(
-    , @('uv', 'run', '--project', 'tools/provenance', 'python', '-m', 'provenance', 'check')
+    , @('uv', 'run', '--locked', '--project', 'tools/provenance', 'python', '-m', 'provenance', 'check')
 )
 $checks += Start-Check 'provenance' $provenanceCommands $ceilings['provenance']
+# The 150-character line check is a job here as well as a prek hook: prek runs it at commit and not before, so without
+# this row a green whole gate could still fail the commit. Like the provenance check it reads the tree rather than the
+# build's output, so it runs beside the others with no order of its own. The leading comma keeps the one command an
+# array of arrays, as above.
+$lineLengthCommands = @(
+    , @('pwsh', 'tools/hooks/Test-LineLength.ps1', '-All')
+)
+$checks += Start-Check 'line-length' $lineLengthCommands $ceilings['line-length']
 
 # Every project under tools/ that carries a pyproject.toml is checked here in the four steps a project
 # `sky.ps1 analysis -Check` runs, none of which writes. The list is read now, so a project landing under tools/ later
@@ -253,6 +263,8 @@ $checks += Start-Check 'provenance' $provenanceCommands $ceilings['provenance']
 # directory where this script stands, and ruff, ty and pytest each read their configuration from the directory they run
 # in or above it (ty's --project defaults to the working directory and walks up from there, ty docs reference/cli.md).
 # From the repo root, which holds no pyproject.toml, a project's pyproject.toml would then never be read.
+# uv is given --locked, as CI gives it, in this block and in the provenance command above: a uv.lock that no longer
+# resolves fails here instead of being rewritten to a resolution nobody reviews.
 $uvProjects = @(
     Get-ChildItem -Path (Join-Path $root 'tools/*/pyproject.toml') -File -ErrorAction SilentlyContinue |
         ForEach-Object { "tools/$($_.Directory.Name)" }
@@ -264,10 +276,10 @@ if ($uvProjects.Count -eq 0) {
 else {
     $analysisCommands = @(
         foreach ($project in $uvProjects) {
-            , @('uv', 'run', '--directory', $project, 'ruff', 'format', '--check', '.')
-            , @('uv', 'run', '--directory', $project, 'ruff', 'check', '.')
-            , @('uv', 'run', '--directory', $project, 'ty', 'check', '.')
-            , @('uv', 'run', '--directory', $project, 'pytest', '.', '-q')
+            , @('uv', 'run', '--locked', '--directory', $project, 'ruff', 'format', '--check', '.')
+            , @('uv', 'run', '--locked', '--directory', $project, 'ruff', 'check', '.')
+            , @('uv', 'run', '--locked', '--directory', $project, 'ty', 'check', '.')
+            , @('uv', 'run', '--locked', '--directory', $project, 'pytest', '.', '-q')
         }
     )
     $analysisCheck = Start-Check 'analysis' $analysisCommands $ceilings['analysis']
@@ -296,7 +308,7 @@ while ($true) {
     Start-Sleep -Milliseconds 500
 }
 
-foreach ($label in @('tests', 'format', 'provenance')) {
+foreach ($label in @('tests', 'format', 'provenance', 'line-length')) {
     $check = $checks | Where-Object { $_.Label -eq $label }
     if ($check) { $results += Complete-Check $check }
 }

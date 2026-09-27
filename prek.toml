@@ -3,14 +3,16 @@
 #:schema https://www.schemastore.org/prek.json
 default_install_hook_types = ["pre-commit", "commit-msg"]
 
+# default_install_hook_types installs a commit-msg hook as well as a pre-commit one, and the builtins tidy the files
+# rather than the message: without a stage of their own the commit-msg hooks would run them over the tree a second time.
 [[repos]]
 repo = "builtin"
 hooks = [
-    { id = "trailing-whitespace" },
-    { id = "end-of-file-fixer" },
-    { id = "check-merge-conflict" },
-    { id = "detect-private-key" },
-    { id = "check-added-large-files", args = ["--maxkb=1024"] },
+    { id = "trailing-whitespace", stages = ["pre-commit"] },
+    { id = "end-of-file-fixer", stages = ["pre-commit"] },
+    { id = "check-merge-conflict", stages = ["pre-commit"] },
+    { id = "detect-private-key", stages = ["pre-commit"] },
+    { id = "check-added-large-files", args = ["--maxkb=1024"], stages = ["pre-commit"] },
 ]
 
 [[repos]]
@@ -68,7 +70,7 @@ stages = ["pre-commit"]
 [[repos.hooks]]
 id = "provenance"
 name = "asset provenance ledger"
-entry = "uv run --project tools/provenance python -m provenance check"
+entry = "uv run --locked --project tools/provenance python -m provenance check"
 language = "system"
 pass_filenames = false
 always_run = true

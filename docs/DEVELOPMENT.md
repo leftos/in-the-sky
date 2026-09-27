@@ -36,7 +36,7 @@ Everything runs from the repo root through `sky.ps1`; `pwsh ./sky.ps1 help` list
 | `pwsh ./sky.ps1 build [-Release]` | `dotnet build InTheSky.slnx -c <Debug\|Release> -warnaserror` | `.tmp/build.log` | 300 s |
 | `pwsh ./sky.ps1 test [-Project P] [-Filter "*XTests"]` | `dotnet test` over `InTheSky.slnx`, or `--project tests/Sky.<P>.Tests` with P in Engine, Content, Scripting, Session, Sim, SimConnect, Voice, Client; `-Filter` becomes `--filter-class`; the rest forwards, and `-- --timeout 2m` is appended unless the caller forwarded a `--` of their own | `.tmp/test.log` | 180 s; 60 s with `-Filter` |
 | `pwsh ./sky.ps1 format [-Check]` | `dotnet csharpier format .`, then `dotnet format style` and `dotnet format analyzers` at `--severity info`; `-Check` uses `csharpier check` and `--verify-no-changes` and writes nothing | `.tmp/csharpier.log`, `.tmp/format.log`, `.tmp/analyzers.log` | 180 s each |
-| `pwsh ./sky.ps1 analysis [-Check]` | for every project under `tools/` with a `pyproject.toml` (today `tools/provenance`): `uv run --directory <project>` over `ruff format .`, `ruff check . --fix`, `ty check .` and `pytest . -q`, stopping at the first that fails; `-Check` changes nothing (`ruff format --check`, no `--fix`). `--directory`, not `--project`: ruff, ty and pytest read their configuration from the directory they run in. With no project present it prints `analysis: no uv projects` and passes | `.tmp/<project>-{format,lint,types,tests}.log` | 120 s each |
+| `pwsh ./sky.ps1 analysis [-Check]` | for every project under `tools/` with a `pyproject.toml` (today `tools/provenance`): `uv run --locked --directory <project>` over `ruff format .`, `ruff check . --fix`, `ty check .` and `pytest . -q`, stopping at the first that fails; `-Check` changes nothing (`ruff format --check`, no `--fix`). `--directory`, not `--project`: ruff, ty and pytest read their configuration from the directory they run in. With no project present it prints `analysis: no uv projects` and passes | `.tmp/<project>-{format,lint,types,tests}.log` | 120 s each |
 | `pwsh ./sky.ps1 provenance [-Check]` | without `-Check`, regenerates `CREDITS.md` from `assets/PROVENANCE.toml` and then checks the ledger; with `-Check`, only checks (see "Provenance" below) | `.tmp/provenance-credits.log`, `.tmp/provenance-check.log` | 60 s each |
 | `pwsh ./sky.ps1 hooks [prek args]` | `prek run --all-files`, or `prek run <args>` when arguments follow | | none |
 | `pwsh ./sky.ps1 client` | the Godot client from a fresh clone, in this order: `dotnet build src/Sky.Client/Sky.Client.csproj -c Debug -warnaserror`, then `--headless --import --quit` (up to three passes on a cold cache, retried only while a pass ends red on the pre-import lines alone: `.godot/imported/`, and art under `res://Art/` that has no loader or fails to load yet), then `--headless --build-solutions --quit` with MSBuild node reuse and shared compilation off, so Godot's job empties when Godot quits. The import comes first because with `.godot/imported/` empty the solutions pass can die before it builds | `.tmp/client-dotnet-build.log`, `.tmp/client-import.log` (`-2`, `-3` for extra passes), `.tmp/client-build.log` | 300 s, 300 s a pass, 180 s |
@@ -66,7 +66,7 @@ A command with no `sky.ps1` subcommand is written under the gate in full, for ex
 
 ## tools/test-all.ps1
 
-The whole gate, one table and one exit code. It builds `InTheSky.slnx` in Release with `-warnaserror` first and alone, under the gate at 300 s, because every check after it reads those binaries and the tests run with `--no-build`; a red build ends the run there. Then these run side by side as jobs, each under its own ceiling, their output held back and printed whole under its own heading once all have finished:
+The whole gate, one table and one exit code. It builds `InTheSky.slnx` in Release with `-warnaserror` first and alone, under the gate at 300 s, because the tests and the format check read those binaries and the tests run with `--no-build`; a red build ends the run there. Every `uv run` it makes carries `--locked`, as CI's do, so a `uv.lock` that no longer resolves fails the run instead of being rewritten. Then these run side by side as jobs, each under its own ceiling, their output held back and printed whole under its own heading once all have finished:
 
 | Row | Runs | Ceiling |
 |---|---|---|
@@ -74,7 +74,8 @@ The whole gate, one table and one exit code. It builds `InTheSky.slnx` in Releas
 | tests | `dotnet test InTheSky.slnx -c Release --no-build -- --timeout 2m` | 180 s |
 | format | `dotnet csharpier check .`, `dotnet format style` and `dotnet format analyzers` with `--verify-no-changes --severity info` | 180 s |
 | analysis | the four `sky.ps1 analysis -Check` steps over every uv project under `tools/`; the row reads `no uv projects` when there is none | 120 s |
-| provenance | `uv run --project tools/provenance python -m provenance check` | 60 s |
+| provenance | `uv run --locked --project tools/provenance python -m provenance check` | 60 s |
+| line-length | `pwsh tools/hooks/Test-LineLength.ps1 -All`: every C#, PowerShell and Python file git tracks or would track, at 150 characters, so a green gate does not fail the commit's `line-length` hook | 60 s |
 
 A check that reaches its ceiling is stopped with every process it started and its row reads `timed out after <n> s`, while the others finish. `-Ceiling` (600 s by default) bounds the whole run. A red `timed out` row is a hang: read the check's log under `.tmp/` rather than raise the ceiling.
 
@@ -92,8 +93,8 @@ A check that reaches its ceiling is stopped with every process it started and it
 
 Every asset has an entry in `assets/PROVENANCE.toml` recording its origin, license, author and source (ADR 0009), and `CREDITS.md` is generated from the ledger, never edited by hand. The checker is the uv project `tools/provenance`:
 
-- `uv run --project tools/provenance python -m provenance check` reports every asset without an entry, every invalid entry (a license outside the allowlist, a file that is missing) and a `CREDITS.md` that no longer matches the ledger, one `PROVENANCE: <problem>` line each; exit 1 when it found problems, 2 when the repository could not be read.
-- `uv run --project tools/provenance python -m provenance credits` rewrites `CREDITS.md` from the ledger.
+- `uv run --locked --project tools/provenance python -m provenance check` reports every asset without an entry, every invalid entry (a license outside the allowlist, a file that is missing) and a `CREDITS.md` that no longer matches the ledger, one `PROVENANCE: <problem>` line each; exit 1 when it found problems, 2 when the repository could not be read.
+- `uv run --locked --project tools/provenance python -m provenance credits` rewrites `CREDITS.md` from the ledger.
 - `pwsh ./sky.ps1 provenance` regenerates `CREDITS.md` and then checks; `pwsh ./sky.ps1 provenance -Check` only checks. After adding or changing an asset, add its ledger entry and run `pwsh ./sky.ps1 provenance`, then commit the asset, the entry and `CREDITS.md` together.
 - The `provenance` prek hook and the `provenance` row of `tools/test-all.ps1` run the check, so a commit or a gate run fails on an asset the ledger does not cover.
 
@@ -103,11 +104,11 @@ The checker's own code is linted and tested by `pwsh ./sky.ps1 analysis`.
 
 `prek install` once per clone; `pwsh ./sky.ps1 hooks` runs every hook over every file. `prek.toml` runs these on every commit, in this order: the fixers first (they re-stage what they change), then the readers, then the build, then the doc-drift check.
 
-1. The builtin checks: `trailing-whitespace`, `end-of-file-fixer`, `check-merge-conflict`, `detect-private-key`, and `check-added-large-files` at 1024 KB.
+1. The builtin checks: `trailing-whitespace`, `end-of-file-fixer`, `check-merge-conflict`, `detect-private-key`, and `check-added-large-files` at 1024 KB, each staged to `pre-commit` only, so the `commit-msg` stage runs `doc-drift-message` alone.
 2. `dotnet-format-style`: `dotnet format style` at severity info over the staged C# files, re-staging what it changed (`tools/hooks/dotnet-format-wrapper.ps1`).
 3. `csharpier`: `dotnet csharpier format` over the staged C# files, re-staging what it changed (`tools/hooks/csharpier-wrapper.ps1`).
 4. `psscriptanalyzer`: PSScriptAnalyzer over the staged PowerShell, under `PSScriptAnalyzerSettings.psd1`.
-5. `line-length`: 150 characters for C#, PowerShell and Python (`tools/hooks/Test-LineLength.ps1`).
+5. `line-length`: 150 characters for C#, PowerShell and Python (`tools/hooks/Test-LineLength.ps1`; with `-All` it reads the whole tree, as the `line-length` row of `tools/test-all.ps1` does).
 6. `gitleaks`: `gitleaks git --pre-commit --staged --redact`, the secrets scan over the staged changes.
 7. `provenance`: the provenance check (above), on every commit whatever it stages.
 8. `dotnet-build`: `dotnet build -p:TreatWarningsAsErrors=true`.
