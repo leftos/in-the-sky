@@ -6,9 +6,10 @@ namespace Sky.Content.Validation;
 /// <summary>
 /// Checks every scenario, in ordinal id order: its id is not empty; its layout is loaded; its gate delay lies in
 /// <see cref="MinGateDelayMinutes"/> to <see cref="MaxGateDelayMinutes"/>; every locked lav is a lav of the layout; and its
-/// crew lever holds together (<c>crew.md</c>: every row belongs to exactly one zone and every zone has at least one crew
-/// member), with crew from <c>crew.json</c>'s roster, a count equal to the distinct crew across the zones, stations that are
-/// fixtures of the layout and cart spans within the layout.
+/// crew lever holds together (<c>crew.md</c>: the zone ids are unique, every row belongs to exactly one zone, every zone has
+/// at least one crew member and lists no member twice, a cart's crew each cover a zone and two different crew push a cart),
+/// with crew from <c>crew.json</c>'s roster, a count equal to the distinct crew across the zones, stations that are fixtures
+/// of the layout and cart spans within the layout.
 /// </summary>
 public sealed class ScenarioValidator : IContentValidator
 {
@@ -75,6 +76,7 @@ public sealed class ScenarioValidator : IContentValidator
 
         public void Run(CrewAssignment crew)
         {
+            CheckZoneIds(crew.Zones);
             int[] zoneOfRow = new int[layout.Rows.Count];
             Array.Fill(zoneOfRow, -1);
             for (int zone = 0; zone < crew.Zones.Count; zone++)
@@ -88,18 +90,61 @@ public sealed class ScenarioValidator : IContentValidator
                 throw new ContentLoadException(file, "$.crew.zones", $"Expected every row in exactly one zone; row {gap} is in none.", null);
             }
 
+            CheckCarts(crew);
+
             int distinct = crew.Zones.SelectMany(zone => zone.Crew).Distinct(StringComparer.Ordinal).Count();
             if (crew.Count != distinct)
             {
                 string expected = $"Expected the crew count to equal the {distinct} distinct crew across the zones; got {crew.Count}.";
                 throw new ContentLoadException(file, "$.crew.count", expected, null);
             }
+        }
 
+        /// <summary>Checks that no zone id is declared twice; the sentences of the crew checks name zones by id.</summary>
+        private void CheckZoneIds(IReadOnlyList<CrewZone> zones)
+        {
+            Dictionary<string, int> seen = new(StringComparer.Ordinal);
+            for (int position = 0; position < zones.Count; position++)
+            {
+                string id = zones[position].Id;
+                if (!seen.TryAdd(id, position))
+                {
+                    string expected = $"Expected each zone id once; \"{id}\" is already the id of $.crew.zones[{seen[id]}].";
+                    throw new ContentLoadException(file, $"$.crew.zones[{position}].id", expected, null);
+                }
+            }
+        }
+
+        /// <summary>Checks every cart: its span lies in the layout, its crew are on the roster and cover a zone, and two
+        /// different crew push it.</summary>
+        private void CheckCarts(CrewAssignment crew)
+        {
+            HashSet<string> covered = new(crew.Zones.SelectMany(zone => zone.Crew), StringComparer.Ordinal);
             for (int cart = 0; cart < crew.Carts.Count; cart++)
             {
                 string path = $"$.crew.carts[{cart}]";
                 CheckRowSpan(path, crew.Carts[cart].FirstRow, crew.Carts[cart].LastRow);
                 CheckCrewIds($"{path}.crew", crew.Carts[cart].Crew);
+                CheckCartCrew(path, crew.Carts[cart].Crew, covered);
+            }
+        }
+
+        /// <summary>Checks a cart's crew list: each of them covers a zone, and exactly two different crew push the cart.</summary>
+        private void CheckCartCrew(string path, IReadOnlyList<string> crewIds, HashSet<string> covered)
+        {
+            for (int position = 0; position < crewIds.Count; position++)
+            {
+                if (!covered.Contains(crewIds[position]))
+                {
+                    string expected = $"Expected every cart crew member in a zone; \"{crewIds[position]}\" is in none.";
+                    throw new ContentLoadException(file, $"{path}.crew[{position}]", expected, null);
+                }
+            }
+
+            int distinct = crewIds.Distinct(StringComparer.Ordinal).Count();
+            if (distinct != 2)
+            {
+                throw new ContentLoadException(file, $"{path}.crew", $"Expected two different crew members on a cart; got {distinct}.", null);
             }
         }
 
@@ -123,6 +168,7 @@ public sealed class ScenarioValidator : IContentValidator
                 throw new ContentLoadException(file, $"{path}.crew", "Expected at least one crew member in the zone; got none.", null);
             }
 
+            CheckZoneCrew(path, zone);
             CheckCrewIds($"{path}.crew", zone.Crew);
             for (int station = 0; station < zone.Stations.Count; station++)
             {
@@ -152,6 +198,20 @@ public sealed class ScenarioValidator : IContentValidator
             if (firstRow > lastRow)
             {
                 throw new ContentLoadException(file, path, $"Expected the first row at or before the last; got {firstRow} to {lastRow}.", null);
+            }
+        }
+
+        /// <summary>Checks that a zone lists no crew member twice; a member may cover any number of zones.</summary>
+        private void CheckZoneCrew(string zonePath, CrewZone zone)
+        {
+            HashSet<string> seen = new(StringComparer.Ordinal);
+            for (int position = 0; position < zone.Crew.Count; position++)
+            {
+                if (!seen.Add(zone.Crew[position]))
+                {
+                    string expected = $"Expected each crew member once in a zone; \"{zone.Crew[position]}\" is listed twice in zone \"{zone.Id}\".";
+                    throw new ContentLoadException(file, $"{zonePath}.crew[{position}]", expected, null);
+                }
             }
         }
 

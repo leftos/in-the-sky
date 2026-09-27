@@ -1,9 +1,18 @@
 namespace Sky.Content.Validation;
 
-/// <summary>Runs every content validator in a fixed order: the layouts, then the scenarios, then the thought catalogue.</summary>
+/// <summary>
+/// Runs every content validator in a fixed order: the layouts, then the needs, then the scenarios, then the thought
+/// catalogue.
+/// </summary>
 public static class ContentValidator
 {
-    private static readonly IContentValidator[] Validators = [new LayoutValidator(), new ScenarioValidator(), new ThoughtCatalogueValidator()];
+    private static readonly IContentValidator[] Validators =
+    [
+        new LayoutValidator(),
+        new NeedsValidator(),
+        new ScenarioValidator(),
+        new ThoughtCatalogueValidator(),
+    ];
 
     /// <summary>Checks the content with every validator, stopping at the first failure.</summary>
     /// <param name="content">The loaded content.</param>

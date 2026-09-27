@@ -4,14 +4,25 @@ namespace Sky.Content.Tests;
 
 /// <summary>
 /// Pins the scenario validator: the layout it names is loaded, the gate delay lies in 0 to 240 minutes, locked lavs are lavs,
-/// the zones cover every row once with crew from the roster, the crew count matches the zones, stations are fixtures and
-/// cart spans lie within the layout; each refusal names the scenario's file and the JSON path of the offending value (R10).
+/// the zone ids are unique, the zones cover every row once with crew from the roster and no member twice in one zone, every
+/// cart crew member covers a zone, a cart runs with two different crew, the crew count matches the distinct crew across the
+/// zones, stations are fixtures and cart spans lie within the layout; each refusal names the scenario's file and the JSON path
+/// of the offending value (R10).
 /// </summary>
 public sealed class ScenarioValidatorTests
 {
     private const string ScenarioFile = "scenarios/ref.json";
 
     private const string ZoneStationsAndCrew = """ "stations": [ "door-fwd", "lav-fwd" ], "crew": [ "purser", "fa2" ] }""";
+
+    private const string Cart = """ "carts": [ { "first_row": 0, "last_row": 0, "crew": [ "purser", "fa2" ] } ]""";
+
+    private const string CartWithoutCrew = """ "carts": [ { "first_row": 0, "last_row": 0, "crew": [ "purser" ] } ]""";
+
+    private const string CartWithRepeatedCrew = """ "carts": [ { "first_row": 0, "last_row": 0, "crew": [ "purser", "purser" ] } ]""";
+
+    private const string ExtraRow =
+        """ "rows": [ { "pitch_inches": 30, "groups": [ { "left_inches": 2, "seats": [ { "label": "A", "width_inches": 18 } ] } ] },""";
 
     /// <summary>A scenario naming a layout that is not loaded is refused at its layout.</summary>
     [Fact]
@@ -167,6 +178,117 @@ public sealed class ScenarioValidatorTests
 
         Assert.Equal(ScenarioFile, error.File);
         Assert.Equal("$.crew.carts[0].last_row", error.JsonPath);
+    }
+
+    /// <summary>A crew member listed twice in one zone is refused at the second listing.</summary>
+    [Fact]
+    public void CrewListedTwiceInAZoneIsRefused()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(ScenarioFile, ZoneStationsAndCrew, """ "stations": [ "door-fwd", "lav-fwd" ], "crew": [ "purser", "purser" ] }""");
+
+        ContentLoadException error = Refusal(tree);
+
+        Assert.Equal(ScenarioFile, error.File);
+        Assert.Equal("$.crew.zones[0].crew[1]", error.JsonPath);
+        Assert.Contains(
+            "Expected each crew member once in a zone; \"purser\" is listed twice in zone \"F\".",
+            error.Message,
+            StringComparison.Ordinal
+        );
+    }
+
+    /// <summary>Two zones with the same id are refused at the later zone's id.</summary>
+    [Fact]
+    public void DuplicateZoneIdIsRefused()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(
+            ScenarioFile,
+            ZoneStationsAndCrew,
+            $$"""{{ZoneStationsAndCrew}}, { "id": "F", "first_row": 0, "last_row": 0, "stations": [], "crew": [ "fa2" ] }"""
+        );
+
+        ContentLoadException error = Refusal(tree);
+
+        Assert.Equal(ScenarioFile, error.File);
+        Assert.Equal("$.crew.zones[1].id", error.JsonPath);
+        Assert.Contains("Expected each zone id once; \"F\" is already the id of $.crew.zones[0].", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A cart crew member in no zone is refused at the listing.</summary>
+    [Fact]
+    public void CartCrewInNoZoneIsRefused()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(ScenarioFile, ZoneStationsAndCrew, """ "stations": [ "door-fwd", "lav-fwd" ], "crew": [ "purser" ] }""");
+        tree.Replace(ScenarioFile, "\"count\": 2", "\"count\": 1");
+
+        ContentLoadException error = Refusal(tree);
+
+        Assert.Equal(ScenarioFile, error.File);
+        Assert.Equal("$.crew.carts[0].crew[1]", error.JsonPath);
+        Assert.Contains("Expected every cart crew member in a zone; \"fa2\" is in none.", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A cart naming only one crew member is refused at its crew list.</summary>
+    [Fact]
+    public void CartWithOneCrewIsRefused()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(ScenarioFile, Cart, CartWithoutCrew);
+
+        ContentLoadException error = Refusal(tree);
+
+        Assert.Equal(ScenarioFile, error.File);
+        Assert.Equal("$.crew.carts[0].crew", error.JsonPath);
+        Assert.Contains("Expected two different crew members on a cart; got 1.", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A cart naming the same crew member twice is refused at its crew list.</summary>
+    [Fact]
+    public void CartWithTheSameCrewTwiceIsRefused()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(ScenarioFile, Cart, CartWithRepeatedCrew);
+
+        ContentLoadException error = Refusal(tree);
+
+        Assert.Equal(ScenarioFile, error.File);
+        Assert.Equal("$.crew.carts[0].crew", error.JsonPath);
+        Assert.Contains("Expected two different crew members on a cart; got 1.", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A crew member listed in two zones is accepted, with a count of the distinct crew.</summary>
+    [Fact]
+    public void CrewInTwoZonesIsAccepted()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace("layouts/tiny.json", "\"rows\": [", ExtraRow);
+        tree.Replace(
+            ScenarioFile,
+            ZoneStationsAndCrew,
+            """
+             "stations": [ "door-fwd", "lav-fwd" ], "crew": [ "purser" ] },
+                { "id": "A", "first_row": 1, "last_row": 1, "stations": [], "crew": [ "purser" ] }
+            """
+        );
+        tree.Replace(ScenarioFile, "\"count\": 2", "\"count\": 1");
+        tree.Replace(ScenarioFile, Cart, """ "carts": []""");
+
+        new ScenarioValidator().Validate(tree.Load());
+    }
+
+    /// <summary>One crew member covering the only zone, with no cart, is accepted.</summary>
+    [Fact]
+    public void OneCrewMemberCoveringEveryZoneIsAccepted()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(ScenarioFile, ZoneStationsAndCrew, """ "stations": [ "door-fwd", "lav-fwd" ], "crew": [ "purser" ] }""");
+        tree.Replace(ScenarioFile, "\"count\": 2", "\"count\": 1");
+        tree.Replace(ScenarioFile, Cart, """ "carts": []""");
+
+        new ScenarioValidator().Validate(tree.Load());
     }
 
     private static ContentLoadException Refusal(ContentTree tree)
