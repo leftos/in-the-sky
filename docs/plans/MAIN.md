@@ -1,13 +1,22 @@
 # Main Plan
-<!-- plan-doc-hygiene: 2026-09-26 67fedc5 -->
+<!-- plan-doc-hygiene: 2026-09-27 bbe992c -->
 
 Open work only, in working order: the next item is the first line from the top. One line an item: the action, the files, who asked and when. Designs and decisions live in `docs/design/` and `docs/decisions/` once they exist; until then, the kickoff decisions are [2026-09-26-rewrite-decisions.md](./2026-09-26-rewrite-decisions.md). A landed line moves, ticked with its landing note, to `archive/YYYY-MM-done.md`. A fresh session reads the root `CLAUDE.md` first.
 
 ## Now: M1, the headless cabin flight
 
-- [ ] Reorganize this index so it gives a sense of detailed progress, within the `plan-doc-hygiene` rules (owner, 2026-09-27)
+The plan is [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): each step with its files, its proving command and its landing note, the acceptance map against `docs/design/CONCEPT.md` section 7, the rulings and the owner's decisions. One line below per wave still open, in working order; a wave's steps inside the subplan are ticked as they land, and the count here moves in the same commit.
 
-- [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled, and the triage's additions (new step F8, ruling R35). Landed: A1 to A3, B1 to B4, C1, C2, C2b, C3, C3a, D1 to D4, E1 to E4, F1, F2, G1, G2, K1, S1, S1b, S2. Startable next: F2b, K1b, K2, S3.
+**Progress: 28 of 60 steps landed.** Finished waves: M1-D design docs (4), M1-A engine foundations (3), M1-B cabin geometry (4), M1-C needs (5), M1-E executor and crew primitives (4). Acceptance (wave M1-Z): none proved yet.
+
+- [ ] **M1-S scripting**, 3 of 4 landed. Open: S3 (the event half of the behaviour port and its Lua adapter; in its fix round). Shared: `src/Sky.Engine/Ports/`, `src/Sky.Scripting/`, `tests/Sky.Scripting.Tests/`. Gate: `code-review` and `oracle`; proved by `pwsh sky.ps1 test -Project Scripting`.
+- [ ] **M1-K content loader**, 1 of 3 landed. Open: K2 (validators), then K1b (manifest rules as content, needs F2). Shared: `src/Sky.Content/` outside `Data/`, `tests/Sky.Content.Tests/`. Gate: `code-review`; proved by `pwsh sky.ps1 test -Project Content`.
+- [ ] **M1-F the flight**, 2 of 9 landed. Open: F2b (manifest seating nits; one game-designer call), F3 (the flight world and tick loop, boarding; needs S3), F4 (passenger decisions), F5 (crew and observations), F6 (events, auto-resolve, incidents), F7 (invariant checker), F8 (passenger thoughts). Shared: `src/Sky.Engine/{Flight,Journal,Manifest,Passengers,Observation,Events,Invariants}/`, `tests/Sky.Engine.Tests/`. Gate: `code-review` and `oracle`; proved by `pwsh sky.ps1 test -Project Engine`.
+- [ ] **M1-G scoring**, 2 of 3 landed. Open: G3 (moments and the flight's score; beside F). Shared: `src/Sky.Engine/Scoring/`. Gate: `code-review` and `oracle`; proved by `pwsh sky.ps1 test -Project Engine`.
+- [ ] **M1-X content data**, 0 of 4 landed. Open: X1 (reference layout, needs, traits; needs K2), X2 (crew and scenarios), X3 (activity modules), X4 (event modules, event-writer; needs S3). Shared: `src/Sky.Content/Data/`. Gate: the owning design doc's agent; proved by `ShippedContentTests`, `ShippedActivityTests`, `ShippedEventTests`.
+- [ ] **M1-H the session**, 0 of 5 landed. Open: H1 (composing and running a flight), H2 (journal, replay, state hash), H3 (the report), H4 (true and observed views), H5 (system switches). Shared: `src/Sky.Session/`, `src/Sky.Engine/State/`, `tests/Sky.Session.Tests/`. Gate: `code-review`, and `oracle` on H2's Engine hash; proved by `pwsh sky.ps1 test -Project Session`.
+- [ ] **M1-I the headless runner**, 0 of 3 landed. Open: I1 (the command line), I2 (sweeps, fuzz, balance CSV), I3 (`sky.ps1 sim`). Shared: `src/Sky.Sim/`, `sky.ps1`, `tests/Sky.Sim.Tests/`. Gate: `code-review`; proved by `pwsh sky.ps1 test -Project Sim`, then `pwsh sky.ps1 sim run --scenario reference --seed 1`.
+- [ ] **M1-Z acceptance**, 0 of 9 landed. Open: Z1 to Z5 (fuzz, replay and golden flight, 64x performance, report citations, events), Z6 and Z6b (balance-analyst's sweeps), Z7 (tuning), Z8 (close). Shared: `tests/Sky.Session.Tests/Acceptance/`, `src/Sky.Content/Data/`, `docs/design/balance.md`. Gate: balance-analyst's runs logged in `balance.md`; proved by `pwsh tools/test-all.ps1`, and by the owner reading a printed report (`pwsh sky.ps1 sim run --scenario reference --seed 1`).
 
 ## Later milestones
 
