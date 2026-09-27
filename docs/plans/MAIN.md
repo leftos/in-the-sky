@@ -12,10 +12,6 @@ Grouped into waves by shared files. Waves run side by side where their files are
 - [ ] Doc-drift hooks: port opening-hand's `tools/hooks/Test-DocDrift.ps1` for `docs/ARCHITECTURE.md` (every `src/Sky.*`) and `docs/TEST_ALMANAC.md` (every test twin and `*Tests` class, the Counts table via `-Update`), a pre-commit hook, and a commit-msg check that a commit staging `src/Sky.Content/` also stages `docs/design/` or carries `Docs: unchanged, <why>`
 - [ ] CI on GitHub Actions (Linux), after the gates and the provenance checker: actionlint, zizmor, build, test, csharpier, `dotnet format`, the provenance check; dependabot
 
-### Wave M0-D: agent docs and studio (`CLAUDE.md`, `docs/*.md` outside plans, `.claude/`; gate: `writing-for-agents` read-through)
-
-- [ ] Studio skills, after `DEVELOPMENT.md`: `sky-nextup` (the profile: agents, reviewers by change type with `oracle` for engine changes, gates, ceiling 3, Docs map, landing, the owner's rule that the orchestrator settles technical decisions) and `sky-changelog-and-commit` (no bullets before the first release); the eight agents in `.claude/agents/` have landed
-
 ### Milestone close
 
 - [ ] Push M0 to `origin/main` once the waves above have landed (the public repo `leftos/in-the-sky` already exists, holding the kickoff commit)

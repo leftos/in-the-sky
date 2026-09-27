@@ -31,6 +31,7 @@ Everything runs from the repo root through `sky.ps1` (`pwsh ./sky.ps1 help`). Ev
 - Every task is a checkbox line in `docs/plans/MAIN.md` (or a subplan it links); a landed line moves, ticked, to `docs/plans/archive/`. A steer that arrives mid-task becomes a line there before anything else.
 - The orchestrator settles non-game technical decisions itself (build config, test layout, tool choices) and records each in the owning doc or an ADR; only design, player-facing or public choices (a push, a GitHub post) go to the owner, through `AskUserQuestion` (owner, 2026-09-26). The owner answers design questions well with previews on the options; when they ask to discuss the tradeoffs of two options, lay out the pros and cons in prose before asking again (owner, 2026-09-26).
 - Source and test edits go to the user-level `implementer` agent with a brief naming the worktree root, the files, the change and a proving command per step; the main session owns docs, plans, config, ADRs and commits.
+- `/nextup` runs the plan through the project profile `.claude/skills/sky-nextup/SKILL.md` (agents, reviewers, gates, the Docs map, landing); every commit follows `.claude/skills/sky-changelog-and-commit/SKILL.md`.
 - Git: commit often inside the `/nextup` loop, push at milestones, and use feature branches for major, experimental or spike work (owner, 2026-09-26).
 - Studio agents in `.claude/agents/`, the owner directing:
   - `game-designer`: design decisions, mechanics, design reviews and specs; owns `docs/design/CONCEPT.md` and every design doc no other agent owns.

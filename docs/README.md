@@ -32,6 +32,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Concept pass | The short design sitting before any code that produces `docs/design/CONCEPT.md`. |
 | Contagion | A need spreading between neighbours; in M1 only Unease spreads, to adjacent seats and across the aisle. |
 | Crew-observed view | The player's picture of the cabin, built from what crew have seen, which ages and goes stale. A setting switches it to the true state. |
+| Decision round | The step of the `/nextup` loop where every choice a brief needs is settled before dispatch: technical ones by the orchestrator, design, player-facing and public ones by the owner. |
 | Delayed consequence | What a Lua event's effect returns instead of changing state at once: a change the engine applies later, at a tick it names. |
 | Dependency edge | A project reference between two `Sky.*` projects. `docs/ARCHITECTURE.md` lists the allowed edges and each test twin's `ReferenceTests` pins them. |
 | Dev inspector | A developer-only surface showing why a character chose what it did, from the top candidate scores each decision records. |
@@ -42,6 +43,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Engine | `Sky.Engine`, the simulation library, which references no other project or package. |
 | Event | A Lua module (`trigger`, `describe`, `choices`, `effects`) that surfaces a situation with choices; crew auto-resolve it when no player chooses. |
 | Experience | A passenger's whole-flight result, 0 to 100, computed from their distress over the flight (`docs/design/CONCEPT.md` section 6). |
+| Fix round | One return trip of review findings to the implementer that wrote the change; an item gets two at most. |
 | Flight phase | A stage of a flight from boarding to deboarding (boarding, taxi, climb, cruise, descent, deboarding and so on); the stage machine enters each in order. |
 | Gate | A check that must pass before work lands (a build, a test run, a format check, a hook), run under `tools/gate.ps1`; `tools/test-all.ps1` is the whole gate. |
 | Hazard | A review finding that can break a build, a run or a player's session; after one is fixed, the reviewer does a last pass. |
@@ -50,6 +52,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Invariant fuzzing | Running many seeded flights and checking after every tick that rules which must always hold still hold. |
 | Journal | The record of a flight's inputs (tick counts per frame, commands, observations) that, with the seed, replays the flight exactly. |
 | Last pass | A reviewer's final read of a diff after a hazard was fixed, checking only that the fix holds and broke nothing. |
+| Landing note | The `Landed YYYY-MM-DD: …` text a finished plan line carries into `docs/plans/archive/`: what landed, test counts, the red proof and review findings. |
 | Lever | Something the player (from M3) or a policy (in M1) sets that changes the conditions the cabin plays out in: a service schedule, a crew zone, the lighting plan. A lever is never an order to one passenger. |
 | Milestone | A numbered stage of the roadmap (M0 to M6) in `docs/plans/MAIN.md`; each has a definition of done. |
 | Moment | Two senses. (1) A surfaced situation the player or crew answers with a choice, as opposed to a policy ("decide at the level of a moment"; seat conflicts arrive as moments). (2) In the report, a journal record that moved an outcome: its tick, what happened, who was involved, the cause chain behind it, and its effect on each scoring outcome. The report is built from moments. |
@@ -60,9 +63,11 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Pillar | One of the design principles in `docs/design/CONCEPT.md` section 2 that every feature is tested against. |
 | Policy | A standing decision that applies to a class of people or situations (a service plan, a crew zone), as opposed to a moment. |
 | Port | An interface the Engine defines and another project implements (`IClockSource`, `ISimFeed`, `IBehaviorScripts`). |
+| Profile | A project's `<project>-nextup` skill (here `sky-nextup`), which supplies the user-level `/nextup` loop with this repo's plan convention, agents, reviewers, gates, docs map and landing path. |
 | Provenance gate | The prek hook and CI job that fail the build on an asset without a ledger entry, a license outside the allowlist, or an entry pointing at a missing file. |
 | Provenance ledger | `assets/PROVENANCE.toml`, one entry per asset recording origin, license, author and source. The gate checks it, and `CREDITS.md` is generated from it. |
 | Rate multiplier | The factor applied to a need's base rate, composed from all active modifiers by the rule in `docs/design/CONCEPT.md` section 4. |
+| Red proof | Showing a new test can fail: a named temporary break of the code turns it red, and restoring the code turns it green. |
 | Reference flight | M1's baseline flight: a narrowbody day departure of about 2.5 hours with one drinks round and one meal. |
 | Replay equality | Replaying a seed and its journal gives the same end-state hash and the same report text as the original run. |
 | RNG root | The one seeded random source of a flight, which hands out named streams. |
@@ -70,6 +75,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Scratch scene | A Debug-only Godot scene under `src/Sky.Client/Scratch/` that shows one piece of the client in isolation; no export carries it. |
 | Sequence executor | The one runner for passenger and crew actions: it orders them by priority, interrupts a lower one for a higher, runs cleanup on interrupt, and holds sync points. |
 | Session | `Sky.Session`'s `ISkySession`: the client pulls views from it and pushes commands to it. |
+| Slice | The plan items one `/nextup` session explores and builds: the first cluster of lines plus the next ones with disjoint files, up to three implementers. |
 | Source class | The origin a rate modifier is grouped by: modifiers from the same source multiply, different sources add. |
 | Spike | A short, throwaway experiment on its own branch that measures something a decision depends on. |
 | Squeeze rule | The nav graph rule that lets one character pass another in an aisle slot that is already occupied. |
@@ -86,3 +92,4 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Utility scoring | How a passenger picks the next activity: each candidate scores itself from needs, traits and context, and the highest score wins. |
 | Verdict | The word the report gives each of the four outcomes (Smooth, Rough, Bad); there is no overall grade. |
 | View projection | One of the Session's two ways of building what the client sees: from crew observations, or from the true state. |
+| Wave | A group of plan lines in `docs/plans/MAIN.md` that share files and a gate; waves with disjoint files run side by side. |
