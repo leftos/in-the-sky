@@ -15,7 +15,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 6 | 60 | 6 | 66 |
-| Sky.Engine.Tests | 21 | 208 | 27 | 235 |
+| Sky.Engine.Tests | 23 | 228 | 37 | 265 |
 | Sky.Scripting.Tests | 4 | 31 | 25 | 56 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
@@ -25,6 +25,8 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 Every class below reads the referenced assembly names from its project's compiled `AssemblyMarker` assembly and compares the `Sky.*` ones, sorted, with the edges `docs/ARCHITECTURE.md` allows.
 
 ## Sky.Engine.Tests
+
+`Fakes/FakeBehaviorScripts.cs` stands in for the Lua host in Engine tests: activity scores set by the test (0 by default), each call's facts recorded, no events.
 
 | Class | Tests | Proves |
 |---|---|---|
@@ -47,6 +49,8 @@ Every class below reads the referenced assembly names from its project's compile
 | `DistressTests` | 8 | `Distress` with D3's terms: Unease alone at 60 gives 30; needs at or below their thresholds give 0; everything at 100 clamps to 100; a missing, repeated or null term and an out-of-range threshold or weight are refused; a CsCheck property keeps distress in [0, 100] and never lowers it when a need rises. |
 | `StageMachineTests` | 12 | `StageMachine`: a feed jump from taxi-out to cruise starts takeoff, climb and cruise in order on one tick; the first advance enters pre-boarding first; a missing or null handler fails at construction naming the stage; an earlier or equal stage starts nothing and the next later one resumes from the current stage; an undefined stage is refused before any handler runs; a handler re-entering `Advance` neither regresses nor double-starts; a throwing handler leaves its stage entered and is not retried; the eleven stages are pinned in order, contiguous from 0. |
 | `ManifestGeneratorTests` | 22 | `ManifestGenerator` on the reference layout (built by its internal `ReferenceLayout()`) with passengers.md's shares: one seed gives one manifest and seed 1's is pinned (a change there breaks replays); no seat is booked twice; load factor and business count stay in range over seeds, and a full load seats 180 with 12 in business; everyone sits in their class; a group of three lands in one seat group; a split family leaves no child without an adult it could have had; a family's adult takes the aisle seat of its seat group; forbidden trait pairs never meet, children carry `child` and only allowed extras, no child has a sleep kit or a profession; business trips carry no children, retirees or students; families have their adults; wake times fall in range; bad rules , a mismatched layout and graph and a layout with no aisle are refused naming the field. |
+| `FlightTests` | 20 | `FlightWorld` on `TwoRowLayout` with `FakeBehaviorScripts`: `Step` advances the tick and journals one frame record a call; a changed feed observation is journalled once and moves the stage machine; late and fed up raises Unease's rise ×1.1 and a trait factor scales its need; Rest rises faster in the afternoon band; unboarded passengers do not tick; passenger character ids follow the crew; every missing or bad setup input is refused. |
+| `StartingNeedsTests` | 52 | `StartingNeeds.Draw` and `BodyClock`: 60 minutes with the outlets closed adds exactly +25 Refreshment, +12 Boredom and +11.25 Unease; Refreshment never passes 70; the reference conditions add nothing; late and fed up from 30 minutes; a booking's members within the spread; one seed, one draw; Unease from the highest trait baseline or the default; starting Rest from hours awake, a short night and the cap; every rules field check. |
 | `IdTests` | 2 | `ActivityId` and `TraitId` refuse a negative value. |
 | `ForbiddenApiTests` | 2 | `Sky.Engine`'s compiled metadata references no wall clock, unseeded or crypto randomness, threading, IO, network, console, process, environment (beyond `NewLine`), `Guid.NewGuid`/`CreateVersion7` or string hashing API (ADR 0001, R3); members of generic types are checked through their definition. A second test proves the scanner's reach on the test assembly itself: a type, a member and a generic type's member. |
 

@@ -43,6 +43,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Catch-up drink | A crew task posted when a crew member reads a passenger's Refreshment as `urgent`, bringing them the drink an answered call would. |
 | Catch-up service | A crew task serving, after a round ends, the passengers the round skipped because they were asleep or away from their seat. |
 | Ceiling | The longest a gate may run before `tools/gate.ps1` or `tools/test-all.ps1` kills it with its children (exit 124); a few times what it takes today, so reaching one means a hang. |
+| Character id | The id the executor and occupancy know a character by: crew hold 0 to crew count − 1, and a passenger is the crew count plus their manifest id. |
 | Check cadence | How often the event scheduler asks every enabled event trigger whether to fire (`docs/design/events.md` section 3). |
 | Check-in follow-up | A crew task posted some minutes after a crew member reads a passenger's Unease as `urgent`: a return visit that calms them and reads Unease again. |
 | Check-in walk | A crew task walking a zone's rows at a set cadence in cruise, observing every seat and stopping at passengers who look uneasy or distressed. |
@@ -82,6 +83,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Flight emulator | The standalone-mode `ISimFeed` in `Sky.Session`: it plays a scenario's phase timeline, seatbelt sign and turbulence, and its output is journaled so a replay never runs it. |
 | Flight phase | A stage of a flight, one of the eleven values of `FlightStage` in order: pre-boarding, boarding, taxi-out, takeoff, climb, cruise, descent, landing, taxi-in, deboarding, done; the stage machine enters each in order. |
 | Focus | The number, from competence, fatigue and crew traits, that decides how sharply a crew member picks an event's best choice in auto-resolve. |
+| Frame record | The journal's record of one `Step` call: the tick it started on and how many ticks it ran, so a replay steps the same way. |
 | Full break | A galley break that ran its 10-minute minimum; only a full break restarts a crew member's 60-minute no-break clock (`docs/design/crew.md`, strain). |
 | Galley break | A crew task at the galley that lowers strain; it is posted when strain or time since the last break runs high, and call buttons can interrupt it. |
 | Gate | A check that must pass before work lands (a build, a test run, a format check, a hook), run under `tools/gate.ps1`; `tools/test-all.ps1` is the whole gate. |
