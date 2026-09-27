@@ -38,7 +38,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Call reason | Why a passenger pressed the call button (`refreshment`, `reassurance` or `lav_permission`): it decides what answering does and which need the answer reveals. |
 | Calming source | An awake, calm off-duty crew passenger, whose Event-class modifier below 1 damps the Unease pushes of the neighbours in contagion reach (`docs/design/passengers.md` section 7). |
 | Cart span | The rows one service cart serves in a round, set with the crew zones as one lever (`docs/design/crew.md`). |
-| Cascade | One system's effect setting off another's, such as a drinks round filling the lav queue that then blocks the cart. |
+| Cascade | One system's effect setting off another's, such as a drinks round filling the lav queue that then blocks the cart. In the needs model, a cascade rule (`CascadeRule`) makes one need above its threshold speed another up: a Cascade-class rate modifier, such as Rest above 80 driving Unease ×1.2. |
 | Catch-up drink | A crew task posted when a crew member reads a passenger's Refreshment as `urgent`, bringing them the drink an answered call would. |
 | Catch-up service | A crew task serving, after a round ends, the passengers the round skipped because they were asleep or away from their seat. |
 | Ceiling | The longest a gate may run before `tools/gate.ps1` or `tools/test-all.ps1` kills it with its children (exit 124); a few times what it takes today, so reaching one means a hang. |
@@ -161,6 +161,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Stow | A cart's return to the galley as the cleanup of a pre-empted round, such as when the landing secure check ends a meal still in the aisle. |
 | Strain | A crew member's accumulated load: time on task without a break, pre-emptions, and fatigue. |
 | Studio agent | One of the project's own agents in `.claude/agents/` (game-designer, event-writer, balance-analyst, art-director, ux-reviewer, playtester, godot-reviewer, sky-explore), each owning a kind of work and, for most, a design doc. |
+| Sustain gate | `SustainGate`, one per passenger and need: it raises a failure once, on the tick a need has held at or above its failure threshold for its sustain window, then stays disarmed until the need drops below the threshold minus the re-arm margin (30 in M1). |
 | Sustain window | How long a need must stay past its threshold before it counts as a failure, so a spike at spawn has no consequence. |
 | Sweep | Running the same scenario over many seeds (a seed sweep) and collecting one balance CSV row per seed. |
 | Sync point | A named moment where several characters' sequences wait for each other, such as two crew working one cart. |
