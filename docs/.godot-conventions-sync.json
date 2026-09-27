@@ -1,0 +1,245 @@
+{
+  "rules": {
+    "bind-idempotent-no-submit": {
+      "repo": "a5bbc86816282715",
+      "user": "a5bbc86816282715"
+    },
+    "cancel-awaited-work-exit-tree": {
+      "repo": "3da31db0c1b1b8a9",
+      "user": "3da31db0c1b1b8a9"
+    },
+    "check-tween-has-tweeners": {
+      "repo": "0b32155d35d1be7f",
+      "user": "0b32155d35d1be7f"
+    },
+    "client-computes-no-rule": {
+      "repo": "16259e5cbec57bd5",
+      "user": "16259e5cbec57bd5"
+    },
+    "container-owns-child": {
+      "repo": "62dded19907b4a66",
+      "user": "62dded19907b4a66"
+    },
+    "decide-from-current-view": {
+      "repo": "b3e57890c8877997",
+      "user": "b3e57890c8877997"
+    },
+    "defer-measure-after-theme-change": {
+      "repo": "45d929e73741f680",
+      "user": "45d929e73741f680"
+    },
+    "defer-scroll-until-sorted": {
+      "repo": "7aed135f01ea4c3b",
+      "user": "7aed135f01ea4c3b"
+    },
+    "deferred-call-same-idle-cycle": {
+      "repo": "626f3c841d477ee8",
+      "user": "626f3c841d477ee8"
+    },
+    "delete-dead-code": {
+      "repo": "1fdcc3721772a928",
+      "user": "1fdcc3721772a928"
+    },
+    "delete-partial-file-on-failure": {
+      "repo": "bb380912fdf65920",
+      "user": "bb380912fdf65920"
+    },
+    "disable-idle-process-input": {
+      "repo": "e850c2e90b0c10a8",
+      "user": "e850c2e90b0c10a8"
+    },
+    "doc-comment-matches-code": {
+      "repo": "977c95e788385d65",
+      "user": "977c95e788385d65"
+    },
+    "driver-log-once-names-cause": {
+      "repo": "2a1384cd7db223ac",
+      "user": "2a1384cd7db223ac"
+    },
+    "driver-presses-player-control": {
+      "repo": "b40dd8ca6bcb1f79",
+      "user": "b40dd8ca6bcb1f79"
+    },
+    "emit-nothing-during-teardown": {
+      "repo": "e282dd8f01e963b6",
+      "user": "e282dd8f01e963b6"
+    },
+    "exit-nonzero-on-failure": {
+      "repo": "73dcdf7c82cc0eea",
+      "user": "73dcdf7c82cc0eea"
+    },
+    "export-tunables-and-scenes": {
+      "repo": "8a8c62255e44831a",
+      "user": "8a8c62255e44831a"
+    },
+    "godot-api-main-thread": {
+      "repo": "a56629e003d3d7b6",
+      "user": "a56629e003d3d7b6"
+    },
+    "hit-area-asks-the-cards-controls": {
+      "repo": "21824142fcd13d7e",
+      "user": "21824142fcd13d7e"
+    },
+    "hoist-side-effect-from-condition": {
+      "repo": "6e9a623298de69b9",
+      "user": "6e9a623298de69b9"
+    },
+    "hold-is-interval": {
+      "repo": "12bf21d7a8127d77",
+      "user": "12bf21d7a8127d77"
+    },
+    "input-callback-by-propagation": {
+      "repo": "87cf267833447877",
+      "user": "87cf267833447877"
+    },
+    "keys-as-inputmap-actions": {
+      "repo": "cbf13c31f816164a",
+      "user": "cbf13c31f816164a"
+    },
+    "light2d-layer-range": {
+      "repo": "98678ce7be71a195",
+      "user": "98678ce7be71a195"
+    },
+    "light2d-scales-item-colour": {
+      "repo": "6c6b7e7f136aa239",
+      "user": "6c6b7e7f136aa239"
+    },
+    "liveness-after-await": {
+      "repo": "61980b9f58a4b574",
+      "user": "61980b9f58a4b574"
+    },
+    "logger-callback-never-throws": {
+      "repo": "215697400e3665e5",
+      "user": "215697400e3665e5"
+    },
+    "mipmaps-and-dpitexture-import": {
+      "repo": "bde8c259dfb4d04b",
+      "user": "bde8c259dfb4d04b"
+    },
+    "modal-traps-focus": {
+      "repo": "41f750cc163f7009",
+      "user": "41f750cc163f7009"
+    },
+    "name-method-by-what-it-does": {
+      "repo": "4813a7130060f85c",
+      "user": "4813a7130060f85c"
+    },
+    "no-mcp-bridge-at-commit": {
+      "repo": "48e1c21c7d299f80",
+      "user": "48e1c21c7d299f80"
+    },
+    "no-underscore-private-fields": {
+      "repo": "6c60ddfbe4d59951",
+      "user": "6c60ddfbe4d59951"
+    },
+    "observe-every-task": {
+      "repo": "9b9439e92193fc11",
+      "user": "9b9439e92193fc11"
+    },
+    "one-owner-per-property": {
+      "repo": "213cddccec686144",
+      "user": "213cddccec686144"
+    },
+    "one-press-one-command": {
+      "repo": "2daacc930a43a344",
+      "user": "2daacc930a43a344"
+    },
+    "partial-theme-redeclares-base-variations": {
+      "repo": "3551b8009c3d0322",
+      "user": "3551b8009c3d0322"
+    },
+    "pixel-art-world": {
+      "repo": "44b1d92675af285b",
+      "user": "44b1d92675af285b"
+    },
+    "procedural-texture-drawn-size": {
+      "repo": "9cae4a21b7b754ff",
+      "user": "9cae4a21b7b754ff"
+    },
+    "process-wide-services-in-autoload": {
+      "repo": "b3e366d49b7b1663",
+      "user": "b3e366d49b7b1663"
+    },
+    "refusal-never-silent": {
+      "repo": "92afdb2486ec965d",
+      "user": "92afdb2486ec965d"
+    },
+    "remake-theme-reads-on-theme-changed": {
+      "repo": "60208ab6ab61579e",
+      "user": "60208ab6ab61579e"
+    },
+    "resolve-node-once-hot-path": {
+      "repo": "036f00f5680eb98f",
+      "user": "036f00f5680eb98f"
+    },
+    "richtextlabel-fit-content-max-width": {
+      "repo": "711e8c6b9e9077a2",
+      "user": "711e8c6b9e9077a2"
+    },
+    "scene-file-as-editor-writes": {
+      "repo": "b8a993bf08d17611",
+      "user": "b8a993bf08d17611"
+    },
+    "selection-writeback-reentry-guard": {
+      "repo": "37622dd6d7d9aab4",
+      "user": "37622dd6d7d9aab4"
+    },
+    "sentence-names-the-thing": {
+      "repo": "a284f1454e421dbc",
+      "user": "a284f1454e421dbc"
+    },
+    "show-disabled-focused-state": {
+      "repo": "535d5ed428b56e3b",
+      "user": "535d5ed428b56e3b"
+    },
+    "size-for-largest-content": {
+      "repo": "5ac45d94b52f441a",
+      "user": "5ac45d94b52f441a"
+    },
+    "spell-name-once": {
+      "repo": "e7ee93293156f1c1",
+      "user": "e7ee93293156f1c1"
+    },
+    "subtree-twice-becomes-scene": {
+      "repo": "1077252ca16d218b",
+      "user": "1077252ca16d218b"
+    },
+    "text-matches-screen-and-state": {
+      "repo": "f671a8ba17fd5e11",
+      "user": "f671a8ba17fd5e11"
+    },
+    "theme-owns-colour-font-size": {
+      "repo": "57a9d2a13cbd2552",
+      "user": "57a9d2a13cbd2552"
+    },
+    "transform3d-rows-check-z": {
+      "repo": "cded229f2e9e55f8",
+      "user": "cded229f2e9e55f8"
+    },
+    "tween-handle-kill-before-restart": {
+      "repo": "1088685851f7e045",
+      "user": "1088685851f7e045"
+    },
+    "tween-pause-needs-tweener-behind": {
+      "repo": "0603dae589fa0fc3",
+      "user": "0603dae589fa0fc3"
+    },
+    "validate-manifest-strings": {
+      "repo": "5e0b87587287d39d",
+      "user": "5e0b87587287d39d"
+    },
+    "waiting-state-has-way-out": {
+      "repo": "bcfb13cbab35346f",
+      "user": "bcfb13cbab35346f"
+    },
+    "watchdog-resets-on-progress": {
+      "repo": "4b3cae21ace6d255",
+      "user": "4b3cae21ace6d255"
+    },
+    "window-mode-off-the-window": {
+      "repo": "6edebf4c9ed57ef7",
+      "user": "6edebf4c9ed57ef7"
+    }
+  },
+  "user_revision": 11
+}
