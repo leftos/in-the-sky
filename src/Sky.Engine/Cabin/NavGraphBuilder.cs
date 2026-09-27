@@ -60,7 +60,10 @@ public static class NavGraphBuilder
         }
     }
 
-    private static void ValidateFixtures(CabinLayout layout)
+    /// <summary>Checks that every fixture names a row and an aisle the layout has.</summary>
+    /// <param name="layout">The layout.</param>
+    /// <exception cref="ArgumentException">A fixture names a missing row or aisle; the message carries its id and the bad index.</exception>
+    internal static void ValidateFixtures(CabinLayout layout)
     {
         foreach (CabinFixture fixture in layout.Fixtures)
         {

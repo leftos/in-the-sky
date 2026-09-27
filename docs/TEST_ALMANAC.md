@@ -15,7 +15,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 1 | 1 | 0 | 1 |
-| Sky.Engine.Tests | 9 | 68 | 9 | 77 |
+| Sky.Engine.Tests | 11 | 86 | 12 | 98 |
 | Sky.Scripting.Tests | 1 | 1 | 0 | 1 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
@@ -31,6 +31,8 @@ Every class below reads the referenced assembly names from its project's compile
 | `ReferenceTests` | 1 | `ReferencesNoOtherProject`: `Sky.Engine` references no Sky project, and no assembly whose name starts with `Godot`, `MoonSharp`, `NLua` or `KeraLua`. |
 | `TickAccumulatorTests` | 4 | `TickAccumulator` turns elapsed sim milliseconds into whole 250 ms ticks and carries the remainder across calls (a CsCheck property: ticks over any split of a duration equal the ticks of the whole); negative input is refused. |
 | `NavGraphBuilderTests` | 11 | `NavGraphBuilder` turns a real-unit layout (a 2-2 row ahead of a 3-3 row) into the nav graph: every seat reaches the door, lav and galley; a window seat reaches the aisle only through the middle and aisle seats; an end seat links only to the nearest aisle with no group between; edge ticks round up from inches without float noise and never fall below 1; bad fixtures, empty seat groups and sub-1-tick links are refused. |
+| `OccupancyTests` | 25 | `Occupancy` over the two-row test layout: a full seat refuses a reservation; a person squeezes into a full aisle slot and a third is refused, and the squeeze is free again after a release; a cart blocks a squeeze, cannot enter an occupied slot and is refused on seats, lavs and lav queues; `Holders` lists reservation order; arrive and release errors name the node and character; a CsCheck property over random reserve, arrive and release never exceeds capacity plus the squeeze and keeps a cart alone. |
+| `LayoutAsciiTests` | 3 | `LayoutAscii.Render` pins the two-row layout's dump, renders a 2-3-2 row's two aisles in lateral order, and refuses a fixture on a missing row as the builder does. |
 | `PathTableTests` | 4 | `PathTable` walks next hops from every node to every target at the tabled cost, equal-cost ties go to the lower node id, two builds are identical, and an unreachable target reports -1. |
 | `SequenceExecutorTests` | 15 | `SequenceExecutor` runs one action per character: a higher priority interrupts and the old action's cleanup runs once before the new action's first tick; equal or lower priority does not interrupt; a finished action clears without cleanup; a start made during a tick first runs on the next tick whatever the character order, and survives its starter finishing. A `SyncPoint` releases every member on the tick after the last arrival, a withdrawn member holds it, and bad arguments are refused. |
 | `RngRootTests` | 18 | SplitMix64, xoshiro256** and FNV-1a-64 match their published reference vectors; a stream is seeded from the root seed and its name hashed together, so streams are independent (drawing from `crew/0` does not shift `passenger/0`) and a (seed, name) pair cannot stand in for another; `passenger/0`'s first draws under seed 1 are pinned; `NextInt`, `NextDouble` and `Chance` stay in range, consume one draw each, and refuse bad arguments. |
