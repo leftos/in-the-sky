@@ -28,11 +28,16 @@ A new edge needs two things in the referencing project: a `ProjectReference` in 
 
 ## Layers
 
-Every project today is a marker only: an `AssemblyMarker` class that names the assembly and holds one `typeof` per referenced project. Nothing else is built yet.
+Every project has an `AssemblyMarker` class that names the assembly and holds one `typeof` per referenced project. Only the Engine holds more so far (M1 in progress).
 
 ### Engine: `src/Sky.Engine`
 
-A plain `net10.0` class library with no project or package references; its `AssemblyMarker` is empty. ADR 0001 governs its isolation; 0002 (fixed tick and `IClockSource`), 0003 (the RNG root and named streams), 0004 (the journal), 0005 (the nav graph) and 0006 (utility scoring, task board, sequence executor) govern what it will hold. Not built yet.
+A plain `net10.0` class library with no project or package references; its `AssemblyMarker` is empty. ADR 0001 governs its isolation; 0002 (fixed tick and `IClockSource`), 0003 (the RNG root and named streams), 0004 (the journal), 0005 (the nav graph) and 0006 (utility scoring, task board, sequence executor) govern what it will hold. Built so far, one folder each:
+
+- `Ports/`: the interfaces other projects implement; `IClockSource` hands the Engine elapsed sim milliseconds.
+- `Time/`: `SimTime` (the 250 ms tick, ticks per sim minute and hour) and `TickAccumulator`, which turns elapsed milliseconds into whole ticks and carries the remainder.
+
+`tests/Sky.Engine.Tests/Guards/ForbiddenApiTests.cs` reads the compiled Engine's metadata and fails on any wall-clock, randomness, threading, IO or string-hashing API (R3 in the M1 plan); a new Engine dependency on one of them is an allowlist edit there, argued in the change. A C# `event` or `lock` compiles to `System.Threading` calls, so either trips it.
 
 ### Content: `src/Sky.Content`
 
