@@ -195,7 +195,7 @@ The five need values are never captured by sight.
 | Tray collection | Refreshment |
 | Call button answered | the call's reason need (`refreshment` → Refreshment, `reassurance` → Unease, `lav_permission` → Bladder), and Unease |
 | Crew reaching an incident | the failing need, and Unease |
-| An event's crew task | the needs the event module declares it reveals (event-writer, D4), and Unease |
+| An event's crew task, once a crew member starts it | for each passenger the chosen branch targets by name (never its neighbours): Unease, and every other need the branch's Need consequences lower on that passenger (events.md section 1; event-writer, 2026-09-27) |
 | Check-in stop or check-in follow-up (crew.md (D2)) | Unease |
 
 Every interaction in this table also reveals the passenger's current thought (section 10; P12). A sleeping passenger passed over reveals nothing beyond "asleep". A check-in walk passing a row reveals by sight, plus the thought of every awake passenger in that row; it reveals a need only where it stops, at a passenger seen as uneasy or distressed. That is what makes staleness honest: a walk shows that 23F looks uneasy and is thinking about the lav queue, not what her Bladder reads.
