@@ -14,7 +14,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 | Project | Classes | `[Fact]` | `[Theory]` | Total |
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
-| Sky.Content.Tests | 2 | 15 | 2 | 17 |
+| Sky.Content.Tests | 5 | 37 | 6 | 43 |
 | Sky.Engine.Tests | 21 | 206 | 27 | 233 |
 | Sky.Scripting.Tests | 4 | 31 | 25 | 56 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
@@ -56,6 +56,9 @@ Every class below reads the referenced assembly names from its project's compile
 |---|---|---|
 | `ReferenceTests` | 1 | `ReferencesOnlyItsAllowedSkyProjects`: `Sky.Content` references `Sky.Engine` and no other Sky project. |
 | `ContentLoaderTests` | 27 | `ContentLoader` over fixture trees written by `ContentTree`: a minimal tree loads into Engine types with ids interned in declaration order; a malformed, unknown, missing or null field fails naming the file and JSON path; enums take only exact member names; omitted optional fields take their defaults; an unknown or duplicate id and a missing module fail naming them; an Engine refusal becomes a `ContentLoadException`; the hash changes with a byte or a rename, ignores listing order, root location and files other than `.json` and `.lua`. |
+| `LayoutValidatorTests` | 20 | `LayoutValidator` over the minimal tree edited one rule at a time: an empty id, a zero or negative cabin, aisle, pitch or seat size, an aisle or seat group past a wall, a seat group over an aisle or another group, a duplicate fixture id, a missing door, lav or galley, and a seat with no walk to a fixture are refused at their JSON paths; spans that only touch are accepted, fractional widths included. |
+| `ScenarioValidatorTests` | 13 | `ScenarioValidator`: an unknown layout, a gate delay outside 0 to 240 (both bounds accepted), a locked lav that is not a lav, a zone gap or overlap, a zone without crew, a crew id not in the roster, a crew count that does not match the zones, an unknown station and a cart span outside the layout are refused at their JSON paths. |
+| `ThoughtCatalogueValidatorTests` | 4 | `ThoughtCatalogueValidator`: an unknown lever tag, neighbour lever tag or hook is refused; the whole minimal tree passes `ContentValidator.Validate`. |
 
 ## Sky.Scripting.Tests
 

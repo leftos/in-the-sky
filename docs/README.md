@@ -174,6 +174,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Task board | The prioritized list of work (services, call buttons, checks) that crew claim. A higher-priority task can pre-empt a lower one. |
 | Test twin | The `tests/Sky.<X>.Tests` project paired with each `src/Sky.<X>` project. |
 | Thought | What one passenger is thinking for a while (a kind with a valence, salience, duration and lever tag), born from engine hooks, read by no system, and shown in the observed view only once a crew interaction or a check-in walk reveals it (`docs/design/passengers.md` section 10). |
+| Thought hook | The engine moment a thought kind is born at (`served`, `decision_point`, `woken`, …), named by id in `thoughts.json`; the ids are `ThoughtCatalogueValidator.Hooks`. |
 | Tick | One fixed step of simulation time: 250 ms (ADR 0010). |
 | Time warp | Running the sim faster than real time (up to 64x) in standalone mode; in MSFS mode the sim's own rate drives it. |
 | Trip purpose | Why a passenger's booking is flying (`business`, `leisure`, `visiting`); it shapes group size, children, traits and wake time. |

@@ -21,7 +21,7 @@ public sealed class ContentLoaderTests
         CabinLayout layout = content.Layouts["tiny"];
         Assert.Equal(148, layout.CabinWidthInches);
         Assert.Equal(3, Assert.Single(Assert.Single(layout.Rows).Groups).Seats.Count);
-        Assert.Equal([FixtureKind.Door, FixtureKind.Lav], layout.Fixtures.Select(fixture => fixture.Kind));
+        Assert.Equal([FixtureKind.Door, FixtureKind.Lav, FixtureKind.Galley], layout.Fixtures.Select(fixture => fixture.Kind));
         Assert.Equal(["idle", "sleep"], content.ActivityModules.Select(module => module.Id));
         Assert.Equal(ContentTree.SleepModule, content.ActivityModules[1].Source);
         Assert.Equal(new ActivityId(1), content.ActivityIds["sleep"]);

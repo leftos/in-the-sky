@@ -8,7 +8,7 @@ namespace Sky.Content.Tests;
 /// </summary>
 internal sealed class ContentTree : IDisposable
 {
-    /// <summary>The layout file, one row of three seats and a door and a lav at row 0.</summary>
+    /// <summary>The layout file, one row of three seats and a door, a lav and a galley at row 0.</summary>
     public const string Layout = """
         {
           "id": "tiny",
@@ -20,7 +20,8 @@ internal sealed class ContentTree : IDisposable
           "aisles": [ { "center_inches": 74, "width_inches": 20 } ],
           "fixtures": [
             { "id": "door-fwd", "kind": "Door", "row_index": 0, "aisle_index": 0, "distance_inches": 20 },
-            { "id": "lav-fwd", "kind": "Lav", "row_index": 0, "aisle_index": 0, "distance_inches": 30 }
+            { "id": "lav-fwd", "kind": "Lav", "row_index": 0, "aisle_index": 0, "distance_inches": 30 },
+            { "id": "galley-fwd", "kind": "Galley", "row_index": 0, "aisle_index": 0, "distance_inches": 40 }
           ]
         }
         """;

@@ -59,7 +59,9 @@ A class library referencing `Sky.Engine`. ADR 0001 governs its place. Built so f
 - `ContentSet.Hash`: the content hash, SHA-256 over every `.json` and `.lua` file under the root in ordinal order of its `/`-separated relative path (the path, a zero byte, the length, the bytes), so the same files hash alike on any machine and in any listing order.
 - `Data/**` is copied to the output of `Sky.Content` and every project that references it. No content ships yet.
 
-The loader checks shape, ids and the Engine's rules; references across files (a scenario's layout, a locked lav's fixture) and value ranges are the validator's, not built yet.
+The loader checks shape, ids and the Engine's rules; references across files and value ranges are the validators':
+
+- `Validation/`: `ContentValidator.Validate(ContentSet)` runs every `IContentValidator` in order and throws the first failure as a `ContentLoadException` naming the file and JSON path. `LayoutValidator`: positive sizes, aisles and seat groups within the walls and overlapping nothing (span ends rounded to 9 decimals, as the nav graph builder rounds), unique fixture ids, at least one door, lav and galley, and every seat reaching every fixture through the built nav graph. `ScenarioValidator`: the layout exists, the gate delay is 0 to 240 minutes, locked lavs are lavs, the crew zones cover every row once with crew from the roster and a matching count, stations are fixtures, cart spans lie in the layout. `ThoughtCatalogueValidator`: every thought kind's lever tag and hook come from its `LeverTags` and `Hooks` lists, which the Engine's thought hooks (F8) emit. `ContentLoader.Load` does not call them; whoever composes a flight does.
 
 ### Scripting: `src/Sky.Scripting`
 
