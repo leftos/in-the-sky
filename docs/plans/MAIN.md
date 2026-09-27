@@ -7,12 +7,6 @@ Open work only, in working order: the next item is the first line from the top. 
 
 Grouped into waves by shared files. Waves run side by side where their files are disjoint; inside a wave, a line that consumes an earlier line's output waits for it.
 
-### Wave M0-A: design docs (`docs/design/`, `docs/decisions/`; gate: owner ruling, `game-designer` review)
-
-
-### Wave M0-B: Lua runtime (`docs/research/`, `spike/lua-boundary` branch; gate: measured numbers, ADR)
-
-
 ### Wave M0-C: skeleton, gates and CI (repo root config, `src/`, `tests/`, `tools/`, `assets/`, `.github/`; gate: `tools/gate.ps1` once it exists, `code-review`)
 
 - [ ] Doc-drift hooks: port opening-hand's `tools/hooks/Test-DocDrift.ps1` for `docs/ARCHITECTURE.md` (every `src/Sky.*`) and `docs/TEST_ALMANAC.md` (every test twin and `*Tests` class, the Counts table via `-Update`), a pre-commit hook, and a commit-msg check that a commit staging `src/Sky.Content/` also stages `docs/design/` or carries `Docs: unchanged, <why>`
@@ -21,8 +15,8 @@ Grouped into waves by shared files. Waves run side by side where their files are
 
 ### Wave M0-D: agent docs and studio (`CLAUDE.md`, `docs/*.md` outside plans, `.claude/`; gate: `writing-for-agents` read-through)
 
-- [ ] Docs skeleton, following the siblings: `docs/README.md` start map and glossary, `ARCHITECTURE.md` with a task index, `DEVELOPMENT.md` (godot-mcp registered at local scope, scratch scenes), `TEST_ALMANAC.md`, `GODOT_CONVENTIONS.md` seeded through `godot-conventions-sync`; `CLAUDE.md` as a router; delete the handoff file once this lands
-- [ ] Studio: `.claude/agents/` for game-designer, ux-reviewer, balance-analyst, narrative and event writer, art-director, playtester, godot-reviewer, `sky-explore`; skills `sky-nextup` (profile) and `sky-changelog-and-commit`; port and update what fits from `D:\openpax\.claude\`
+- [ ] Docs skeleton, the rest: `docs/DEVELOPMENT.md` (toolchain, the `sky.ps1` commands and ceilings, prek and gitleaks, the provenance commands, godot-mcp registered at local scope, scratch scenes), then `CLAUDE.md` as a router; delete the handoff file once both land (README start map and glossary, `ARCHITECTURE.md`, `TEST_ALMANAC.md` and `GODOT_CONVENTIONS.md` have landed)
+- [ ] Studio skills, after `DEVELOPMENT.md`: `sky-nextup` (the profile: agents, reviewers by change type with `oracle` for engine changes, gates, ceiling 3, Docs map, landing, the owner's rule that the orchestrator settles technical decisions) and `sky-changelog-and-commit` (no bullets before the first release); the eight agents in `.claude/agents/` have landed
 
 ### Milestone close
 
@@ -30,7 +24,9 @@ Grouped into waves by shared files. Waves run side by side where their files are
 
 ## Next: M1, the headless cabin flight
 
-Broken into steps, each with its proving command, in an M1 subplan written after the concept pass. It is scoped in section 1 of the decisions doc: one narrowbody, seeded manifest, crew auto-resolving event choices, a few new Lua events, score and report, replay and fuzz, and the 64x performance test.
+- [ ] Write the M1 subplan: steps, each with its proving command, whose acceptance list is `docs/design/CONCEPT.md` section 7 (the concept pass and ADR 0010 have landed, so nothing blocks it).
+
+It is scoped in section 1 of the decisions doc: one narrowbody, seeded manifest, crew auto-resolving event choices, a few new Lua events, score and report, replay and fuzz, and the 64x performance test.
 
 ## Later milestones
 
