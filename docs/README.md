@@ -35,7 +35,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Booking | One party the manifest draws: its trip purpose, its size, whether it is a family, and its wake time, shared by its passengers, who are seated together where a seat group holds them. |
 | Bridge | The code the godot MCP server injects into a running client through an `override.cfg` beside `project.godot`, so an agent can drive the game; it is removed when the run stops and never tracked. |
 | Brief | The written instructions for one implementer run: the plan steps it carries, the files each touches and the command that proves each. |
-| Cabin ready | The tick at which boarding is complete, bins are closed and every passenger is seated and belted: the part of an on-time door the cabin controls. |
+| Cabin ready | The tick the last zone's secure check completes, which needs boarding complete, bins closed and every passenger seated and belted: the part of an on-time door the cabin controls (`crew.md`, Owner rulings 4). |
 | Call reason | Why a passenger pressed the call button (`refreshment`, `reassurance` or `lav_permission`): it decides what answering does and which need the answer reveals. |
 | Calming source | An awake, calm off-duty crew passenger, whose Event-class modifier below 1 damps the Unease pushes of the neighbours in contagion reach (`docs/design/passengers.md` section 7). |
 | Cart span | The rows one service cart serves in a round, set with the crew zones as one lever (`docs/design/crew.md`). |
@@ -54,6 +54,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Contagion | A need spreading between neighbours; in M1 only Unease spreads, to adjacent seats and across the aisle. |
 | Content hash | A SHA-256 over every `.json` and `.lua` file's path and bytes under the content root, written in a journal's header so a replay against changed content is refused. |
 | Content root | The folder `ContentLoader.Load` reads: `src/Sky.Content/Data/` as shipped, a fixture tree in tests. |
+| Covering member | A crew member listed in more than one zone; each zone past the first is an extra zone, and the covering factor raises their time-on-task strain by each one (`crew.md` ruling 15). |
 | Crew station | A nav graph node beside the forward door, off the passenger path, where the purser stands for boarding and deboarding. |
 | Crew-observed view | The player's picture of the cabin, built from what crew have seen, which ages and goes stale. A setting switches it to the true state. |
 | Crewless flight | A flight with passengers and no cabin crew, scored on flight smoothness instead of the four crewed outcomes; from M5 (`docs/design/CONCEPT.md` section 8, T7). |
@@ -90,6 +91,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Hazard | A review finding that can break a build, a run or a player's session; after one is fixed, the reviewer does a last pass. |
 | Held peak | The highest distress a passenger stays at or above for a whole hold window (5 sim minutes): a spike shorter than the window does not set it (R36). |
 | Headless | Run without a window or Godot: `Sky.Sim` flies a whole flight headless, and M1 is a headless flight. |
+| Home zone | A covering member's first-listed zone: where their jumpseat is, where they wait when idle, and where moments file them. |
 | Hold priority | The priority a running task defends: a new task pre-empts it only when the new task's claim priority is higher (a cart claims low but holds high). |
 | Incident | A situation that needs crew action within a window (a medical case, a dispute); it is handled or missed, and the report counts both. |
 | Incident kind | Which incident it is: one per need from a sustained failure (`accident`, `food_demand`, `noise_complaint`, `panic`, `disruptive_passenger`), plus `fight`, raised only by events. |
@@ -178,6 +180,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Tick | One fixed step of simulation time: 250 ms (ADR 0010). |
 | Time warp | Running the sim faster than real time (up to 64x) in standalone mode; in MSFS mode the sim's own rate drives it. |
 | Trip purpose | Why a passenger's booking is flying (`business`, `leisure`, `visiting`); it shapes group size, children, traits and wake time. |
+| Understaffed | A flight with fewer crew than zones; one crew member a zone is the expectation (OD8). |
 | Utility scoring | How a passenger picks the next activity: each candidate scores itself from needs, traits and context, and the highest score wins. |
 | Verdict | The word the report gives each of the four outcomes (Smooth, Rough, Bad); there is no overall grade. |
 | View projection | One of the Session's two ways of building what the client sees: from crew observations, or from the true state. |

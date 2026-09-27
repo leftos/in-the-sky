@@ -505,13 +505,51 @@ Bin help (crew.md, section 2.17) cuts "remaining bin time" by 40% once a passeng
 
 Moves: Doors, both ends (cabin ready at departure, deboarding duration at arrival); the two numbers are independent estimates from section 3.5's aggregate target — one is a mechanic F3 actually runs, the other a scoring threshold — and Z6 is what reconciles them once a real boarding/deboarding run exists.
 
+### 3.7 The reference layout's geometry (X1)
+
+OD2 sets the reference narrowbody's seat map (crew.md:23): rows 0-2 are 2-2 business (12 seats), rows 3-30 are 3-3 economy (168 seats), one aisle, the forward door and forward lav ahead of row 0, the galley and aft lav behind row 30. `CabinLayout` (`src/Sky.Engine/Cabin/CabinLayout.cs`) needs every dimension in inches that OD2 and crew.md leave unstated: `CabinWidthInches`, each `CabinRow.PitchInches`, each class's `SeatSpec.WidthInches`, the `Aisle.CenterInches`/`WidthInches`, each `SeatGroup.LeftInches`, and each `CabinFixture.DistanceInches`. None of this is measured — `Sky.Sim` does not exist, so nothing has walked this aisle yet; X1's own `ShippedContentTests` (the directory loads and validates, OD2's seat count, a pinned ASCII dump) and K2's `LayoutValidator` (seat groups fit inside the walls and the aisle, every seat reachable) are the first checks these numbers face, and once F3 and H1 exist, Z6 reads them again indirectly through the boarding and deboarding minutes they set (section 3.5's target, the on-time-doors outcome).
+
+| Field | Value | Published/typical/judged | Reason |
+|---|---|---|---|
+| Cabin width | 146 in (3.70 m) | published | Airbus's own A320-family cross-section figure for interior cabin width |
+| Aisle width | 20 in | published | 14 CFR 25.815's minimum aisle width for an aircraft with more than 20 passenger seats, the certified floor single-aisle jets are typically built to |
+| Aisle centre | 73 in from the left wall | judged | half the cabin width; a constant-section fuselage does not taper across the seating rows, so one centre serves every row |
+| Business row pitch (rows 0-2) | 36 in | typical | short/medium-haul 2-2 business or domestic-first recliner pitch, industry range 36-38 in; row 2's edge into row 3 (the business/economy transition) is provisionally set to this same 36 in too, since a row's pitch is its own occupant's legroom, not the row behind's |
+| Economy row pitch (rows 3-30) | 31 in | typical | full-service legacy-carrier economy pitch, industry range 30-32 in; a low-cost carrier's 28-29 in does not fit CONCEPT's "one drinks round and one meal" full-service reference flight |
+| Business seat width | 21 in | typical | 2-2 domestic business/first recliner seat, industry range 20-21 in |
+| Economy seat width | 18 in | typical | Airbus markets the A320 family's standard economy seat at 18 in wide; kept typical here since it is a marketing figure, not a certified spec |
+| Business seat-group left edge (both sides) | 21 in | judged | derived so the row is centred on the 73 in aisle: (146 − 2×21 − 20) / 2 |
+| Economy seat-group left edge (both sides) | 9 in | judged | same method: (146 − 2×18×3 − 20) / 2 |
+| Forward door distance | 40 in ahead of row 0's aisle slot | judged | a short boarding vestibule, no published figure found |
+| Forward lav distance | 70 in ahead of row 0's aisle slot | judged | beyond the door, in the same vestibule |
+| Aft galley distance | 40 in behind row 30's aisle slot | judged | mirrors the forward door's depth |
+| Aft lav distance | 75 in behind row 30's aisle slot | judged | mirrors the forward lav's depth |
+| Walking pace, `inches_per_tick` (`NavGraphBuilder.Build`, `src/Sky.Engine/Cabin/NavGraphBuilder.cs:14`) | 7.87 in per 250 ms tick (0.8 m/s) | typical | a crowded-aisle boarding pace, not a free-flow corridor speed: Fruin's pedestrian level-of-service D/E congested-flow range (about 0.6-1.2 m/s) and the aisle-walking speeds aviation boarding-simulation studies validate against real airline boarding (Steffen 2008; van Landeghem & Beuselinck 2002 both model aisle walking near 0.8-1.0 m/s), converted 0.8 m/s × 39.3701 in/m × 0.25 s/tick = 7.87401… in/tick, rounded to 3 significant figures; bin-stow time (section 3.6) is a separate stop, not part of this pace |
+
+Sanity check: 3 business rows at 36 in plus 28 economy rows at 31 in is 976 in (81.3 ft, 24.8 m) of seating alone; adding the two vestibules (roughly 70-115 in each) lands the whole cabin around 27-29 m, inside the published range for an A320's cabin length (about 27.5 m) — the only cross-check available before a real boarding walk exists.
+
+The link to boarding time: F3's `BoardingFlow` walks each passenger from the forward door to their row, so these pitches, fixture distances and the walking pace above are what set that walk in ticks (`edge ticks = max(1, ceil(inches / inches_per_tick))`, `NavGraphBuilder.Build`, `src/Sky.Engine/Cabin/NavGraphBuilder.cs:220`), and Z6 reads the result back out as the boarding-side half of section 3.5's target formula and the on-time-doors outcome once F3 and H1 run. Worked example, no queue and no stow stop: the forward door to row 30's aisle slot is 40 in (the fixture) plus 3 business edges at 36 in (108 in) plus 27 economy edges at 31 in (837 in) = 985 in total, `ceil(985 / 7.87401574803) = 126` ticks, 126 × 250 ms = **31.5 s** — this is the pure walking component only, before section 3.6's per-passenger stow time is added at the passenger's own row. This closes the request section 5 raised: `inches_per_tick` is now set, at this line.
+
+### 3.8 `node_capacities` in `needs.json` (X1)
+
+`NodeCapacitiesSpec` (`src/Sky.Content/Schema/NeedsSchema.cs`) needs one holder count per nav-graph node kind ADR 0005 derives from the layout: an aisle slot at each row, seat nodes, and the door, lav and galley fixture nodes. None of these is measured either; F7's `InvariantChecker` and Z1's 500-seed fuzz are the first checks that exercise them (capacity and reservations never exceeded on any tick), and `lav_queue` specifically is what Z6's one-lav-locked lever check and passengers.md's own canonical-story line (the aft lav queue's longest overflow into the aisle, on at least 60% of seeds) will tune once real sweeps exist.
+
+| Field | Value | Published/typical/judged | Reason |
+|---|---|---|---|
+| `aisle_slot` | 1 | judged | one occupant (a cart or one walking or queuing passenger) holds a row's aisle slot at a time; a second person passes at the +4-tick squeeze cost (crew.md 2.23) instead of a bigger number here, so blocking (CONCEPT pillar 3's canonical story) still happens |
+| `seat` | 1 | judged | one passenger per seat |
+| `door` | 1 | judged | a doorway threshold is single-file, like a seat or a lav; the crew station beside it (crew.md:25) is a separate node "off the passenger path," so it never shares the door's capacity — diverges from `ContentTree`'s test fixture (2), which reads as an arbitrary test value, not a design choice |
+| `lav` | 1 | judged | one occupant per lavatory at a time |
+| `lav_queue` | 4 | judged | matches passengers.md's own thought trigger: `lav_queue_long` fires when a passenger "joins a lav queue with 3 or more ahead, or overflows into the aisle" (section 2.28); a capacity of 4 means the passenger who joins as the 4th (3 ahead) still fits on the queue node, and the next arrival is the one who overflows into the aisle slot behind it (passengers.md:94) — the thought's two clauses then map exactly onto the queue's last slot and its overflow boundary; diverges from `ContentTree`'s test fixture (2), sized for a much smaller test layout |
+| `galley` | 4 | judged | covers the reference crew's up-to-2-on-break cap (crew.md 2.20, six-crew roster) plus a working crew member or a stretching passenger (passengers.md's `stretch` activity walks to the aft galley) without the galley itself becoming a bottleneck |
+
 ## 4. Scope note (not a flag)
 
 Every worked example in `passengers.md` and `crew.md` was re-derived by hand while collecting section 2 (the rate-multiplier composition, the Unease equilibrium under moderate turbulence, the auto-resolve focus formula and its 80%/7% and 46%/26% pick chances, and the quality-to-percentage split in the fourth-power worked example): all reproduce exactly as stated, so no number is flagged as wrong. The one open item found — the seat-comfort formula "D3 owns" (section 2.3) — is a scope gap, not an error: `passengers.md` already gives the three reference-layout constants M1 needs, and a continuous pitch-and-width formula has no second layout to calibrate against until the layout editor (M2 onward, already out of M1's scope). Section 2.3 records that as the resolution rather than an open question.
 
 ## 5. Open requests for implementers
 
-None yet — `Sky.Sim` does not exist, so there is no scenario key or CSV column to be missing from. This section is for a lever with no scenario switch, or an outcome with no balance-CSV column, once a run needs one.
+None open. Section 3.7's `inches_per_tick` row (added 2026-09-27, orchestrator steer) answers the one request this section briefly carried: `BoardingFlow` (F3) now has a walking pace to turn the reference layout's pitches and fixture distances into ticks. Otherwise none yet — `Sky.Sim` does not exist, so there is no scenario key or CSV column to be missing from. This section is for a lever with no scenario switch, or an outcome with no balance-CSV column, once a run needs one.
 
 ## 6. Runs
 
