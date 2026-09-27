@@ -77,7 +77,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | First value | A number a design doc sets so a system has a shape, marked FV or [D3], unmeasured until `balance-analyst` computes and tunes it in `docs/design/balance.md`. |
 | Fix round | One return trip of review findings to the implementer that wrote the change; an item gets two at most. |
 | Flight emulator | The standalone-mode `ISimFeed` in `Sky.Session`: it plays a scenario's phase timeline, seatbelt sign and turbulence, and its output is journaled so a replay never runs it. |
-| Flight phase | A stage of a flight from boarding to deboarding (boarding, taxi, climb, cruise, descent, deboarding and so on); the stage machine enters each in order. |
+| Flight phase | A stage of a flight, one of the eleven values of `FlightStage` in order: pre-boarding, boarding, taxi-out, takeoff, climb, cruise, descent, landing, taxi-in, deboarding, done; the stage machine enters each in order. |
 | Focus | The number, from competence, fatigue and crew traits, that decides how sharply a crew member picks an event's best choice in auto-resolve. |
 | Full break | A galley break that ran its 10-minute minimum; only a full break restarts a crew member's 60-minute no-break clock (`docs/design/crew.md`, strain). |
 | Galley break | A crew task at the galley that lowers strain; it is posted when strain or time since the last break runs high, and call buttons can interrupt it. |
@@ -152,8 +152,11 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Source class | The origin a rate modifier is grouped by: modifiers from the same source multiply, different sources add. |
 | Spike | A short, throwaway experiment on its own branch that measures something a decision depends on. |
 | Spill time | How long a task waits before crew outside its zone may claim it. |
+| Sim feed | The `ISimFeed` port: what the simulator reports at a tick as a `FeedObservation` (the flight phase, the seatbelt sign and the turbulence level: none, light or moderate); the flight emulator implements it headless, the SimConnect adapter in MSFS. |
 | Split group | A booking group seated apart; a child with no adult of their group beside them, and those adults, take extra Unease until an event's seat move ends it. |
 | Squeeze rule | The nav graph rule that lets one character pass another in an aisle slot that is already occupied. |
+| Stage handler | The `IStageHandler` the stage machine calls once, with the tick, as the flight enters that handler's stage. |
+| Stage machine | `StageMachine` in the Engine: it moves the flight forward through the flight phases as the sim feed reports them, running every crossed stage's handler in order when the feed jumps several in one tick, and ignoring a report of an earlier stage. |
 | Stage manager | The player's role: they set the conditions the cabin plays out in, rather than moving people. |
 | Stow | A cart's return to the galley as the cleanup of a pre-empted round, such as when the landing secure check ends a meal still in the aisle. |
 | Strain | A crew member's accumulated load: time on task without a break, pre-emptions, and fatigue. |

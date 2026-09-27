@@ -15,7 +15,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 1 | 1 | 0 | 1 |
-| Sky.Engine.Tests | 15 | 142 | 26 | 168 |
+| Sky.Engine.Tests | 16 | 154 | 26 | 180 |
 | Sky.Scripting.Tests | 2 | 13 | 5 | 18 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
@@ -42,6 +42,7 @@ Every class below reads the referenced assembly names from its project's compile
 | `OutcomeTests` | 28 | Doors lateness (on time, early, the worse of the two); every verdict boundary of `balance.md` 3.4 on its documented side for experience, incidents, strain and doors; no incidents is Smooth; the nearest-rank median time to crew; missed ids in order; strain takes the worst crew member; bad thresholds, inputs and a null incident are refused. |
 | `RateMultiplierTests` | 15 | `RateMultiplier.Compose` is CONCEPT's rule, `clamp(1 + Σ_class (Π m − 1), 0.2, 2.5)`: the worked example caps at 2.5, two classes at 0.4 give the 0.2 floor, classes add as deltas, a zero factor zeroes its class even after an overflow (no NaN), and CsCheck properties keep any modifier set, extremes included, in [0.2, 2.5]; every invalid factor or class is refused. |
 | `NeedSetTests` | 25 | `NeedSet` over `NeedRates`: Refreshment at 25 an hour is full in 4 sim hours; a +15 pulse over 30 minutes is half landed at 15 and whole at 30; Unease closes half its gap to the baseline in one half-life; Boredom holds while asleep or on IFE; Rest rises awake and falls only asleep, the fall unscaled; the Unease multiplier scales every push (the context's hourly push, held at m × P ÷ k above baseline; `PushUnease`; positive pulse slices) and not relief or the pull, and a positive `Add` on Unease throws; `Add` clamps, `Set` out of range throws, the pending pulse count falls to 0; bad multipliers, settings, values and needs are refused; a CsCheck property keeps every need in [0, 100], NaN caught. |
+| `StageMachineTests` | 12 | `StageMachine`: a feed jump from taxi-out to cruise starts takeoff, climb and cruise in order on one tick; the first advance enters pre-boarding first; a missing or null handler fails at construction naming the stage; an earlier or equal stage starts nothing and the next later one resumes from the current stage; an undefined stage is refused before any handler runs; a handler re-entering `Advance` neither regresses nor double-starts; a throwing handler leaves its stage entered and is not retried; the eleven stages are pinned in order, contiguous from 0. |
 | `ForbiddenApiTests` | 2 | `Sky.Engine`'s compiled metadata references no wall clock, unseeded or crypto randomness, threading, IO, network, console, process, environment (beyond `NewLine`), `Guid.NewGuid`/`CreateVersion7` or string hashing API (ADR 0001, R3); members of generic types are checked through their definition. A second test proves the scanner's reach on the test assembly itself: a type, a member and a generic type's member. |
 
 ## Sky.Content.Tests
