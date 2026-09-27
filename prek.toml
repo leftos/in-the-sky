@@ -1,0 +1,74 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+default_install_hook_types = ["pre-commit"]
+
+[[repos]]
+repo = "builtin"
+hooks = [
+    { id = "trailing-whitespace" },
+    { id = "end-of-file-fixer" },
+    { id = "check-merge-conflict" },
+    { id = "detect-private-key" },
+    { id = "check-added-large-files", args = ["--maxkb=1024"] },
+]
+
+[[repos]]
+repo = "local"
+
+# Order matters: the fixers run and re-stage first, the readers report on the result, and the warnings-as-errors build
+# gates it last. Both C# wrappers `git add` what they changed so the commit proceeds instead of failing with "files were
+# modified by this hook". They are pwsh because prek launched from PowerShell on Windows can hand a bash hook the WSL
+# stub, which has no dotnet.
+
+[[repos.hooks]]
+id = "dotnet-format-style"
+name = "dotnet format style (info)"
+entry = "pwsh tools/hooks/dotnet-format-wrapper.ps1 style"
+language = "system"
+types = ["c#"]
+require_serial = true
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "csharpier"
+name = "dotnet csharpier format"
+entry = "pwsh tools/hooks/csharpier-wrapper.ps1"
+language = "system"
+types = ["c#"]
+require_serial = true
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "psscriptanalyzer"
+name = "PSScriptAnalyzer"
+entry = "pwsh tools/hooks/Invoke-ScriptAnalyzerHook.ps1"
+language = "system"
+types = ["powershell"]
+require_serial = true
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "line-length"
+name = "line length (150)"
+entry = "pwsh tools/hooks/Test-LineLength.ps1"
+language = "system"
+types_or = ["c#", "powershell", "python"]
+require_serial = true
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "gitleaks"
+name = "gitleaks (staged)"
+entry = "gitleaks git --pre-commit --staged --redact --no-banner"
+language = "system"
+pass_filenames = false
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "dotnet-build"
+name = "dotnet build (warnings as errors)"
+entry = "dotnet build -p:TreatWarningsAsErrors=true"
+language = "system"
+pass_filenames = false
+stages = ["pre-commit"]

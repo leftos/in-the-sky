@@ -16,7 +16,7 @@ Grouped into waves by shared files. Waves run side by side where their files are
 
 ### Wave M0-C: skeleton, gates and CI (repo root config, `src/`, `tests/`, `tools/`, `assets/`, `.github/`; gate: `tools/gate.ps1` once it exists, `code-review`)
 
-- [ ] Gates, after the skeleton: `sky.ps1`, `tools/gate.ps1` with time ceilings, `tools/test-all.ps1`, prek (hygiene, CSharpier, a build with warnings as errors, doc drift, a secret scan, the provenance check) and a commit-msg docs check
+- [ ] Doc-drift hooks: port opening-hand's `tools/hooks/Test-DocDrift.ps1` for `docs/ARCHITECTURE.md` (every `src/Sky.*`) and `docs/TEST_ALMANAC.md` (every test twin and `*Tests` class, the Counts table via `-Update`), a pre-commit hook, and a commit-msg check that a commit staging `src/Sky.Content/` also stages `docs/design/` or carries `Docs: unchanged, <why>`
 - [ ] Wire the provenance check, after the gates: a prek hook running `uv run --project tools/provenance python -m provenance check`, a `sky.ps1 provenance [-Check]` subcommand, and a row in `tools/test-all.ps1`
 - [ ] CI on GitHub Actions (Linux), after the gates and the provenance checker: actionlint, zizmor, build, test, csharpier, `dotnet format`, the provenance check; dependabot
 
