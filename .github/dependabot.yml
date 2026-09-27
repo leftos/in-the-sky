@@ -1,0 +1,36 @@
+# One grouped pull request a week per ecosystem, so a version bump arrives with its neighbours rather than as a run of
+# single-package pull requests. The 7-day cooldown holds a release back until it has been out a week, which is the window
+# a bad one is usually yanked in; the CI workflow is what decides whether the group is safe to merge.
+version: 2
+
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      nuget:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # The one uv project in the tree: the provenance checker under tools/.
+  - package-ecosystem: uv
+    directory: /tools/provenance
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      uv:
+        patterns: ["*"]

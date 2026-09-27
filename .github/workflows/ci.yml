@@ -1,0 +1,125 @@
+name: CI
+
+# Every push to main and every pull request against it runs the gates this repo already runs locally. Linux only: the
+# client takes Godot 4.7.2 as a NuGet package, so no Godot binary is needed and one platform is enough to gate the tree.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# One run per ref. A pull request that is pushed to again cancels the run its earlier push started, so a branch holds
+# one verdict rather than a queue of superseded ones; a run on main is never cancelled, so every commit that lands keeps
+# its own.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Read-only by default and no job widens it: nothing here writes to the repository, and no check needs the security tab.
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      # persist-credentials: false keeps the job's token out of the checkout's git config, where a step that ran
+      # repository code could read it back out.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: actionlint
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7  # v2.2.0
+
+      # Findings are reported as workflow annotations beside the diff instead of a SARIF upload to the code-scanning
+      # tab, which would need a write permission this workflow deliberately does not hold.
+      - name: zizmor
+        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482  # v0.6.4
+        with:
+          advanced-security: false
+          annotations: true
+
+  build-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # global.json pins the SDK this solution builds with, so the runner installs that one rather than the newest.
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68  # v6.0.0
+        with:
+          global-json-file: global.json
+
+      # Restore is a step of its own so the build can be told --no-restore: a build that restored on its own would hide
+      # a project or lock file the restore never saw.
+      - name: Restore
+        run: dotnet restore InTheSky.slnx
+
+      # csharpier is a local tool pinned in .config/dotnet-tools.json; the format check below runs the restored one.
+      - name: Restore local tools
+        run: dotnet tool restore
+
+      # Warnings are errors, here as in Directory.Build.props, so a warning that a local build showed is a red gate.
+      - name: Build
+        run: dotnet build InTheSky.slnx -c Release --no-restore -warnaserror
+
+      # --timeout is the platform's global test execution timeout: a test that never completes ends its own module
+      # rather than holding the runner until the job's own limit.
+      - name: Test
+        run: dotnet test InTheSky.slnx -c Release --no-build -- --timeout 2m
+
+      - name: Format
+        run: dotnet csharpier check .
+
+      # `dotnet format` is named style and analyzers one at a time, never bare: its whitespace pass would undo what
+      # csharpier just checked. --verify-no-changes writes nothing, so the tree the build read is the tree read here.
+      - name: Style
+        run: dotnet format style InTheSky.slnx --verify-no-changes --severity info
+
+      - name: Analyzers
+        run: dotnet format analyzers InTheSky.slnx --verify-no-changes --severity info
+
+      # The same hook prek runs before a commit, so docs that no longer name the tree fail here as they would locally.
+      # pwsh is preinstalled on the ubuntu runners.
+      - name: Doc drift
+        shell: pwsh
+        run: ./tools/hooks/Test-DocDrift.ps1
+
+  # The four steps a `sky.ps1 analysis -Check` runs, for the one uv project in the tree.
+  analysis:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The Python version and the pinned tools come from tools/provenance/pyproject.toml and its uv.lock, so nothing
+      # else is installed here and there is no cache that could drift from the lock.
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+        with:
+          enable-cache: false
+
+      # --locked fails the run when uv.lock no longer matches pyproject.toml, so a dependency change that forgot to
+      # re-lock is caught here rather than in a resolution nobody reviews.
+      - name: Format
+        working-directory: tools/provenance
+        run: uv run --locked ruff format --check .
+
+      - name: Lint
+        working-directory: tools/provenance
+        run: uv run --locked ruff check .
+
+      - name: Types
+        working-directory: tools/provenance
+        run: uv run --locked ty check .
+
+      - name: Test
+        working-directory: tools/provenance
+        run: uv run --locked pytest . -q
+
+      # The provenance gate reads the whole tree from the repo root: every asset file git carries needs a ledger entry,
+      # no entry may point at a missing file, and CREDITS.md must match the ledger.
+      - name: Provenance
+        run: uv run --locked --project tools/provenance python -m provenance check

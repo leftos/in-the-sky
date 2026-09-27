@@ -78,6 +78,16 @@ The whole gate, one table and one exit code. It builds `InTheSky.slnx` in Releas
 
 A check that reaches its ceiling is stopped with every process it started and its row reads `timed out after <n> s`, while the others finish. `-Ceiling` (600 s by default) bounds the whole run. A red `timed out` row is a hang: read the check's log under `.tmp/` rather than raise the ceiling.
 
+## CI
+
+`.github/workflows/ci.yml` runs on every push and pull request to `main`, on `ubuntu-24.04` only, with read-only permissions and every action pinned by commit SHA:
+
+- `lint`: actionlint and zizmor (annotations; no SARIF upload, which would need a write permission).
+- `build-test`: the Release build with `-warnaserror`, the tests with `-- --timeout 2m`, CSharpier, `dotnet format style` and `dotnet format analyzers`, and `tools/hooks/Test-DocDrift.ps1`. The client builds from the `Godot.NET.Sdk` NuGet package, so CI needs no Godot.
+- `analysis`: ruff, ty and pytest over `tools/provenance`, then the provenance check, every `uv run` with `--locked`.
+
+`.github/dependabot.yml` opens one grouped pull request a week for each of NuGet, GitHub Actions and `tools/provenance`'s uv lock, holding each release back seven days.
+
 ## Provenance
 
 Every asset has an entry in `assets/PROVENANCE.toml` recording its origin, license, author and source (ADR 0009), and `CREDITS.md` is generated from the ledger, never edited by hand. The checker is the uv project `tools/provenance`:

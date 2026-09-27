@@ -5,15 +5,9 @@ Open work only, in working order: the next item is the first line from the top. 
 
 ## Now: M0, the concept pass and the repo skeleton
 
-Grouped into waves by shared files. Waves run side by side where their files are disjoint; inside a wave, a line that consumes an earlier line's output waits for it.
+Every M0 wave has landed; only the push is left.
 
-### Wave M0-C: skeleton, gates and CI (repo root config, `src/`, `tests/`, `tools/`, `assets/`, `.github/`; gate: `tools/gate.ps1` once it exists, `code-review`)
-
-- [ ] CI on GitHub Actions (Linux), after the gates and the provenance checker: actionlint, zizmor, build, test, csharpier, `dotnet format`, the provenance check; dependabot
-
-### Milestone close
-
-- [ ] Push M0 to `origin/main` once the waves above have landed (the public repo `leftos/in-the-sky` already exists, holding the kickoff commit)
+- [ ] Push M0 to `origin/main` (the public repo `leftos/in-the-sky` holds only the kickoff commit); the owner's go is asked first, since a push is public. The first CI run on that push is the first time the workflow runs on `ubuntu-24.04`, so a red run there is the next item.
 
 ## Next: M1, the headless cabin flight
 
