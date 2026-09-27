@@ -15,7 +15,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 1 | 1 | 0 | 1 |
-| Sky.Engine.Tests | 3 | 7 | 0 | 7 |
+| Sky.Engine.Tests | 4 | 18 | 1 | 19 |
 | Sky.Scripting.Tests | 1 | 1 | 0 | 1 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
@@ -30,6 +30,7 @@ Every class below reads the referenced assembly names from its project's compile
 |---|---|---|
 | `ReferenceTests` | 1 | `ReferencesNoOtherProject`: `Sky.Engine` references no Sky project, and no assembly whose name starts with `Godot`, `MoonSharp`, `NLua` or `KeraLua`. |
 | `TickAccumulatorTests` | 4 | `TickAccumulator` turns elapsed sim milliseconds into whole 250 ms ticks and carries the remainder across calls (a CsCheck property: ticks over any split of a duration equal the ticks of the whole); negative input is refused. |
+| `RateMultiplierTests` | 15 | `RateMultiplier.Compose` is CONCEPT's rule, `clamp(1 + Σ_class (Π m − 1), 0.2, 2.5)`: the worked example caps at 2.5, two classes at 0.4 give the 0.2 floor, classes add as deltas, a zero factor zeroes its class even after an overflow (no NaN), and CsCheck properties keep any modifier set, extremes included, in [0.2, 2.5]; every invalid factor or class is refused. |
 | `ForbiddenApiTests` | 2 | `Sky.Engine`'s compiled metadata references no wall clock, unseeded or crypto randomness, threading, IO, network, console, process, environment (beyond `NewLine`), `Guid.NewGuid`/`CreateVersion7` or string hashing API (ADR 0001, R3); members of generic types are checked through their definition. A second test proves the scanner's reach on the test assembly itself: a type, a member and a generic type's member. |
 
 ## Sky.Content.Tests
