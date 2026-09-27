@@ -66,6 +66,15 @@ pass_filenames = false
 stages = ["pre-commit"]
 
 [[repos.hooks]]
+id = "provenance"
+name = "asset provenance ledger"
+entry = "uv run --project tools/provenance python -m provenance check"
+language = "system"
+pass_filenames = false
+always_run = true
+stages = ["pre-commit"]
+
+[[repos.hooks]]
 id = "dotnet-build"
 name = "dotnet build (warnings as errors)"
 entry = "dotnet build -p:TreatWarningsAsErrors=true"

@@ -1,8 +1,8 @@
 #requires -Version 7
 <#
 .SYNOPSIS
-Builds the solution once, then runs the format check, the tests and the Python analysis checks side by side under a
-ceiling each and ends on one verdict.
+Builds the solution once, then runs the format check, the tests, the Python analysis and the provenance checks side by
+side under a ceiling each and ends on one verdict.
 
 .DESCRIPTION
 The build runs alone and first, because every check after it reads the binaries it writes and the tests are told
@@ -47,13 +47,14 @@ New-Item -ItemType Directory -Force $tmp | Out-Null
 $startedAt = Get-Date
 
 # Every check's ceiling in seconds, against what it took on a machine like this: build seconds, format tens of seconds,
-# tests seconds, the Python analysis seconds. A ceiling is a few times that, so a check that reaches one has hung
-# rather than slowed.
+# tests seconds, the Python analysis seconds, the provenance check seconds. A ceiling is a few times that, so a check
+# that reaches one has hung rather than slowed.
 $ceilings = [ordered]@{
-    build    = 300
-    format   = 180
-    tests    = 180
-    analysis = 120
+    build      = 300
+    format     = 180
+    tests      = 180
+    analysis   = 120
+    provenance = 60
 }
 
 # Starts one check as a job of its own. Its commands are handed over as arrays rather than as a line to parse, so an
@@ -237,6 +238,13 @@ $formatCommands = @(
     @('dotnet', 'format', 'analyzers', 'InTheSky.slnx', '--verify-no-changes', '--severity', 'info')
 )
 $checks += Start-Check 'format' $formatCommands $ceilings['format']
+# The asset provenance gate: every asset file git carries must have a ledger entry, and CREDITS.md must match the ledger.
+# It reads the tree the build reads rather than the build's output, so it runs beside the other checks with no order of
+# its own. The leading comma keeps the one command an array of arrays, as above.
+$provenanceCommands = @(
+    , @('uv', 'run', '--project', 'tools/provenance', 'python', '-m', 'provenance', 'check')
+)
+$checks += Start-Check 'provenance' $provenanceCommands $ceilings['provenance']
 
 # Every project under tools/ that carries a pyproject.toml is checked here in the four steps a project
 # `sky.ps1 analysis -Check` runs, none of which writes. The list is read now, so a project landing under tools/ later
@@ -288,7 +296,7 @@ while ($true) {
     Start-Sleep -Milliseconds 500
 }
 
-foreach ($label in @('tests', 'format')) {
+foreach ($label in @('tests', 'format', 'provenance')) {
     $check = $checks | Where-Object { $_.Label -eq $label }
     if ($check) { $results += Complete-Check $check }
 }

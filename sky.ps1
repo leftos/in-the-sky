@@ -14,6 +14,8 @@
                  -Check only verifies.
       analysis   ruff format, ruff check, ty and pytest over every project under tools/ that carries a pyproject.toml,
                  through uv. -Check only verifies.
+      provenance uv run python -m provenance credits, then check: regenerates CREDITS.md from the ledger and
+                 gates every asset on it. -Check only checks.
       hooks      prek run --all-files (anything after `hooks` forwards to prek instead).
       client     The Godot client from a fresh clone: dotnet build of the client (Debug, -warnaserror), then
                  --import --quit (up to three passes while a pass ends red on the pre-import lines alone), then
@@ -37,6 +39,7 @@
     .\sky.ps1 build -Release
     .\sky.ps1 test -Project Engine -Filter "*ReferenceTests"
     .\sky.ps1 format -Check
+    .\sky.ps1 provenance -Check
     .\sky.ps1 hooks
     .\sky.ps1 client
     .\sky.ps1 play
@@ -48,7 +51,7 @@
     Justification = 'Top-level params are read from script scope by the subcommands.')]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('', 'help', 'build', 'test', 'format', 'analysis', 'hooks', 'client', 'play', 'clean')]
+    [ValidateSet('', 'help', 'build', 'test', 'format', 'analysis', 'provenance', 'hooks', 'client', 'play', 'clean')]
     [string]$Command = '',
 
     # Everything after the subcommand. Each subcommand takes the options it knows and forwards the rest.
@@ -71,6 +74,7 @@ $script:FormatSeconds = 180
 $script:TestSeconds = 180
 $script:FilteredTestSeconds = 60
 $script:AnalysisSeconds = 120
+$script:ProvenanceSeconds = 60
 $script:ImportSeconds = 300
 $script:BuildSolutionsSeconds = 180
 
@@ -162,6 +166,8 @@ Build and check
   analysis [-Check]                   ruff format, ruff check, ty and pytest over every project under tools/ with a
                                       pyproject.toml (uv); -Check changes nothing; with none present it prints
                                       `analysis: no uv projects` and passes
+  provenance [-Check]                 uv run python -m provenance credits, then check: regenerates CREDITS.md
+                                      from the ledger and gates every asset on it; -Check only checks
   hooks [prek args]                   prek run --all-files
   clean                               dotnet clean InTheSky.slnx
   help                                This list
@@ -275,6 +281,22 @@ function Invoke-Analysis {
         Invoke-Gate -Title "uv run pytest $project -q" -Log (Join-Path $script:Tmp "$name-tests.log") `
             -Seconds $script:AnalysisSeconds -Gate ($uv + @('pytest', '.', '-q'))
     }
+}
+
+# The asset ledger gate. Without -Check, `credits` writes CREDITS.md from the ledger and `check` then gates every asset
+# git carries on it; -Check runs the gate alone and writes nothing. uv is given --project rather than analysis's
+# --directory: the checker finds the repository root from the working directory, so it must run from the repo root.
+function Invoke-Provenance {
+    $check = (Split-Rest -Switches 'Check').Options['Check']
+    $uv = @('uv', 'run', '--project', 'tools/provenance', 'python', '-m', 'provenance')
+    if (-not $check) {
+        Invoke-Gate -Title 'uv run --project tools/provenance python -m provenance credits' `
+            -Log (Join-Path $script:Tmp 'provenance-credits.log') -Seconds $script:ProvenanceSeconds `
+            -Gate ($uv + @('credits'))
+    }
+    Invoke-Gate -Title 'uv run --project tools/provenance python -m provenance check' `
+        -Log (Join-Path $script:Tmp 'provenance-check.log') -Seconds $script:ProvenanceSeconds `
+        -Gate ($uv + @('check'))
 }
 
 function Invoke-Hook {
@@ -403,6 +425,7 @@ switch ($Command) {
     'test' { Invoke-Test }
     'format' { Invoke-Format }
     'analysis' { Invoke-Analysis }
+    'provenance' { Invoke-Provenance }
     'hooks' { Invoke-Hook }
     'client' { Invoke-Client }
     'play' { Invoke-Play }
