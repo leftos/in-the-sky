@@ -10,8 +10,8 @@
       test       dotnet test InTheSky.slnx. -Project P runs one test project, P in Engine, Content, Scripting, Session,
                  Sim, SimConnect, Voice, Client; -Filter "*X" one class (a wildcard on the full class name). The rest
                  forwards.
-      format     dotnet csharpier format ., then dotnet format style and dotnet format analyzers at --severity info.
-                 -Check only verifies.
+      format     dotnet csharpier format ., then dotnet format style and dotnet format analyzers at --severity info,
+                 then the 150-character line check (tools/hooks/Test-LineLength.ps1 -All). -Check only verifies.
       analysis   ruff format, ruff check, ty and pytest over every project under tools/ that carries a pyproject.toml,
                  through uv. -Check only verifies.
       provenance uv run python -m provenance credits, then check: regenerates CREDITS.md from the ledger and
@@ -75,6 +75,7 @@ $script:TestSeconds = 180
 $script:FilteredTestSeconds = 60
 $script:AnalysisSeconds = 120
 $script:ProvenanceSeconds = 60
+$script:LineLengthSeconds = 60
 $script:ImportSeconds = 300
 $script:BuildSolutionsSeconds = 180
 
@@ -161,8 +162,8 @@ Build and check
   build [-Release]                    dotnet build InTheSky.slnx -warnaserror; -Release builds Release
   test [-Project P] [-Filter "*X"]    dotnet test; P in Engine, Content, Scripting, Session, Sim, SimConnect,
                                       Voice, Client; the rest forwards
-  format [-Check]                     csharpier, then dotnet format style and analyzers (--severity info);
-                                      -Check verifies only and writes nothing
+  format [-Check]                     csharpier, then dotnet format style and analyzers (--severity info), then
+                                      the 150-character line check; -Check verifies only and writes nothing
   analysis [-Check]                   ruff format, ruff check, ty and pytest over every project under tools/ with a
                                       pyproject.toml (uv); -Check changes nothing; with none present it prints
                                       `analysis: no uv projects` and passes
@@ -232,15 +233,22 @@ function Invoke-Format {
         Invoke-Gate -Title 'dotnet format analyzers InTheSky.slnx --verify-no-changes --severity info' `
             -Log $analyzersLog -Seconds $script:FormatSeconds `
             -Gate @('dotnet', 'format', 'analyzers', 'InTheSky.slnx', '--verify-no-changes', '--severity', 'info')
-        return
     }
-    Invoke-Gate -Title 'dotnet csharpier format .' -Log $csharpierLog -Seconds $script:FormatSeconds `
-        -Gate @('dotnet', 'csharpier', 'format', '.')
-    Invoke-Gate -Title 'dotnet format style InTheSky.slnx --severity info' -Log $formatLog -Seconds $script:FormatSeconds `
-        -Gate @('dotnet', 'format', 'style', 'InTheSky.slnx', '--severity', 'info')
-    Invoke-Gate -Title 'dotnet format analyzers InTheSky.slnx --severity info' -Log $analyzersLog `
-        -Seconds $script:FormatSeconds `
-        -Gate @('dotnet', 'format', 'analyzers', 'InTheSky.slnx', '--severity', 'info')
+    else {
+        Invoke-Gate -Title 'dotnet csharpier format .' -Log $csharpierLog -Seconds $script:FormatSeconds `
+            -Gate @('dotnet', 'csharpier', 'format', '.')
+        Invoke-Gate -Title 'dotnet format style InTheSky.slnx --severity info' -Log $formatLog `
+            -Seconds $script:FormatSeconds `
+            -Gate @('dotnet', 'format', 'style', 'InTheSky.slnx', '--severity', 'info')
+        Invoke-Gate -Title 'dotnet format analyzers InTheSky.slnx --severity info' -Log $analyzersLog `
+            -Seconds $script:FormatSeconds `
+            -Gate @('dotnet', 'format', 'analyzers', 'InTheSky.slnx', '--severity', 'info')
+    }
+    # Neither formatter wraps a comment or a string literal, so the 150-character line check runs here too: without it
+    # a long line surfaces only in the whole gate or at commit. It reads and never writes, so both modes run it last.
+    Invoke-Gate -Title 'Test-LineLength.ps1 -All' -Log (Join-Path $script:Tmp 'line-length.log') `
+        -Seconds $script:LineLengthSeconds `
+        -Gate @('pwsh', (Join-Path $script:Root 'tools\hooks\Test-LineLength.ps1'), '-All')
 }
 
 # Every project under tools/ that carries a pyproject.toml, as repo-relative paths. Read at run time, so a project
