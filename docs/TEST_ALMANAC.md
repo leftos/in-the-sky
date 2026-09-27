@@ -15,7 +15,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 1 | 1 | 0 | 1 |
-| Sky.Engine.Tests | 4 | 18 | 1 | 19 |
+| Sky.Engine.Tests | 6 | 33 | 1 | 34 |
 | Sky.Scripting.Tests | 1 | 1 | 0 | 1 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
@@ -30,6 +30,8 @@ Every class below reads the referenced assembly names from its project's compile
 |---|---|---|
 | `ReferenceTests` | 1 | `ReferencesNoOtherProject`: `Sky.Engine` references no Sky project, and no assembly whose name starts with `Godot`, `MoonSharp`, `NLua` or `KeraLua`. |
 | `TickAccumulatorTests` | 4 | `TickAccumulator` turns elapsed sim milliseconds into whole 250 ms ticks and carries the remainder across calls (a CsCheck property: ticks over any split of a duration equal the ticks of the whole); negative input is refused. |
+| `NavGraphBuilderTests` | 11 | `NavGraphBuilder` turns a real-unit layout (a 2-2 row ahead of a 3-3 row) into the nav graph: every seat reaches the door, lav and galley; a window seat reaches the aisle only through the middle and aisle seats; an end seat links only to the nearest aisle with no group between; edge ticks round up from inches without float noise and never fall below 1; bad fixtures, empty seat groups and sub-1-tick links are refused. |
+| `PathTableTests` | 4 | `PathTable` walks next hops from every node to every target at the tabled cost, equal-cost ties go to the lower node id, two builds are identical, and an unreachable target reports -1. |
 | `RateMultiplierTests` | 15 | `RateMultiplier.Compose` is CONCEPT's rule, `clamp(1 + Σ_class (Π m − 1), 0.2, 2.5)`: the worked example caps at 2.5, two classes at 0.4 give the 0.2 floor, classes add as deltas, a zero factor zeroes its class even after an overflow (no NaN), and CsCheck properties keep any modifier set, extremes included, in [0.2, 2.5]; every invalid factor or class is refused. |
 | `ForbiddenApiTests` | 2 | `Sky.Engine`'s compiled metadata references no wall clock, unseeded or crypto randomness, threading, IO, network, console, process, environment (beyond `NewLine`), `Guid.NewGuid`/`CreateVersion7` or string hashing API (ADR 0001, R3); members of generic types are checked through their definition. A second test proves the scanner's reach on the test assembly itself: a type, a member and a generic type's member. |
 

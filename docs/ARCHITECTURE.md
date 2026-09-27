@@ -35,6 +35,7 @@ Every project has an `AssemblyMarker` class that names the assembly and holds on
 A plain `net10.0` class library with no project or package references; its `AssemblyMarker` is empty. ADR 0001 governs its isolation; 0002 (fixed tick and `IClockSource`), 0003 (the RNG root and named streams), 0004 (the journal), 0005 (the nav graph) and 0006 (utility scoring, task board, sequence executor) govern what it will hold. Built so far, one folder each:
 
 - `Ports/`: the interfaces other projects implement; `IClockSource` hands the Engine elapsed sim milliseconds.
+- `Cabin/`: `CabinLayout` (rows of seat groups, aisles and fixtures in inches), `NavGraphBuilder` (the derived graph of aisle slots, seats, doors, lavs, lav queues and galleys, with edge costs in ticks) and `PathTable` (next hop and cost from every node to every node, Dijkstra per target, ties to the lower id). Nothing after the builder reads inches (ADR 0005).
 - `Needs/`: `SourceClass`, `RateModifier` and `RateMultiplier.Compose`, the rate rule of CONCEPT section 4 with its 0.2 floor and 2.5 cap.
 - `Time/`: `SimTime` (the 250 ms tick, ticks per sim minute and hour) and `TickAccumulator`, which turns elapsed milliseconds into whole ticks and carries the remainder.
 
