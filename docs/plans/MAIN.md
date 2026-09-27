@@ -7,6 +7,8 @@ Open work only, in working order: the next item is the first line from the top. 
 
 - [ ] M1 — see [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md): 52 steps in 13 waves, its acceptance list `docs/design/CONCEPT.md` section 7, the owner's six decisions ruled. Waves M1-D (design docs: game-designer, balance-analyst, event-writer), M1-A (engine foundations), M1-B (cabin geometry), M1-C (needs), M1-E (executor and crew) and M1-S (scripting) share no files and start together.
 
+- [ ] Owner triage of the goals `docs/research/2026-09-26-openpax-avsim-goals.md` finds CONCEPT missing (a memory and CPU budget beside MSFS, automation profiles and the Captain or Lead Flight Attendant ways to play, SimBrief, GSX, cargo and weight limits, other sims, crewless flights, player-written announcements with live weather, belongings and relationships, helpful passengers, airport-set starting needs, overrides of the automatic layout work): adopt into CONCEPT, defer to a milestone, or drop (owner, 2026-09-26)
+
 ## Later milestones
 
 - [ ] M2: Godot client. A 2D cabin view drawing Session views, a dev inspector showing decision scores, scratch scenes, the art-direction decision
