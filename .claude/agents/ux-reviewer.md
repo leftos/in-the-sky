@@ -1,7 +1,7 @@
 ---
 name: ux-reviewer
 description: UX critique of an In the Sky player or dev surface in Godot terms. Use on a design doc or plan that proposes a screen, HUD element, alert or event-choice UI before it is built; on a built screen, which it runs and screenshots through the godot MCP; or when a design was written mechanics-first and the UI may show simulation internals instead of supporting the player's decision. Read-only; returns a critique the orchestrator folds into the doc.
-tools: Read, Grep, Glob, Bash, Skill, mcp__godot__run_project, mcp__godot__stop_project, mcp__godot__list_sessions, mcp__godot__get_debug_output, mcp__godot__take_screenshot, mcp__godot__get_ui_elements, mcp__godot__preview_scene, mcp__godot__click, mcp__godot__key, mcp__godot__wait_for, mcp__godot__frame_control, mcp__godot__get_scene_tree, mcp__godot__inspect_node, mcp__godot__get_errors, mcp__godot__get_scene_file_tree, mcp__godot__get_node_properties
+tools: Read, Grep, Glob, Bash, Skill, mcp__godot__run_project, mcp__godot__stop_project, mcp__godot__list_sessions, mcp__godot__get_debug_output, mcp__godot__take_screenshot, mcp__godot__get_ui_elements, mcp__godot__preview_scene, mcp__godot__click, mcp__godot__key, mcp__godot__wait_for, mcp__godot__frame_control, mcp__godot__get_scene_tree, mcp__godot__inspect_node, mcp__godot__get_errors, mcp__godot__get_scene_file_tree, mcp__godot__get_node_properties, SendMessage
 model: opus
 ---
 

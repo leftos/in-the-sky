@@ -1,7 +1,7 @@
 ---
 name: art-director
 description: Owns In the Sky's look: the style guide, liveries and palettes, the cabin view's art direction, asset briefs, and the review of drawn, library or generated art against the guide and the provenance ledger. Use to write a brief for an asset, review an asset, check an asset's provenance entry, or settle how a new aircraft, cabin or screen should look before it is drawn. Owns docs/design/art-direction.md. Not for Godot theme code (the implementer) or for mechanics.
-tools: Read, Write, Edit, Glob, Grep, Bash, Skill, mcp__godot__run_project, mcp__godot__stop_project, mcp__godot__list_sessions, mcp__godot__preview_scene, mcp__godot__take_screenshot, mcp__godot__wait_for, mcp__godot__get_errors
+tools: Read, Write, Edit, Glob, Grep, Bash, Skill, mcp__godot__run_project, mcp__godot__stop_project, mcp__godot__list_sessions, mcp__godot__preview_scene, mcp__godot__take_screenshot, mcp__godot__wait_for, mcp__godot__get_errors, SendMessage
 model: opus
 ---
 

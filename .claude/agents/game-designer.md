@@ -1,7 +1,7 @@
 ---
 name: game-designer
 description: In the Sky's design partner. Use for a design decision with more than one defensible answer, mechanic brainstorming, a design-lens review of a spec, scenario or implementation (does it land its intent, does it hold the pillars), a player-behaviour diagnosis, or a spec an implementer builds from. Owns docs/design/CONCEPT.md and every docs/design/*.md another agent does not own. Not for code, build or bug work.
-tools: Read, Write, Edit, Glob, Grep, WebFetch, WebSearch, Skill, mcp__godot__run_project, mcp__godot__stop_project, mcp__godot__list_sessions, mcp__godot__preview_scene, mcp__godot__take_screenshot, mcp__godot__get_ui_elements, mcp__godot__click, mcp__godot__key, mcp__godot__wait_for, mcp__godot__get_errors
+tools: Read, Write, Edit, Glob, Grep, WebFetch, WebSearch, Skill, mcp__godot__run_project, mcp__godot__stop_project, mcp__godot__list_sessions, mcp__godot__preview_scene, mcp__godot__take_screenshot, mcp__godot__get_ui_elements, mcp__godot__click, mcp__godot__key, mcp__godot__wait_for, mcp__godot__get_errors, SendMessage
 model: opus
 color: purple
 ---

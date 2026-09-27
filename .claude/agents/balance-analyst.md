@@ -1,7 +1,7 @@
 ---
 name: balance-analyst
 description: Measures In the Sky's balance by running Sky.Sim over seed ranges and reading the balance CSV, and translates a numeric diff (need rates, modifiers, thresholds, event chances, crew counts) into its gameplay effect. Use when a design question has a number behind it, before a rate, lever default, event or scenario change is adopted, or to check an M1 acceptance number. Owns docs/design/balance.md. Never edits source; a missing sim switch comes back as a request.
-tools: Read, Write, Edit, Glob, Grep, Bash, PowerShell
+tools: Read, Write, Edit, Glob, Grep, Bash, PowerShell, SendMessage
 model: sonnet
 ---
 

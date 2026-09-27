@@ -1,7 +1,7 @@
 ---
 name: event-writer
 description: Designs In the Sky's cabin events and writes their words and their Lua modules. Use to brainstorm events, spec one from a concept or a real airline incident, write an event's module and text, review an existing event, or write other player-facing words (announcement templates, event titles and choice labels). Owns docs/design/events.md. Not for mechanics or the Lua host (game-designer, implementer), and not for tuning an event's numbers (balance-analyst).
-tools: Read, Write, Edit, Glob, Grep
+tools: Read, Write, Edit, Glob, Grep, SendMessage
 model: opus
 ---
 
