@@ -10,7 +10,6 @@ Grouped into waves by shared files. Waves run side by side where their files are
 ### Wave M0-A: design docs (`docs/design/`, `docs/decisions/`; gate: owner ruling, `game-designer` review)
 
 - [ ] Concept pass with the owner (owner, 2026-09-26): `docs/design/CONCEPT.md` with the player fantasy, pillars, core loop, the need set, what each scoring outcome measures, and M1's definition of done; settles the questions in section 4 of the decisions doc; `game-designer` drafts, the owner rules
-- [ ] Record the kickoff decisions as ADRs in `docs/decisions/`, starting at 0001: engine references nothing, fixed tick and `IClockSource`, one seeded RNG root with named streams, the journal, real-unit layouts with a nav graph, the utility scorer and crew task board, crew-observed views, the text-only small model, the provenance ledger
 
 ### Wave M0-B: Lua runtime (`docs/research/`, `spike/lua-boundary` branch; gate: measured numbers, ADR)
 
