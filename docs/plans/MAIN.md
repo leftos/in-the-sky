@@ -13,8 +13,7 @@ Grouped into waves by shared files. Waves run side by side where their files are
 
 ### Wave M0-B: Lua runtime (`docs/research/`, `spike/lua-boundary` branch; gate: measured numbers, ADR)
 
-- [ ] Research the Lua runtime (decisions doc, section 4): `librarian` checks MoonSharp, NLua/KeraLua and any maintained successor for maintenance and sandboxing; findings to `docs/research/`
-- [ ] Lua boundary and tick spike on a `spike/lua-boundary` branch, after the research and the skeleton: 200 passengers, about 10 activities, 64x, the top two runtimes against C# scoring, 250 ms ticks; the result sets where Lua runs and the tick size (ADR)
+- [ ] Lua boundary and tick spike on a `spike/lua-boundary` branch, after the skeleton: 200 passengers, about 10 activities, 64x, Lua-CSharp and MoonSharp (the top two in [the runtime research](../research/2026-09-26-lua-runtime.md), which also lists the questions only the spike answers) against C# scoring, 250 ms ticks; the result sets the runtime, where Lua runs and the tick size (ADR)
 
 ### Wave M0-C: skeleton, gates and CI (repo root config, `src/`, `tests/`, `tools/`, `assets/`, `.github/`; gate: `tools/gate.ps1` once it exists, `code-review`)
 

@@ -6,6 +6,8 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 |---|---|
 | What was decided at kickoff, and why? | [plans/2026-09-26-rewrite-decisions.md](./plans/2026-09-26-rewrite-decisions.md) |
 | Which engineering decisions stand? | [decisions/README.md](./decisions/README.md) (the ADRs) |
+| What is the game, and what did the owner rule? | [design/CONCEPT.md](./design/CONCEPT.md) |
+| What did research find? | [research/](./research/) (dated notes, such as the Lua runtime comparison) |
 | What is next? | [plans/MAIN.md](./plans/MAIN.md) |
 | What does a word mean? | The glossary below |
 
