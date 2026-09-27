@@ -122,6 +122,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Outcome record | A journal record of a moment, written as it happens; a replay regenerates outcome records and compares them rather than reading them as input. |
 | Pillar | One of the design principles in `docs/design/CONCEPT.md` section 2 that every feature is tested against. |
 | Policy | A standing decision that applies to a class of people or situations (a service plan, a crew zone), as opposed to a moment. |
+| Passenger facts | `PassengerFacts`: everything an activity module may read about one passenger at a decision point (needs, traits, stage, seatbelt sign, turbulence, current activity and the seat-level context), built per call and read in Lua as `facts`. |
 | Port | An interface the Engine defines and another project implements (`IClockSource`, `ISimFeed`, `IBehaviorScripts`). |
 | Preset | A saved, shareable set of lever values and of which moments reach the player, standing for a way to play (Captain, Lead Flight Attendant) of the one stage-manager role; from M3. |
 | Profile | A project's `<project>-nextup` skill (here `sky-nextup`), which supplies the user-level `/nextup` loop with this repo's plan convention, agents, reviewers, gates, docs map and landing path. |

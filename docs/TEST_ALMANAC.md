@@ -15,8 +15,8 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 1 | 1 | 0 | 1 |
-| Sky.Engine.Tests | 19 | 184 | 27 | 211 |
-| Sky.Scripting.Tests | 2 | 13 | 5 | 18 |
+| Sky.Engine.Tests | 20 | 186 | 27 | 213 |
+| Sky.Scripting.Tests | 3 | 21 | 12 | 33 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
 | Sky.SimConnect.Tests | 1 | 1 | 0 | 1 |
@@ -46,6 +46,7 @@ Every class below reads the referenced assembly names from its project's compile
 | `CascadeTests` | 12 | `Cascades` with D3's three rules: Refreshment strictly above 70 adds ×1.1 on Unease; the Bladder rule fires only with the lav unreachable; all three compose by multiplying in one class to 1.1 × 1.2 × 1.3; another target gets none; a buffer sized for what fires is accepted and a shorter one refused; a threshold of 100, a factor of 0, negative or NaN, a rule driving its own need and a null rule are refused. |
 | `DistressTests` | 8 | `Distress` with D3's terms: Unease alone at 60 gives 30; needs at or below their thresholds give 0; everything at 100 clamps to 100; a missing, repeated or null term and an out-of-range threshold or weight are refused; a CsCheck property keeps distress in [0, 100] and never lowers it when a need rises. |
 | `StageMachineTests` | 12 | `StageMachine`: a feed jump from taxi-out to cruise starts takeoff, climb and cruise in order on one tick; the first advance enters pre-boarding first; a missing or null handler fails at construction naming the stage; an earlier or equal stage starts nothing and the next later one resumes from the current stage; an undefined stage is refused before any handler runs; a handler re-entering `Advance` neither regresses nor double-starts; a throwing handler leaves its stage entered and is not retried; the eleven stages are pinned in order, contiguous from 0. |
+| `IdTests` | 2 | `ActivityId` and `TraitId` refuse a negative value. |
 | `ForbiddenApiTests` | 2 | `Sky.Engine`'s compiled metadata references no wall clock, unseeded or crypto randomness, threading, IO, network, console, process, environment (beyond `NewLine`), `Guid.NewGuid`/`CreateVersion7` or string hashing API (ADR 0001, R3); members of generic types are checked through their definition. A second test proves the scanner's reach on the test assembly itself: a type, a member and a generic type's member. |
 
 ## Sky.Content.Tests
@@ -60,6 +61,7 @@ Every class below reads the referenced assembly names from its project's compile
 |---|---|---|
 | `ReferenceTests` | 1 | `ReferencesOnlyItsAllowedSkyProjects`: `Sky.Scripting` references `Sky.Engine` and no other Sky project. |
 | `LuaHostTests` | 37 | `LuaHost`: the sandbox hides `io`, `os`, `require`, `load`, `dofile`, `debug`, `_G`, the metatable and raw functions, `print`, `coroutine`, `string.dump` and `math.randomseed`, while string method syntax works; the budget stops a bare and a `pcall`-wrapped loop and disables only that module; the stack depth is restored after a caught error; an overflow disables its module, rebuilds the state and restarts module-level state; load-time errors, wrong returns and non-function calls disable with a reason taken from the error value; a host exception escapes; unknown ids throw; `string.rep` is capped in both forms; `math.random` matches the `SimRandom` draws, rejects non-integer bounds and is unavailable while a module loads; modules share no globals. |
+| `ActivityScoringTests` | 60 | `LuaBehaviorScripts`: a thirsty passenger scores `drink` above `sleep`; a module that throws scores 0 and is disabled while the others score, and is not called again; a negative, NaN, infinite, nil, string or numeric-string result scores 0 and disables with the value in the reason; a module without `utility` or failing to load scores 0; a `math.random` draw disables even with a stream set; every Lua member reaches Lua (one row each, every stage and turbulence id from the enums); a saved `facts` reads the passenger being scored; facts that cannot be rendered, mismatched spans, unknown candidates, blank, repeated or null ids and names are refused before any score is written. |
 
 ## Sky.Session.Tests
 

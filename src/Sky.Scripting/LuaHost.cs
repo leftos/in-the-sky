@@ -64,6 +64,12 @@ public sealed class LuaHost : IDisposable
     }
 
     /// <summary>
+    /// Takes the stream away, so <c>math.random</c> throws until <see cref="SetRandom"/> is called again. A scoring call
+    /// clears it: activity modules draw nothing (R6).
+    /// </summary>
+    internal void ClearRandom() => stream = null;
+
+    /// <summary>
     /// Loads a module: compiles <paramref name="source"/> into its own environment and runs it under the budget, with
     /// <c>math.random</c> unavailable while it runs.
     /// </summary>
@@ -112,6 +118,16 @@ public sealed class LuaHost : IDisposable
     {
         LuaModule module = GetModule(moduleId);
         return module.Table is not null && module.Table[functionName].Type == LuaValueType.Function;
+    }
+
+    /// <summary>Disables a module for the rest of the flight for a reason the caller knows and the host does not.</summary>
+    /// <param name="moduleId">A loaded module's id.</param>
+    /// <param name="reason">Why the module can no longer be called; the first reason a module was disabled with is kept.</param>
+    /// <exception cref="ArgumentException"><paramref name="moduleId"/> was never loaded.</exception>
+    internal void DisableModule(string moduleId, string reason)
+    {
+        ArgumentNullException.ThrowIfNull(reason);
+        Disable(GetModule(moduleId), reason);
     }
 
     /// <summary>
