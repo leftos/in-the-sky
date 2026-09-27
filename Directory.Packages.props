@@ -4,6 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="CsCheck" Version="4.9.1" />
+    <PackageVersion Include="LuaCSharp" Version="0.5.7" />
+    <PackageVersion Include="LuaCSharp.SourceGenerator" Version="0.5.7" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.1" />

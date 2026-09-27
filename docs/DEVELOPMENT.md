@@ -86,7 +86,7 @@ A check that reaches its ceiling is stopped with every process it started and it
 - `build-test`: the Release build with `-warnaserror`, the tests with `-- --timeout 2m`, CSharpier, `dotnet format style` and `dotnet format analyzers`, and `tools/hooks/Test-DocDrift.ps1`. The client builds from the `Godot.NET.Sdk` NuGet package, so CI needs no Godot.
 - `analysis`: ruff, ty and pytest over `tools/provenance`, then the provenance check, every `uv run` with `--locked`.
 
-`.github/dependabot.yml` opens one grouped pull request a week for each of NuGet, GitHub Actions and `tools/provenance`'s uv lock, holding each release back seven days.
+`LuaCSharp` and `LuaCSharp.SourceGenerator` stay at 0.5.7, the version the boundary spike measured: the generator is referenced directly because the runtime package excludes its analyzers from flowing, and an upgrade of either is its own change that re-runs the golden-flight check (R7). `.github/dependabot.yml` opens one grouped pull request a week for each of NuGet, GitHub Actions and `tools/provenance`'s uv lock, holding each release back seven days.
 
 ## Provenance
 

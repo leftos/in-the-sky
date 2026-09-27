@@ -50,7 +50,9 @@ A class library referencing `Sky.Engine`. ADR 0001 governs its place. The schema
 
 ### Scripting: `src/Sky.Scripting`
 
-A class library referencing `Sky.Engine`. ADR 0001 and 0006 govern it: it hosts Lua and implements the Engine's ports. The runtime is chosen by the Lua runtime research (`docs/research/2026-09-26-lua-runtime.md`) and the boundary spike. Not built yet.
+A class library referencing `Sky.Engine`. ADR 0001 and 0006 govern it: it hosts Lua and implements the Engine's ports. The runtime is Lua-CSharp (`LuaCSharp` 0.5.7 with its source generator, ADR 0010, R7), chosen by the Lua runtime research (`docs/research/2026-09-26-lua-runtime.md`) and the boundary spike.
+
+- `LuaHost` owns one Lua state per flight. Each module is Lua source under a string id that returns a table, run in its own whitelist environment that `LuaSandbox` builds (the state opens only the basic, string, table and math libraries; `string.rep` is capped and `string.dump` removed). Every load and call runs under an instruction budget re-armed per call. A module that errors, runs out of budget, overflows the stack or returns the wrong shape is disabled for the flight with a reason; a .NET exception from a host function escapes instead, as a host bug. A stack overflow rebuilds the state and re-runs the enabled modules. `math.random` draws from the `SimRandom` set with `SetRandom`, rejects non-integer bounds, and is unavailable while a module loads. The Lua-typed members (`LoadModule`, `HasFunction`, `TryCall`) are internal, for the port adapters in this assembly.
 
 ### Session: `src/Sky.Session`
 

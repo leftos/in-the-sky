@@ -16,7 +16,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
 | Sky.Content.Tests | 1 | 1 | 0 | 1 |
 | Sky.Engine.Tests | 13 | 114 | 18 | 132 |
-| Sky.Scripting.Tests | 1 | 1 | 0 | 1 |
+| Sky.Scripting.Tests | 2 | 13 | 5 | 18 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
 | Sky.Sim.Tests | 1 | 1 | 0 | 1 |
 | Sky.SimConnect.Tests | 1 | 1 | 0 | 1 |
@@ -53,6 +53,7 @@ Every class below reads the referenced assembly names from its project's compile
 | Class | Tests | Proves |
 |---|---|---|
 | `ReferenceTests` | 1 | `ReferencesOnlyItsAllowedSkyProjects`: `Sky.Scripting` references `Sky.Engine` and no other Sky project. |
+| `LuaHostTests` | 37 | `LuaHost`: the sandbox hides `io`, `os`, `require`, `load`, `dofile`, `debug`, `_G`, the metatable and raw functions, `print`, `coroutine`, `string.dump` and `math.randomseed`, while string method syntax works; the budget stops a bare and a `pcall`-wrapped loop and disables only that module; the stack depth is restored after a caught error; an overflow disables its module, rebuilds the state and restarts module-level state; load-time errors, wrong returns and non-function calls disable with a reason taken from the error value; a host exception escapes; unknown ids throw; `string.rep` is capped in both forms; `math.random` matches the `SimRandom` draws, rejects non-integer bounds and is unavailable while a module loads; modules share no globals. |
 
 ## Sky.Session.Tests
 

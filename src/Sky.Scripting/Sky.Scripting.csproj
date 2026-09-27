@@ -9,6 +9,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="LuaCSharp" />
+    <PackageReference Include="LuaCSharp.SourceGenerator" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Sky.Engine\Sky.Engine.csproj" />
   </ItemGroup>
 </Project>
