@@ -8,6 +8,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Which engineering decisions stand? | [decisions/README.md](./decisions/README.md) (the ADRs) |
 | What is the game, and what did the owner rule? | [design/CONCEPT.md](./design/CONCEPT.md) |
 | Where does code live, and what may reference what? | [ARCHITECTURE.md](./ARCHITECTURE.md) (projects, dependency edges, task index) |
+| How do I build, test, run the hooks and set up a clone? | [DEVELOPMENT.md](./DEVELOPMENT.md) (toolchain, `sky.ps1` commands and ceilings, hooks, provenance, the godot MCP server) |
 | Which tests exist, and where does a new one go? | [TEST_ALMANAC.md](./TEST_ALMANAC.md) |
 | What must Godot client code follow? | [GODOT_CONVENTIONS.md](./GODOT_CONVENTIONS.md) |
 | What did research find? | [research/](./research/) (dated notes, such as the Lua runtime comparison) |
@@ -24,8 +25,10 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | AssemblyMarker | The one public class in each project; its `Dependencies` field names a type from every project it references, so the compiler keeps each reference and `ReferenceTests` can see it. |
 | Auto-resolve | Crew make an event's choice on their own, weighted by competence, traits and fatigue. It is used when no player is making the choice. |
 | Balance CSV | `Sky.Sim`'s output from a sweep: one row per seed with the four outcome measures, read by `balance-analyst`. |
+| Bridge | The code the godot MCP server injects into a running client through an `override.cfg` beside `project.godot`, so an agent can drive the game; it is removed when the run stops and never tracked. |
 | Cabin ready | The tick at which boarding is complete, bins are closed and every passenger is seated and belted: the part of an on-time door the cabin controls. |
 | Cascade | One system's effect setting off another's, such as a drinks round filling the lav queue that then blocks the cart. |
+| Ceiling | The longest a gate may run before `tools/gate.ps1` or `tools/test-all.ps1` kills it with its children (exit 124); a few times what it takes today, so reaching one means a hang. |
 | Concept pass | The short design sitting before any code that produces `docs/design/CONCEPT.md`. |
 | Contagion | A need spreading between neighbours; in M1 only Unease spreads, to adjacent seats and across the aisle. |
 | Crew-observed view | The player's picture of the cabin, built from what crew have seen, which ages and goes stale. A setting switches it to the true state. |
@@ -40,6 +43,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Event | A Lua module (`trigger`, `describe`, `choices`, `effects`) that surfaces a situation with choices; crew auto-resolve it when no player chooses. |
 | Experience | A passenger's whole-flight result, 0 to 100, computed from their distress over the flight (`docs/design/CONCEPT.md` section 6). |
 | Flight phase | A stage of a flight from boarding to deboarding (boarding, taxi, climb, cruise, descent, deboarding and so on); the stage machine enters each in order. |
+| Gate | A check that must pass before work lands (a build, a test run, a format check, a hook), run under `tools/gate.ps1`; `tools/test-all.ps1` is the whole gate. |
 | Hazard | A review finding that can break a build, a run or a player's session; after one is fixed, the reviewer does a last pass. |
 | Headless | Run without a window or Godot: `Sky.Sim` flies a whole flight headless, and M1 is a headless flight. |
 | Incident | A situation that needs crew action within a window (a medical case, a dispute); it is handled or missed, and the report counts both. |
@@ -52,6 +56,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Named stream | A random sequence handed out by the one seeded RNG root under a fixed name, so adding draws in one system never shifts another's. |
 | Nav graph | The graph the engine derives from a layout: aisle slots, seat nodes, galley, lav and door nodes, with capacity and reservations. |
 | Need | One of the five meters a passenger carries (Refreshment, Bladder, Rest, Unease, Boredom), 0 to 100; each rises at a rate and a lever moves it. |
+| Orchestrator | The main Claude session: it owns plans, docs, config and commits, dispatches code edits to the `implementer` agent, and settles non-game technical decisions itself. |
 | Pillar | One of the design principles in `docs/design/CONCEPT.md` section 2 that every feature is tested against. |
 | Policy | A standing decision that applies to a class of people or situations (a service plan, a crew zone), as opposed to a moment. |
 | Port | An interface the Engine defines and another project implements (`IClockSource`, `ISimFeed`, `IBehaviorScripts`). |
@@ -70,6 +75,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Squeeze rule | The nav graph rule that lets one character pass another in an aisle slot that is already occupied. |
 | Stage manager | The player's role: they set the conditions the cabin plays out in, rather than moving people. |
 | Strain | A crew member's accumulated load: time on task without a break, pre-emptions, and fatigue. |
+| Studio agent | One of the project's own agents in `.claude/agents/` (game-designer, event-writer, balance-analyst, art-director, ux-reviewer, playtester, godot-reviewer, sky-explore), each owning a kind of work and, for most, a design doc. |
 | Sustain window | How long a need must stay past its threshold before it counts as a failure, so a spike at spawn has no consequence. |
 | Sweep | Running the same scenario over many seeds (a seed sweep) and collecting one balance CSV row per seed. |
 | Sync point | A named moment where several characters' sequences wait for each other, such as two crew working one cart. |

@@ -1,7 +1,7 @@
 # Main Plan
 <!-- plan-doc-hygiene: 2026-09-26 f38edb6 -->
 
-Open work only, in working order: the next item is the first line from the top. One line an item: the action, the files, who asked and when. Designs and decisions live in `docs/design/` and `docs/decisions/` once they exist; until then, the kickoff decisions are [2026-09-26-rewrite-decisions.md](./2026-09-26-rewrite-decisions.md). A landed line moves, ticked with its landing note, to `archive/YYYY-MM-done.md`. A fresh session reads [2026-09-26-handoff.md](./2026-09-26-handoff.md) first.
+Open work only, in working order: the next item is the first line from the top. One line an item: the action, the files, who asked and when. Designs and decisions live in `docs/design/` and `docs/decisions/` once they exist; until then, the kickoff decisions are [2026-09-26-rewrite-decisions.md](./2026-09-26-rewrite-decisions.md). A landed line moves, ticked with its landing note, to `archive/YYYY-MM-done.md`. A fresh session reads the root `CLAUDE.md` first.
 
 ## Now: M0, the concept pass and the repo skeleton
 
@@ -14,7 +14,6 @@ Grouped into waves by shared files. Waves run side by side where their files are
 
 ### Wave M0-D: agent docs and studio (`CLAUDE.md`, `docs/*.md` outside plans, `.claude/`; gate: `writing-for-agents` read-through)
 
-- [ ] Docs skeleton, the rest: `docs/DEVELOPMENT.md` (toolchain, the `sky.ps1` commands and ceilings, prek and gitleaks, the provenance commands, godot-mcp registered at local scope, scratch scenes), then `CLAUDE.md` as a router; delete the handoff file once both land (README start map and glossary, `ARCHITECTURE.md`, `TEST_ALMANAC.md` and `GODOT_CONVENTIONS.md` have landed)
 - [ ] Studio skills, after `DEVELOPMENT.md`: `sky-nextup` (the profile: agents, reviewers by change type with `oracle` for engine changes, gates, ceiling 3, Docs map, landing, the owner's rule that the orchestrator settles technical decisions) and `sky-changelog-and-commit` (no bullets before the first release); the eight agents in `.claude/agents/` have landed
 
 ### Milestone close
