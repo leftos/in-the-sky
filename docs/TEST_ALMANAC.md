@@ -14,7 +14,7 @@ Every test class in the repo, what it proves, and where a new test goes. The doc
 | Project | Classes | `[Fact]` | `[Theory]` | Total |
 |---|---|---|---|---|
 | Sky.Client.Tests | 1 | 1 | 0 | 1 |
-| Sky.Content.Tests | 1 | 1 | 0 | 1 |
+| Sky.Content.Tests | 2 | 15 | 2 | 17 |
 | Sky.Engine.Tests | 20 | 186 | 27 | 213 |
 | Sky.Scripting.Tests | 3 | 21 | 12 | 33 |
 | Sky.Session.Tests | 1 | 1 | 0 | 1 |
@@ -54,6 +54,7 @@ Every class below reads the referenced assembly names from its project's compile
 | Class | Tests | Proves |
 |---|---|---|
 | `ReferenceTests` | 1 | `ReferencesOnlyItsAllowedSkyProjects`: `Sky.Content` references `Sky.Engine` and no other Sky project. |
+| `ContentLoaderTests` | 16 | `ContentLoader` over fixture trees written by `ContentTree`: a minimal tree loads into Engine types with ids interned in declaration order; a malformed, unknown, missing or null field fails naming the file and JSON path; enums take only exact member names; omitted optional fields take their defaults; an unknown or duplicate id and a missing module fail naming them; an Engine refusal becomes a `ContentLoadException`; the hash changes with a byte or a rename, ignores listing order, root location and files other than `.json` and `.lua`. |
 
 ## Sky.Scripting.Tests
 

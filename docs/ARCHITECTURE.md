@@ -49,7 +49,15 @@ A plain `net10.0` class library with no project or package references; its `Asse
 
 ### Content: `src/Sky.Content`
 
-A class library referencing `Sky.Engine`. ADR 0001 governs its place. The schemas, loader and validator are not built yet.
+A class library referencing `Sky.Engine`. ADR 0001 governs its place. Built so far:
+
+- `ContentLoader.Load(directory)` reads a content root (`layouts/<id>.json`, `needs.json`, `traits.json`, `activities.json` with `activities/<id>.lua`, `crew.json`, `scenarios/<id>.json`, `thoughts.json`) into a `ContentSet`. Layouts, need rates, cascades, distress terms, node capacities and sustain gates map to their Engine types and pass the Engine's own checks; traits, activities, crew, scenarios and thoughts stay schema records until a later step gives them an Engine type. Trait and activity ids are interned to `TraitId` and `ActivityId` by their index in their file's list, and activity modules come back as text in that order, as `LuaBehaviorScripts` requires (R9).
+- `Schema/`: the records per file and `ContentJsonContext`, a source-generated `System.Text.Json` context: snake_case fields, an unknown or repeated field fails, a missing required field fails, enums only as their exact C# member names (`StrictEnumConverter`), and an omitted optional field takes its documented default.
+- `ContentLoadException`: every load failure, naming the file relative to the root, the JSON path, and what was expected (R10). A null list entry fails at its index.
+- `ContentSet.Hash`: the content hash, SHA-256 over every `.json` and `.lua` file under the root in ordinal order of its `/`-separated relative path (the path, a zero byte, the length, the bytes), so the same files hash alike on any machine and in any listing order.
+- `Data/**` is copied to the output of `Sky.Content` and every project that references it. No content ships yet.
+
+The loader checks shape, ids and the Engine's rules; references across files (a scenario's layout, a locked lav's fixture) and value ranges are the validator's, not built yet.
 
 ### Scripting: `src/Sky.Scripting`
 

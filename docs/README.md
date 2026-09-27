@@ -51,7 +51,8 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Concept pass | The short design sitting before any code that produces `docs/design/CONCEPT.md`. |
 | Consequence kind | One of the four shapes an event's delayed consequence takes: a need change, an incident, a seat move, or a line (`docs/design/events.md` section 1). |
 | Contagion | A need spreading between neighbours; in M1 only Unease spreads, to adjacent seats and across the aisle. |
-| Content hash | A SHA-256 over every content file's path and bytes, written in a journal's header so a replay against changed content is refused. |
+| Content hash | A SHA-256 over every `.json` and `.lua` file's path and bytes under the content root, written in a journal's header so a replay against changed content is refused. |
+| Content root | The folder `ContentLoader.Load` reads: `src/Sky.Content/Data/` as shipped, a fixture tree in tests. |
 | Crew station | A nav graph node beside the forward door, off the passenger path, where the purser stands for boarding and deboarding. |
 | Crew-observed view | The player's picture of the cabin, built from what crew have seen, which ages and goes stale. A setting switches it to the true state. |
 | Crewless flight | A flight with passengers and no cabin crew, scored on flight smoothness instead of the four crewed outcomes; from M5 (`docs/design/CONCEPT.md` section 8, T7). |

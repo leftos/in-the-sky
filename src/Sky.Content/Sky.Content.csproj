@@ -11,4 +11,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Sky.Engine\Sky.Engine.csproj" />
   </ItemGroup>
+
+  <!-- The shipped content, copied beside the assembly so tests and Sky.Sim load it from AppContext.BaseDirectory (R9).
+       Update, not Include: the SDK's default None items already hold these files, and a second Include duplicates them. -->
+  <ItemGroup>
+    <None Update="Data\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
