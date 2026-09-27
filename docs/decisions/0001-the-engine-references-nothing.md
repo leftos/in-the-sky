@@ -30,4 +30,4 @@ The repo root also carries `sky.ps1`, `tools/gate.ps1` and `tools/test-all.ps1`.
 - Engine, Sim and tests run anywhere, and CI runs on Linux. Only the SimConnect adapter and Windows TTS are Windows-only, and the client builds without them.
 - A flight runs without a view: M1 is a headless cabin flight in `Sky.Sim` with no Godot.
 - The client draws views and holds no rules.
-- Which Lua runtime `Sky.Scripting` hosts is still open; the M0 Lua runtime research and the boundary spike (§4) choose between MoonSharp, NLua/KeraLua and any maintained successor.
+- `Sky.Scripting` hosts Lua-CSharp, chosen by the M0 research and spike ([0010](./0010-lua-csharp-at-decision-points-and-250-ms-ticks.md)).

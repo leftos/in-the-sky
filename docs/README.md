@@ -75,7 +75,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Sync point | A named moment where several characters' sequences wait for each other, such as two crew working one cart. |
 | Task board | The prioritized list of work (services, call buttons, checks) that crew claim. A higher-priority task can pre-empt a lower one. |
 | Test twin | The `tests/Sky.<X>.Tests` project paired with each `src/Sky.<X>` project. |
-| Tick | One fixed step of simulation time. The spike sets its size; 250 ms is the working figure. |
+| Tick | One fixed step of simulation time: 250 ms (ADR 0010). |
 | Time warp | Running the sim faster than real time (up to 64x) in standalone mode; in MSFS mode the sim's own rate drives it. |
 | Utility scoring | How a passenger picks the next activity: each candidate scores itself from needs, traits and context, and the highest score wins. |
 | Verdict | The word the report gives each of the four outcomes (Smooth, Rough, Bad); there is no overall grade. |

@@ -15,12 +15,12 @@ OpenPax's time depends on the frame and the machine. It multiplies a variable de
 - Flights run at their real length in sim time, with need rates per sim hour.
 - The engine must sustain 64x at full cabin. With 250 ms ticks that is 256 ticks per second, pinned by a performance test.
 
-## Open
+## Settled
 
-The tick size is not settled. 250 ms is the working figure; the M0 Lua boundary and tick spike confirms it against the 64x budget and sets it.
+Settled by [0010](./0010-lua-csharp-at-decision-points-and-250-ms-ticks.md): the tick is 250 ms, measured against the 64x budget by the M0 spike.
 
 ## Consequences
 
 - Simulation time never reads the frame delta, the wall clock or a Stopwatch budget.
-- The per-second tick count in the performance test follows from whatever tick size the spike sets.
+- The per-second tick count in the performance test follows from the 250 ms tick of ADR 0010: 256 ticks per second.
 - MSFS clock edge cases (active pause, slew, a sim rate change mid-tick) are open until M5.

@@ -16,9 +16,9 @@ OpenPax has no preemption model: it has the clear-and-re-enqueue, `OverrideCurre
 - Each decision records its top candidate scores for a dev inspector.
 - Lua is used for everything behavioral.
 
-## Open
+## Settled
 
-How often Lua may run (only at decision points, or also per tick) is not decided. The M0 Lua boundary spike runs 200 passengers with about 10 activities at 64x, comparing the top two runtimes against plain C# scoring, and settles it; the cost is unmeasured today. The runtime itself is chosen by the M0 Lua runtime research and that spike.
+Settled by [0010](./0010-lua-csharp-at-decision-points-and-250-ms-ticks.md): Lua runs only at decision points and event evaluation, on Lua-CSharp, under an instruction budget.
 
 ## Consequences
 

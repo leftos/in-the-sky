@@ -13,5 +13,6 @@ One numbered Architecture Decision Record per engineering decision. The kickoff 
 | [0007](./0007-crew-observed-player-views.md) | The player's view is built from what crew observed, with a setting for the true state |
 | [0008](./0008-a-bundled-on-device-small-model-text-only.md) | A bundled on-device small model changes only words; no cloud LLM provider ships |
 | [0009](./0009-the-asset-provenance-ledger.md) | Every asset has an entry in `assets/PROVENANCE.toml`, enforced by prek and CI |
+| [0010](./0010-lua-csharp-at-decision-points-and-250-ms-ticks.md) | `Sky.Scripting` hosts Lua-CSharp; Lua runs only at decision points, under an instruction budget; the tick is 250 ms |
 
 A new ADR takes the next free number. A superseded ADR is kept, and its status changes to `Superseded by NNNN` with a link to the ADR that replaces it; the new ADR names the one it supersedes.
