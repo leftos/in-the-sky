@@ -103,6 +103,11 @@ In M1 the words reach the text report (a moment cites the event, the choice and 
 - **No internal names** in any text: a state key, event id or choice id stays in the module.
 - A word not in the docs goes to the owner as a proposal before it goes in a line.
 
+The module's Lua follows two rules as well, from S1's review of the Lua host:
+
+- **No recursion through `pcall`, `xpcall` or a metamethod.** The depth at which a stack overflow comes there depends on the machine's native stack, so the same flight could overflow on one machine and not on another, and a golden hash would differ between Windows and Linux.
+- **No `pcall` of your own around code that may overflow.** The module's `pcall` swallows the overflow, so the host never sees it and the Lua state is not rebuilt.
+
 ## 7. What triggers read
 
 For S3 and F6, which define `ctx`. The four M1 events read:
