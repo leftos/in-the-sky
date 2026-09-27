@@ -75,7 +75,7 @@ public static class ManifestGenerator
         return order;
     }
 
-    /// <summary>A booking drawn but not yet seated; its members are in seating order.</summary>
+    /// <summary>A booking drawn but not yet seated; its members are in draw order.</summary>
     private sealed record BookingDraft(SeatClass SeatClass, TripPurpose TripPurpose, int WakeMinute, MemberDraft[] Members);
 
     /// <summary>A passenger drawn but not yet seated.</summary>
@@ -273,7 +273,10 @@ public static class ManifestGenerator
         }
     }
 
-    /// <summary>The layout's seat groups by class, each a list of seat node ids left to right, row by row from the front.</summary>
+    /// <summary>
+    /// The layout's seat groups by class, each a list of seat node ids running from the group's aisle end, row by row from
+    /// the front.
+    /// </summary>
     private sealed class SeatPlan
     {
         private readonly List<int[]> businessGroups = [];
@@ -282,6 +285,14 @@ public static class ManifestGenerator
         /// <summary>Pairs the layout's seat groups with the graph's seat nodes, which the builder numbers in the same order.</summary>
         public static SeatPlan From(CabinLayout layout, NavGraph graph, int businessRowCount)
         {
+            if (layout.Aisles.Count == 0)
+            {
+                throw new ArgumentException(
+                    $"The layout '{layout.Id}' has no aisle; a layout needs at least one aisle to seat passengers.",
+                    nameof(layout)
+                );
+            }
+
             if (businessRowCount > layout.Rows.Count)
             {
                 throw new ArgumentException(
@@ -297,7 +308,7 @@ public static class ManifestGenerator
                 List<int[]> groups = row < businessRowCount ? plan.businessGroups : plan.economyGroups;
                 foreach (SeatGroup group in layout.Rows[row].Groups)
                 {
-                    groups.Add(GroupSeats(graph, row, group, ref next));
+                    groups.Add(AisleFirst(layout, group, GroupSeats(graph, row, group, ref next)));
                 }
             }
 
@@ -355,10 +366,30 @@ public static class ManifestGenerator
         private static bool IsSeat(NavNode node, int row, SeatSpec seat) => node.RowIndex == row && node.Label == seat.Label;
 
         /// <summary>
+        /// Turns a group's seats to run from its aisle end: its edge nearer the nearest aisle's centre — unless the group has
+        /// an aisle on each side, an aisle centre at or left of its left edge and another at or right of its right edge, when
+        /// it uses the left edge's.
+        /// </summary>
+        private static int[] AisleFirst(CabinLayout layout, SeatGroup group, int[] seats)
+        {
+            double leftEdge = group.LeftInches;
+            double rightEdge = leftEdge + group.Seats.Sum(seat => seat.WidthInches);
+            bool aisleOnEachSide =
+                layout.Aisles.Any(aisle => aisle.CenterInches <= leftEdge) && layout.Aisles.Any(aisle => aisle.CenterInches >= rightEdge);
+            double fromLeft = layout.Aisles.Min(aisle => Math.Abs(aisle.CenterInches - leftEdge));
+            if (!aisleOnEachSide && layout.Aisles.Min(aisle => Math.Abs(aisle.CenterInches - rightEdge)) < fromLeft)
+            {
+                Array.Reverse(seats);
+            }
+
+            return seats;
+        }
+
+        /// <summary>
         /// Assigns a booking's members to its seat runs, one run to each seat group it sits in. The first runs of two or more
         /// seats, one to each adult, keep a seat for an adult and fill the rest with children; children left over take the
-        /// other runs in order, and adults fill every seat left. Within a run the order is adult, child, adult, child, so a
-        /// booking in one seat group sits as it was drafted.
+        /// other runs in order, and adults fill every seat left. Within a run the order runs from the group's aisle end: an
+        /// adult first, then the run's children, then its other adults.
         /// </summary>
         private static (MemberDraft Member, int Seat)[] Arrange(MemberDraft[] members, List<int[]> runs)
         {
@@ -368,7 +399,7 @@ public static class ManifestGenerator
             List<(MemberDraft Member, int Seat)> placed = [];
             for (int r = 0; r < runs.Count; r++)
             {
-                AgeBand[] order = SeatingOrder(runs[r].Length - childrenPerRun[r], childrenPerRun[r]);
+                AgeBand[] order = RunOrder(runs[r].Length - childrenPerRun[r], childrenPerRun[r]);
                 for (int i = 0; i < order.Length; i++)
                 {
                     placed.Add((order[i] == AgeBand.Adult ? adults.Dequeue() : children.Dequeue(), runs[r][i]));
@@ -376,6 +407,22 @@ public static class ManifestGenerator
             }
 
             return [.. placed];
+        }
+
+        /// <summary>
+        /// Orders one run's members from the seat group's aisle end: one adult first, then the run's children, then its
+        /// remaining adults, so the last adult takes the window end. A run of children alone is left as it is.
+        /// </summary>
+        private static AgeBand[] RunOrder(int adults, int children)
+        {
+            int childrenStart = adults > 0 && children > 0 ? 1 : 0;
+            var order = new AgeBand[adults + children];
+            for (int i = 0; i < order.Length; i++)
+            {
+                order[i] = i >= childrenStart && i < childrenStart + children ? AgeBand.Child : AgeBand.Adult;
+            }
+
+            return order;
         }
 
         private static int[] ChildrenPerRun(List<int[]> runs, int adults, int children)
@@ -443,6 +490,11 @@ public static class ManifestGenerator
             int left = count;
             foreach (int[] group in groups)
             {
+                if (left == 0)
+                {
+                    break;
+                }
+
                 int[] run = FreeSeats(group, left, taken);
                 if (run.Length > 0)
                 {

@@ -226,7 +226,7 @@ All numbers in this section are first values, D3: thresholds, chances, minutes, 
 Effects:
 - `swap`: 0, subject, line "The crew member leans in to {swapper_seat} and asks if they would mind moving." · 2, swap subject and swapper · 2, subject and partner, Unease −10 · 2, swapper, Unease +8 · 5, subject and partner, Unease −6.
 - `pair`: 0, subject, line "The crew member points out two empty seats in row {pair_row}." · 2, subject to `pair[1]`, partner to `pair[2]` · 2, subject and partner, Unease −10 · 5, subject and partner, Unease −6.
-- `leave`: 0, subject, line "They wave to each other over the seat backs." · 5, subject and partner, Unease +6 · 15, subject and partner, Unease +5. With a child, nothing more is added here: `passengers.md` already gives a child with no adult of their group beside them Unease ×1.3, and that adult ×1.2 (Context class), for as long as they sit apart. That lasting modifier is the child case's real cost, and the reason `leave` scores low for it; the seat moves in `swap` and `pair` are what end it.
+- `leave`: 0, subject, line "They wave to each other over the seat backs." · 5, subject and partner, Unease +6 · 15, subject and partner, Unease +5. With a child, nothing more is added here: `passengers.md` already gives a child with no adult of their group in their seat group Unease ×1.3, and that adult ×1.2 (Context class), for as long as they sit apart. That lasting modifier is the child case's real cost, and the reason `leave` scores low for it; the seat moves in `swap` and `pair` are what end it.
 
 Quality:
 

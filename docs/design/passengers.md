@@ -127,7 +127,7 @@ Each passenger rolls each belonging independently. Belongings stack with any tra
 
 ### 5. The manifest
 
-Every share and range is [D3]. The generator draws bookings (a booking is a group) until the load is reached, then seats them by the scenario's fixed default order (F2: groups together, then by class), a child always beside an adult of their group when a seat group allows.
+Every share and range is [D3]. The generator draws bookings (a booking is a group) until the load is reached, then seats them by the scenario's fixed default order (F2: groups together, then by class), a child always in the same seat group as an adult of their group when a seat group allows. Within a seat group a family's adult takes the aisle seat, and with two adults the second takes the window: one adult with two children sits `C C A` from the window to the aisle (owner, 2026-09-27: "Usually the adult sits in the aisle seat"; this replaces the game-designer's `C A C` ruling of the same day).
 
 - **Load factor:** 0.90 to 1.00 of 180 seats, uniform (the performance test forces 1.00).
 - **Seat class:** 10 to 12 of the 12 business seats booked; the rest of the load in economy.
@@ -276,7 +276,7 @@ Thoughts on the player surface (section 10):
 | Scenario gate conditions (section 2) | | starting Refreshment, Boredom and Unease; the late-and-fed-up Unease modifier until first served |
 | Observation (thoughts, section 10) | the current thought, revealed by any crew interaction or a check-in walk passing the row | nothing: thoughts are read by no system |
 
-A split group (a seat-conflict event unresolved, or seating that could not keep a family together) gives a child with no adult of their group beside them Unease ×1.3 and those adults Unease ×1.2, Context class [D3]. That is what makes OD5's event matter after boarding.
+A split group (a seat-conflict event unresolved, or seating that could not keep a family together) gives a child with no adult of their group in their seat group Unease ×1.3 and those adults Unease ×1.2, Context class [D3]; a family sharing a seat group is together whichever seats its members hold (owner, 2026-09-27). That is what makes OD5's event matter after boarding.
 
 ## Edge cases and failure modes
 

@@ -232,7 +232,7 @@ Moves: Incidents directly (this table is the whole "handled or missed" measure);
 
 | Number | Value | Moves |
 |---|---|---|
-| Child with no adult of their group beside them | Unease ×1.3 | Experience, and what makes OD5's `split-group` event (events.md) matter after boarding |
+| Child with no adult of their group in their seat group | Unease ×1.3 | Experience, and what makes OD5's `split-group` event (events.md) matter after boarding |
 | Those adults | Unease ×1.2 | as above |
 
 ### `crew.md` (D2), continuing the same numbering

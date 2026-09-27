@@ -39,6 +39,11 @@ public sealed class ManifestGeneratorTests
     private static readonly ManifestRules Rules = ReferenceRules();
     private static readonly PassengerManifest[] Sampled = [.. Enumerable.Range(0, SeedCount).Select(seed => Generate((ulong)seed))];
 
+    /// <summary>Each seat group's seat nodes, keyed by <see cref="GroupOf"/>, left to right.</summary>
+    private static readonly Dictionary<int, int[]> GroupSeatNodes = Graph
+        .SeatNodes.GroupBy(GroupOf)
+        .ToDictionary(group => group.Key, group => group.ToArray());
+
     /// <summary>One seed gives one manifest, passenger for passenger and field for field.</summary>
     [Fact]
     public void SameSeedGivesSameManifest() => Assert.Equal(Fingerprint(Generate(7)), Fingerprint(Generate(7)));
@@ -109,9 +114,42 @@ public sealed class ManifestGeneratorTests
     }
 
     /// <summary>
-    /// Every seat group holding a child of a booking holds an adult of that booking, unless no adult could have gone there:
-    /// then every adult of the booking is the only adult of it in their seat group, and either beside children of it or
-    /// the booking's only seat in that group. A booking seated wholly in one seat group has each child next to an adult.
+    /// In every seat group holding an adult and a child of one booking, the aisle-most seat that booking holds in the group —
+    /// toward the group's edge nearer the aisle's centre — belongs to an adult of that booking. A seat group may hold another
+    /// booking's passengers on its aisle side, so the rule is read on the booking's own seats in the group.
+    /// </summary>
+    [Fact]
+    public void AFamilysAdultTakesTheAisleSeat()
+    {
+        int groupsWithBoth = 0;
+        foreach (PassengerManifest manifest in Sampled)
+        {
+            foreach (Booking booking in manifest.Bookings)
+            {
+                ManifestPassenger[] members = [.. booking.PassengerIds.Select(id => manifest.Passengers[id])];
+                foreach (ManifestPassenger[] group in members.GroupBy(member => GroupOf(member.SeatNode)).Select(seats => seats.ToArray()))
+                {
+                    if (!group.Any(IsChild) || !group.Any(member => !IsChild(member)))
+                    {
+                        continue;
+                    }
+
+                    int aisleSeat = AisleFirstSeats(group[0].SeatNode).First(seat => group.Any(member => member.SeatNode == seat));
+                    Assert.True(
+                        group.Any(member => !IsChild(member) && member.SeatNode == aisleSeat),
+                        $"Booking {booking.Id} seats a child in {aisleSeat}, the aisle-most seat it holds in its seat group."
+                    );
+                    groupsWithBoth++;
+                }
+            }
+        }
+
+        Assert.True(groupsWithBoth > 0, "No seat group held an adult and a child of one booking.");
+    }
+
+    /// <summary>
+    /// A booking with a child never has a seat group holding only children of it while another holds two or more of its seats
+    /// and an adult of it but no child of it. Families that spill over seat groups are checked.
     /// </summary>
     [Fact]
     public void AChildSitsBesideAnAdultOfTheirBookingWhenTheSeatGroupHoldsThem()
@@ -130,13 +168,6 @@ public sealed class ManifestGeneratorTests
                 ManifestPassenger[][] groups = [.. members.GroupBy(member => GroupOf(member.SeatNode)).Select(group => group.ToArray())];
                 spilledFamilies += groups.Length > 1 ? 1 : 0;
                 AssertChildrenSpreadOverAdults(booking, groups);
-                if (groups.Length == 1)
-                {
-                    Assert.All(
-                        members.Where(IsChild),
-                        child => Assert.Contains(members, member => !IsChild(member) && Math.Abs(member.SeatNode - child.SeatNode) == 1)
-                    );
-                }
             }
         }
 
@@ -193,7 +224,7 @@ public sealed class ManifestGeneratorTests
     {
         PassengerManifest manifest = Generate(1);
         string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Fingerprint(manifest))))[..16];
-        Assert.Equal("180:0D6D6BD28DB6C0D4", $"{manifest.Passengers.Count}:{hash}");
+        Assert.Equal("180:EACB494936ADC814", $"{manifest.Passengers.Count}:{hash}");
     }
 
     /// <summary>
@@ -351,6 +382,11 @@ public sealed class ManifestGeneratorTests
         AssertRejects("graph", () => ManifestGenerator.Generate(relabeled, Graph, Rules, new RngRoot(1)));
     }
 
+    /// <summary>Generating refuses a layout with no aisle at all, naming the layout.</summary>
+    [Fact]
+    public void GenerateRefusesALayoutWithNoAisle() =>
+        AssertRejects("layout", () => ManifestGenerator.Generate(Layout with { Aisles = [] }, Graph, Rules, new RngRoot(1)));
+
     /// <summary>
     /// Builds the reference narrowbody of OD2: 3 rows of 2-2 business ahead of 28 rows of 3-3 economy, one aisle, the forward
     /// door and lav at row 0, the aft lav and galley at row 30.
@@ -465,6 +501,19 @@ public sealed class ManifestGeneratorTests
         return (node.RowIndex * 2) + (node.Label[0] < 'D' ? 0 : 1);
     }
 
+    /// <summary>The seat group's seat nodes from its aisle end: the group's edge nearer the nearest aisle's centre.</summary>
+    private static int[] AisleFirstSeats(int seatNode)
+    {
+        int[] seats = GroupSeatNodes[GroupOf(seatNode)];
+        return AisleAtRight(seatNode) ? [.. seats.Reverse()] : seats;
+    }
+
+    /// <summary>
+    /// Whether the seat group holding <paramref name="seatNode"/> has the aisle to its right: on the reference layout the A
+    /// to C groups do and the D to F groups do not, as <see cref="GroupOf"/> encodes.
+    /// </summary>
+    private static bool AisleAtRight(int seatNode) => Graph.Nodes[seatNode].Label[0] < 'D';
+
     private static bool AnyGroupWithFreeSeats(SeatClass seatClass, int count, HashSet<int> taken) =>
         Graph.SeatNodes.Where(seat => ClassOf(seat) == seatClass && !taken.Contains(seat)).GroupBy(GroupOf).Any(group => group.Count() >= count);
 
@@ -480,8 +529,8 @@ public sealed class ManifestGeneratorTests
     private static bool IsChild(ManifestPassenger passenger) => passenger.AgeBand == AgeBand.Child;
 
     /// <summary>
-    /// Asserts that a child-only seat group of the booking exists only when no adult could have sat there: each adult is the
-    /// booking's only adult in their group, and beside a child of the booking or the booking's only seat in that group.
+    /// Asserts that when a seat group holds only children of the booking, no seat group holding two or more of its seats and
+    /// an adult of it is left without a child of it too.
     /// </summary>
     private static void AssertChildrenSpreadOverAdults(Booking booking, ManifestPassenger[][] groups)
     {
@@ -490,12 +539,11 @@ public sealed class ManifestGeneratorTests
             return;
         }
 
-        foreach (ManifestPassenger[] group in groups.Where(group => !group.All(IsChild)))
+        foreach (ManifestPassenger[] group in groups.Where(group => group.Length >= 2 && group.Any(member => !IsChild(member))))
         {
-            bool spread = group.Count(member => !IsChild(member)) == 1 && (group.Length == 1 || group.Any(IsChild));
             Assert.True(
-                spread,
-                $"Booking {booking.Id} leaves a child without an adult while group {GroupOf(group[0].SeatNode)} holds adults it need not."
+                group.Any(IsChild),
+                $"Booking {booking.Id} holds {group.Length} seats in group {GroupOf(group[0].SeatNode)} with an adult and no child."
             );
         }
     }
