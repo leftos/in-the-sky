@@ -24,7 +24,9 @@ public abstract class CharacterAction(int priority)
 
     /// <summary>
     /// Undoes or settles whatever the action leaves half-done. The executor calls it exactly once, when a higher-priority
-    /// action interrupts this one, and never when the action finishes by returning <see cref="ActionStatus.Done"/>.
+    /// <see cref="SequenceExecutor.TryStart"/> or any <see cref="SequenceExecutor.Replace"/> swaps this action out, never
+    /// when it returns <see cref="ActionStatus.Done"/>; it may run inside this action's own <see cref="Tick"/> when the
+    /// action arranges its own replacement.
     /// </summary>
     /// <param name="tick">The tick on which the interruption happens.</param>
     public virtual void Cleanup(long tick) { }

@@ -54,6 +54,91 @@ public sealed class SequenceExecutorTests
     [Fact]
     public void LowerPriorityDoesNotInterrupt() => AssertRefused(currentPriority: 3, newPriority: 2);
 
+    /// <summary>Replace installs an action of lower or equal priority over the running one, which a start would refuse.</summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(5)]
+    public void ReplaceIgnoresPriority(int newPriority)
+    {
+        List<string> log = [];
+        SequenceExecutor executor = new(1);
+        RecordingAction running = new("running", 5, log);
+        RecordingAction replacement = new("replacement", newPriority, log);
+        Assert.True(executor.TryStart(0, running, 0));
+
+        executor.Replace(0, replacement, 1);
+        executor.Tick(1);
+
+        Assert.Same(replacement, executor.ActionOf(0));
+        Assert.Equal(["running cleanup 1", "replacement tick 1"], log);
+    }
+
+    /// <summary>Replace runs the running action's cleanup once, before the new action's first tick, and none on an idle character.</summary>
+    [Fact]
+    public void ReplaceRunsCleanupOnce()
+    {
+        List<string> log = [];
+        SequenceExecutor executor = new(1);
+        RecordingAction first = new("first", 1, log);
+        RecordingAction second = new("second", 9, log);
+        RecordingAction third = new("third", 1, log);
+
+        executor.Replace(0, first, 0);
+        executor.Tick(0);
+        executor.Replace(0, second, 1);
+        executor.Tick(1);
+        executor.Replace(0, third, 2);
+        executor.Tick(2);
+
+        Assert.Equal(["first tick 0", "first cleanup 1", "second tick 1", "second cleanup 2", "third tick 2"], log);
+        Assert.Equal(1, first.CleanupCount);
+        Assert.Equal(1, second.CleanupCount);
+        Assert.Equal(0, third.CleanupCount);
+    }
+
+    /// <summary>Replacing a character's action with the action it is already running throws and leaves it running, uncleaned.</summary>
+    [Fact]
+    public void ReplaceWithTheRunningActionThrows()
+    {
+        SequenceExecutor executor = new(1);
+        RecordingAction running = new("running", 1, []);
+        executor.Replace(0, running, 0);
+
+        Assert.Throws<InvalidOperationException>(() => executor.Replace(0, running, 1));
+
+        Assert.Same(running, executor.ActionOf(0));
+        Assert.Equal(0, running.CleanupCount);
+    }
+
+    /// <summary>
+    /// A replace issued inside a tick, for the ticking character itself or for another before or after it, runs the
+    /// replaced action's cleanup at once and the successor first on the next tick.
+    /// </summary>
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(0, 1)]
+    [InlineData(1, 0)]
+    public void ReplaceDuringTickRunsCleanupFirstAndTheSuccessorNextTick(int replacer, int target)
+    {
+        List<string> log = [];
+        SequenceExecutor executor = new(2);
+        RecordingAction successor = new("successor", 1, log);
+        Assert.True(executor.TryStart(replacer, new ReplacerAction(executor, target, successor, log), 0));
+        if (target != replacer)
+        {
+            Assert.True(executor.TryStart(target, new RecordingAction("victim", 1, log), 0));
+        }
+
+        executor.Tick(0);
+        executor.Tick(1);
+
+        string cleanup = target == replacer ? "replacer cleanup 0" : "victim cleanup 0";
+        Assert.Equal(1, log.Count(entry => entry.Contains("cleanup", StringComparison.Ordinal)));
+        Assert.DoesNotContain("successor tick 0", log);
+        Assert.True(log.IndexOf(cleanup) >= 0 && log.IndexOf(cleanup) < log.IndexOf("successor tick 1"));
+        Assert.Same(successor, executor.ActionOf(target));
+    }
+
     /// <summary>An action that returns done is cleared, and its cleanup never runs, then or when another action starts.</summary>
     [Fact]
     public void FinishedActionIsClearedWithoutCleanup()
@@ -238,6 +323,25 @@ public sealed class SequenceExecutorTests
             log.Add($"{name} cleanup {tick}");
             CleanupCount++;
         }
+    }
+
+    private sealed class ReplacerAction(SequenceExecutor executor, int target, CharacterAction successor, List<string> log) : CharacterAction(0)
+    {
+        private bool replaced;
+
+        public override ActionStatus Tick(long tick)
+        {
+            log.Add($"replacer tick {tick}");
+            if (!replaced)
+            {
+                replaced = true;
+                executor.Replace(target, successor, tick);
+            }
+
+            return ActionStatus.Running;
+        }
+
+        public override void Cleanup(long tick) => log.Add($"replacer cleanup {tick}");
     }
 
     private sealed class StarterAction(SequenceExecutor executor, int target, CharacterAction started) : CharacterAction(0)

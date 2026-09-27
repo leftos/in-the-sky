@@ -2,7 +2,8 @@ namespace Sky.Engine.Execution;
 
 /// <summary>
 /// Runs at most one <see cref="CharacterAction"/> per character, ticking the characters in id order. A strictly
-/// higher-priority action interrupts the current one, whose cleanup runs before the new action's first tick. An action
+/// higher-priority action interrupts the current one, whose cleanup runs before the new action's first tick;
+/// <see cref="Replace"/> swaps with the same cleanup and no priority check, for a caller that arbitrates itself. An action
 /// started while <see cref="Tick"/> is running first runs on the next tick, whether its character comes before or after
 /// the one that started it, so the character order never decides when a start takes effect.
 /// </summary>
@@ -35,19 +36,37 @@ public sealed class SequenceExecutor
         ArgumentNullException.ThrowIfNull(action);
 
         CharacterAction? running = current[character];
-        if (running is not null)
+        if (running is not null && running.Priority >= action.Priority)
         {
-            if (running.Priority >= action.Priority)
-            {
-                return false;
-            }
-
-            running.Cleanup(tick);
+            return false;
         }
 
-        current[character] = action;
-        startedThisTick[character] = ticking;
+        Install(character, action, tick);
         return true;
+    }
+
+    /// <summary>
+    /// Starts <paramref name="action"/> for <paramref name="character"/> whatever the priorities, for a caller that has
+    /// already decided the swap. A running action has its <see cref="CharacterAction.Cleanup"/> called once, before the
+    /// new action is set; an action replaced while <see cref="Tick"/> is running first runs on the next tick, as with
+    /// <see cref="TryStart"/>.
+    /// </summary>
+    /// <param name="character">The character id.</param>
+    /// <param name="action">The action to start.</param>
+    /// <param name="tick">The tick on which the swap happens, passed to the replaced action's cleanup.</param>
+    /// <exception cref="InvalidOperationException"><paramref name="action"/> is already the character's running action.</exception>
+    public void Replace(int character, CharacterAction action, long tick)
+    {
+        RequireCharacter(character);
+        ArgumentNullException.ThrowIfNull(action);
+        if (ReferenceEquals(current[character], action))
+        {
+            throw new InvalidOperationException(
+                $"Character {character} is already running this action; replacing it with itself would clean it up while it runs."
+            );
+        }
+
+        Install(character, action, tick);
     }
 
     /// <summary>
@@ -79,6 +98,13 @@ public sealed class SequenceExecutor
     {
         RequireCharacter(character);
         return current[character];
+    }
+
+    private void Install(int character, CharacterAction action, long tick)
+    {
+        current[character]?.Cleanup(tick);
+        current[character] = action;
+        startedThisTick[character] = ticking;
     }
 
     private void TickCharacter(int character, long tick)
