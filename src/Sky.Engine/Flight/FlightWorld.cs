@@ -52,11 +52,15 @@ public sealed record FlightSetup
 
     /// <summary>Gets the effect of every trait the passengers carry.</summary>
     public required TraitEffects Traits { get; init; }
+
+    /// <summary>Gets the boarding and deboarding movement numbers.</summary>
+    public required MovementRules Movement { get; init; }
 }
 
 /// <summary>
 /// The flight world: the cabin, its passengers, the executor, the task board and the stage machine, run one tick at a time.
-/// Each tick reads the feed and hands a changed observation to the stage machine, ticks the executor, ticks every boarded
+/// Each tick reads the feed and hands a changed observation to the stage machine, lets the boarding flow admit and stand
+/// passengers, ticks the executor, records <see cref="AllSeatedTick"/> and <see cref="AllOffTick"/>, ticks every boarded
 /// passenger's needs, then advances <see cref="Tick"/>. The journal's input records are appended as they happen.
 /// </summary>
 public sealed class FlightWorld
@@ -78,15 +82,20 @@ public sealed class FlightWorld
 
     private readonly double aboardUneasePushPerHour;
 
+    private readonly BoardingFlow boardingFlow;
+
     private FeedObservation? lastObservation;
 
     /// <summary>Builds the flight: the nav graph, path table and occupancy from the layout, and each passenger with their starting needs.</summary>
     /// <param name="setup">Everything the flight is built from.</param>
     /// <exception cref="ArgumentNullException"><paramref name="setup"/> or one of its reference inputs is null, naming the input.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">The aboard Unease push is negative, NaN or infinite, naming it.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The crew count is negative, or the aboard Unease push is negative, NaN or
+    /// infinite, naming the input.</exception>
+    /// <exception cref="ArgumentException">The layout has no door.</exception>
     public FlightWorld(FlightSetup setup)
     {
         RequireInputs(setup);
+        CrewCount = setup.CrewCount;
         Layout = setup.Layout;
         Graph = NavGraphBuilder.Build(setup.Layout, setup.InchesPerTick);
         Paths = PathTable.Build(Graph);
@@ -113,7 +122,9 @@ public sealed class FlightWorld
 
         Executor = new SequenceExecutor(setup.CrewCount + Passengers.Count);
         Board = new TaskBoard(Executor, setup.CrewCount);
-        Stages = new StageMachine(NoOpHandlers());
+        Movement = new Movement(this, setup.Movement, setup.CrewCount + Passengers.Count);
+        boardingFlow = new BoardingFlow(this, setup.Manifest, setup.Movement);
+        Stages = new StageMachine(StageHandlers(boardingFlow));
         Journal = journal.AsReadOnly();
     }
 
@@ -156,8 +167,20 @@ public sealed class FlightWorld
     /// <summary>Gets the next tick to run: the number of ticks run so far.</summary>
     public long Tick { get; private set; }
 
-    /// <summary>Gets the first tick at which every boarded passenger was seated, or null until then.</summary>
-    public long? AllSeatedTick { get; internal set; }
+    /// <summary>
+    /// Gets the first tick, after boarding starts and before deboarding does, at which every manifest passenger was seated, or null
+    /// until then; it stays null when deboarding starts first.
+    /// </summary>
+    public long? AllSeatedTick { get; private set; }
+
+    /// <summary>Gets the first tick, once deboarding has started, at which every passenger who boarded was off, or null until then.</summary>
+    public long? AllOffTick { get; private set; }
+
+    /// <summary>Gets how many crew the flight carries; they hold the executor's first character ids.</summary>
+    internal int CrewCount { get; }
+
+    /// <summary>Gets the mover: every character's node and movement state.</summary>
+    internal Movement Movement { get; }
 
     /// <summary>Runs <paramref name="ticks"/> ticks as one frame, journalling the frame first; zero ticks run and journal nothing.</summary>
     /// <param name="ticks">How many ticks to run, at least 0.</param>
@@ -174,7 +197,9 @@ public sealed class FlightWorld
         for (long run = 0; run < ticks; run++)
         {
             ReadFeed();
+            boardingFlow.Tick(Tick);
             Executor.Tick(Tick);
+            RecordMilestones();
             TickNeeds();
             Tick++;
         }
@@ -197,6 +222,8 @@ public sealed class FlightWorld
         ArgumentNullException.ThrowIfNull(setup.StartingNeeds, nameof(setup.StartingNeeds));
         ArgumentNullException.ThrowIfNull(setup.Conditions, nameof(setup.Conditions));
         ArgumentNullException.ThrowIfNull(setup.Traits, nameof(setup.Traits));
+        ArgumentNullException.ThrowIfNull(setup.Movement, nameof(setup.Movement));
+        ArgumentOutOfRangeException.ThrowIfNegative(setup.CrewCount, nameof(setup.CrewCount));
         RequireFiniteNonNegative(setup.AboardUneasePushPerHour, nameof(setup.AboardUneasePushPerHour));
     }
 
@@ -211,8 +238,15 @@ public sealed class FlightWorld
     private static Passenger BuildPassenger(ManifestPassenger passenger, PassengerStart start, int crewCount) =>
         new(passenger, start.ToNeedSet(), start.LateAndFedUp, crewCount);
 
-    private static Dictionary<FlightStage, IStageHandler> NoOpHandlers() =>
-        Enum.GetValues<FlightStage>().ToDictionary(stage => stage, IStageHandler (_) => new NoOpStageHandler());
+    /// <summary>A handler for every stage: boarding and deboarding start their flows, every other stage does nothing on entry.</summary>
+    private static Dictionary<FlightStage, IStageHandler> StageHandlers(BoardingFlow flow)
+    {
+        Dictionary<FlightStage, IStageHandler> handlers = Enum.GetValues<FlightStage>()
+            .ToDictionary(stage => stage, IStageHandler (_) => new NoOpStageHandler());
+        handlers[FlightStage.Boarding] = new StageHandler(_ => flow.StartBoarding());
+        handlers[FlightStage.Deboarding] = new StageHandler(_ => flow.StartDeboarding());
+        return handlers;
+    }
 
     /// <summary>The product of a passenger's trait factors on each need, indexed by <see cref="Need"/>.</summary>
     private static double[] TraitFactors(ManifestPassenger passenger, TraitEffects traits)
@@ -232,6 +266,21 @@ public sealed class FlightWorld
         }
 
         return factors;
+    }
+
+    /// <summary>Records the tick every passenger is first seated after boarding starts, and first off after deboarding starts.</summary>
+    private void RecordMilestones()
+    {
+        bool boarding = boardingFlow.BoardingStarted && !boardingFlow.DeboardingStarted;
+        if (AllSeatedTick is null && boarding && boardingFlow.AllSeated())
+        {
+            AllSeatedTick = Tick;
+        }
+
+        if (AllOffTick is null && boardingFlow.DeboardingStarted && boardingFlow.AllOff())
+        {
+            AllOffTick = Tick;
+        }
     }
 
     private void ReadFeed()

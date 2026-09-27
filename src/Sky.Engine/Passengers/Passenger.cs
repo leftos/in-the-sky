@@ -28,9 +28,12 @@ public sealed class Passenger(ManifestPassenger manifest, NeedSet needs, bool la
     /// <summary>Gets the nav graph node the passenger is on, or null before they board.</summary>
     public int? Node { get; internal set; }
 
-    /// <summary>Gets whether the passenger has boarded: they are on the nav graph, and their needs tick.</summary>
+    /// <summary>Gets whether the passenger is aboard: they are on the nav graph, and their needs tick.</summary>
     public bool IsBoarded => Node.HasValue;
 
-    /// <summary>Gets whether the passenger carries the late-and-fed-up Unease modifier; it clears when they are first served.</summary>
+    /// <summary>Gets whether the passenger has left the aircraft at the end of the flight; one who has not yet boarded is not off.</summary>
+    public bool IsOff { get; internal set; }
+
+    /// <summary>Gets whether the passenger carries the late-and-fed-up Unease modifier.</summary>
     public bool LateAndFedUp { get; internal set; } = lateAndFedUp;
 }

@@ -228,6 +228,7 @@ public sealed class FlightTests
             StartingNeeds = StartingNeedsTests.Rules(),
             Conditions = StartingNeedsTests.Conditions(0, true),
             Traits = StartingNeedsTests.Traits(),
+            Movement = BoardingFlowTests.Rules(),
         };
 
     /// <summary>Builds a flight and seats every passenger in their booked seat, as boarding would.</summary>

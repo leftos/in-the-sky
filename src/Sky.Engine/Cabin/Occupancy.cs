@@ -127,6 +127,13 @@ public sealed class Occupancy
     /// <returns>The holder count.</returns>
     public int HolderCount(int node) => HoldersOf(node).Count;
 
+    /// <summary>Returns one holder of a node by its place in reservation order, for reading the holders without a copy.</summary>
+    /// <param name="node">The node's id.</param>
+    /// <param name="index">The holder's place, 0 to <see cref="HolderCount"/> - 1, earliest reservation first.</param>
+    /// <returns>The holder's id.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The node is not in the graph, or the index is outside its holders.</exception>
+    public int HolderAt(int node, int index) => HoldersOf(node)[index].Character;
+
     /// <summary>Returns the ids of the characters holding a node, reserved or arrived, in the order they reserved it.</summary>
     /// <param name="node">The node's id.</param>
     /// <returns>The holders' ids, earliest reservation first.</returns>
