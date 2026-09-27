@@ -37,6 +37,7 @@ A plain `net10.0` class library with no project or package references; its `Asse
 - `Ports/`: the interfaces other projects implement; `IClockSource` hands the Engine elapsed sim milliseconds.
 - `Cabin/`: `CabinLayout` (rows of seat groups, aisles and fixtures in inches), `NavGraphBuilder` (the derived graph of aisle slots, seats, doors, lavs, lav queues and galleys, with edge costs in ticks) and `PathTable` (next hop and cost from every node to every node, Dijkstra per target, ties to the lower id). Nothing after the builder reads inches (ADR 0005).
 - `Needs/`: `SourceClass`, `RateModifier` and `RateMultiplier.Compose`, the rate rule of CONCEPT section 4 with its 0.2 floor and 2.5 cap.
+- `Randomness/`: `RngRoot` (the flight's seed) and `SimRandom`, a named stream (xoshiro256** seeded through SplitMix64 from the FNV-1a-64 hash of the seed and the name); every draw in the sim comes from one (ADR 0003, R5).
 - `Time/`: `SimTime` (the 250 ms tick, ticks per sim minute and hour) and `TickAccumulator`, which turns elapsed milliseconds into whole ticks and carries the remainder.
 
 `tests/Sky.Engine.Tests/Guards/ForbiddenApiTests.cs` reads the compiled Engine's metadata and fails on any wall-clock, randomness, threading, IO or string-hashing API (R3 in the M1 plan); a new Engine dependency on one of them is an allowlist edit there, argued in the change. A C# `event` or `lock` compiles to `System.Threading` calls, so either trips it.
