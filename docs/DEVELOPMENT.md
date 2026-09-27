@@ -21,7 +21,7 @@ The toolchain, the commands and their ceilings, the hooks, and the Godot setup. 
 From the repo root:
 
 1. `dotnet tool restore` (CSharpier).
-2. `prek install` (the pre-commit hooks).
+2. `prek install` (the pre-commit and commit-msg hooks).
 3. `pwsh ./sky.ps1 build`, then `pwsh tools/test-all.ps1`.
 4. `pwsh ./sky.ps1 client` once before opening or driving the Godot client, so Godot has imported the project.
 
@@ -91,7 +91,7 @@ The checker's own code is linted and tested by `pwsh ./sky.ps1 analysis`.
 
 ## Hooks
 
-`prek install` once per clone; `pwsh ./sky.ps1 hooks` runs every hook over every file. `prek.toml` runs these on every commit, in this order: the fixers first (they re-stage what they change), then the readers, then the build last.
+`prek install` once per clone; `pwsh ./sky.ps1 hooks` runs every hook over every file. `prek.toml` runs these on every commit, in this order: the fixers first (they re-stage what they change), then the readers, then the build, then the doc-drift check.
 
 1. The builtin checks: `trailing-whitespace`, `end-of-file-fixer`, `check-merge-conflict`, `detect-private-key`, and `check-added-large-files` at 1024 KB.
 2. `dotnet-format-style`: `dotnet format style` at severity info over the staged C# files, re-staging what it changed (`tools/hooks/dotnet-format-wrapper.ps1`).
@@ -101,6 +101,11 @@ The checker's own code is linted and tested by `pwsh ./sky.ps1 analysis`.
 6. `gitleaks`: `gitleaks git --pre-commit --staged --redact`, the secrets scan over the staged changes.
 7. `provenance`: the provenance check (above), on every commit whatever it stages.
 8. `dotnet-build`: `dotnet build -p:TreatWarningsAsErrors=true`.
+9. `doc-drift`: `tools/hooks/Test-DocDrift.ps1`, on every commit: `docs/ARCHITECTURE.md` names every `src/Sky.*` project in backticks, and `docs/TEST_ALMANAC.md` every `tests/Sky.*.Tests` project and every `*Tests` class. `pwsh tools/hooks/Test-DocDrift.ps1 -Update` rewrites the almanac's Counts table from the tree.
+
+One hook runs at the commit-msg stage: `doc-drift-message` (`Test-DocDrift.ps1 -CommitMessage`) refuses a commit that stages anything under `src/Sky.Content/` without staging a file under `docs/design/` or carrying a body line starting `Docs: unchanged, <why>`. `prek install` installs both stages; a clone installed before the commit-msg stage was added runs `prek install` again.
+
+The doc-drift hook reads the committing tree's docs, so work done in a worktree lands on `main` as a patch (`.claude/skills/sky-nextup/SKILL.md`, "Landing") rather than as a worktree commit.
 
 The hook scripts under `tools/hooks/` are pwsh, not bash: prek launched from PowerShell on Windows can resolve a `bash` entry to the WSL stub, which has no dotnet.
 

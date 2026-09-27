@@ -1,6 +1,6 @@
 # Architecture
 
-The projects as built, what each may reference, and where a change goes. Read this before the source. The decisions the code cannot show are under `docs/decisions/`; terms are in the glossary in `docs/README.md`. The doc-drift pre-commit hook fails when a `src/Sky.*` project is not named in this file.
+The projects as built, what each may reference, and where a change goes. Read this before the source. The decisions the code cannot show are under `docs/decisions/`; terms are in the glossary in `docs/README.md`. The doc-drift pre-commit hook (`tools/hooks/Test-DocDrift.ps1`) fails when a `src/Sky.*` project is not named in this file in backticks.
 
 ## Projects and dependency edges
 

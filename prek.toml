@@ -1,7 +1,7 @@
 # Configuration file for `prek`, a git hook framework written in Rust.
 # See https://prek.j178.dev for more information.
 #:schema https://www.schemastore.org/prek.json
-default_install_hook_types = ["pre-commit"]
+default_install_hook_types = ["pre-commit", "commit-msg"]
 
 [[repos]]
 repo = "builtin"
@@ -16,10 +16,10 @@ hooks = [
 [[repos]]
 repo = "local"
 
-# Order matters: the fixers run and re-stage first, the readers report on the result, and the warnings-as-errors build
-# gates it last. Both C# wrappers `git add` what they changed so the commit proceeds instead of failing with "files were
-# modified by this hook". They are pwsh because prek launched from PowerShell on Windows can hand a bash hook the WSL
-# stub, which has no dotnet.
+# Order matters: the fixers run and re-stage first, the readers report on the result, the warnings-as-errors build gates
+# it, and the doc-drift check closes, always_run so a docs-only commit is checked too. Both C# wrappers `git add` what
+# they changed so the commit proceeds instead of failing with "files were modified by this hook". They are pwsh because
+# prek launched from PowerShell on Windows can hand a bash hook the WSL stub, which has no dotnet.
 
 [[repos.hooks]]
 id = "dotnet-format-style"
@@ -81,3 +81,20 @@ entry = "dotnet build -p:TreatWarningsAsErrors=true"
 language = "system"
 pass_filenames = false
 stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "doc-drift"
+name = "docs name every project and every test class"
+entry = "pwsh tools/hooks/Test-DocDrift.ps1"
+language = "system"
+pass_filenames = false
+always_run = true
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "doc-drift-message"
+name = "a content commit stages a design doc or says why"
+entry = "pwsh tools/hooks/Test-DocDrift.ps1 -CommitMessage"
+language = "system"
+always_run = true
+stages = ["commit-msg"]

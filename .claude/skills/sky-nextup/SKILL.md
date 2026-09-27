@@ -61,10 +61,10 @@ Match the diff's paths and the implementer's `SURFACES` line against this table 
 | What changed | Owning doc |
 |---|---|
 | A `src/Sky.*` project added or removed, or a reference edge | `docs/ARCHITECTURE.md` |
-| A test class or test project | `docs/TEST_ALMANAC.md`; its Counts table via `pwsh tools/hooks/Test-DocDrift.ps1 -Update` once that hook lands |
+| A test class or test project | `docs/TEST_ALMANAC.md`; its Counts table via `pwsh tools/hooks/Test-DocDrift.ps1 -Update` |
 | `sky.ps1`, `tools/`, `prek.toml`, CI | `docs/DEVELOPMENT.md` (and `sky.ps1 help` for a subcommand) |
 | An engineering decision the code cannot show | a new ADR in `docs/decisions/`, listed in its `README.md` |
-| `src/Sky.Content/` | the owning `docs/design/` doc, or `Docs: unchanged, <why>` (the commit-msg hook checks it once it lands) |
+| `src/Sky.Content/` | the owning `docs/design/` doc, or `Docs: unchanged, <why>` (the `doc-drift-message` commit-msg hook checks it) |
 | An asset | `assets/PROVENANCE.toml`, then `pwsh ./sky.ps1 provenance` regenerates `CREDITS.md`; all three in one commit |
 | A Godot client rule | `docs/GODOT_CONVENTIONS.md` |
 | A new term | the glossary in `docs/README.md`, in the commit that first uses it |

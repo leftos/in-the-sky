@@ -38,7 +38,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Dev inspector | A developer-only surface showing why a character chose what it did, from the top candidate scores each decision records. |
 | Display RNG | The random source for purely visual draws, kept apart from the sim streams so drawing never changes the simulation. |
 | Distress | How far a passenger is from fine at one tick: 0 is fine, 100 is as bad as the sim allows. It is computed from their needs. |
-| Doc drift | A doc naming a file, project or test that has changed or gone since the doc was written; a prek hook checks `ARCHITECTURE.md` and `TEST_ALMANAC.md` against the tree. |
+| Doc drift | A doc naming a file, project or test that has changed or gone since the doc was written; a prek hook (`tools/hooks/Test-DocDrift.ps1`) checks `ARCHITECTURE.md` and `TEST_ALMANAC.md` against the tree, and a commit-msg hook refuses a `src/Sky.Content/` commit that stages no `docs/design/` file and gives no `Docs: unchanged, <why>` line. |
 | Docs map | The table in the `sky-nextup` skill naming which doc owns which kind of change, walked before every commit. |
 | Engine | `Sky.Engine`, the simulation library, which references no other project or package. |
 | Event | A Lua module (`trigger`, `describe`, `choices`, `effects`) that surfaces a situation with choices; crew auto-resolve it when no player chooses. |

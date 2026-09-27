@@ -1,6 +1,6 @@
 # Test Almanac
 
-Every test class in the repo, what it proves, and where a new test goes. The doc-drift pre-commit hook fails when a `tests/Sky.*.Tests` project or a `*Tests` class is not named in this file in backticks; its `-Update` switch rewrites the counts table below from the tree and changes nothing else.
+Every test class in the repo, what it proves, and where a new test goes. The doc-drift pre-commit hook fails when a `tests/Sky.*.Tests` project or a `*Tests` class is not named in this file in backticks (a project may be named by its name or its `tests/` path); its `-Update` switch rewrites the counts table below from the tree and changes nothing else.
 
 ## How to run
 
