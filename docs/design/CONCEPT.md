@@ -1,20 +1,10 @@
 # Game Concept
 
-Status: drafted 2026-09-26 by `game-designer` for the concept pass. What the owner decided at kickoff is in [the decisions doc](../plans/2026-09-26-rewrite-decisions.md) and is not reopened here. Every section or table marked **Proposed — owner to rule** is a recommendation awaiting the owner; the open questions in section 8 are the rulings needed. Terms are in the glossary in [docs/README.md](../README.md); terms this doc coins are defined in section 0.
+Status: ruled by the owner 2026-09-26 in the concept pass; drafted by `game-designer`. What the owner decided at kickoff is in [the decisions doc](../plans/2026-09-26-rewrite-decisions.md) and is not reopened here. Section 8 records each ruling; options not taken are kept as the record of what was weighed. Terms are in the glossary in [docs/README.md](../README.md).
 
-## 0. Terms this doc coins
+## 0. Terms
 
-These need glossary entries once the owner rules on the sections that use them.
-
-| Term | Meaning |
-|---|---|
-| Lever | Something the player (from M3) or a policy (in M1) sets that changes the conditions the cabin plays out in: a service schedule, a crew zone, the lighting plan. A lever is never an order to one passenger. |
-| Moment | A journal record that moved an outcome: its tick, what happened, who was involved, the cause chain behind it, and its effect on each scoring outcome. The report is built from moments. |
-| Distress | How far a passenger is from fine at one tick: 0 is fine, 100 is as bad as the sim allows. It is computed from their needs. |
-| Experience | A passenger's whole-flight result, 0 to 100, computed from their distress over the flight (section 6). |
-| Strain | A crew member's accumulated load: time on task without a break, pre-emptions, and fatigue. |
-| Cabin ready | The tick at which boarding is complete, bins are closed and every passenger is seated and belted: the part of an on-time door the cabin controls. |
-| Rate multiplier | The factor applied to a need's base rate, composed from all active modifiers by the rule in section 4. |
+The terms this doc coins (lever, moment, distress, experience, strain, cabin ready, rate multiplier) are defined in the glossary in [docs/README.md](../README.md).
 
 ## 1. Player fantasy
 
@@ -22,7 +12,7 @@ You run the cabin, not the people in it. Somewhere up front a pilot (maybe you, 
 
 ## 2. Pillars
 
-Proposed — owner to rule (sharpened from the kept pillars in section 2 of the decisions doc; the substance is unchanged).
+Ruled (owner, 2026-09-26): accepted as drafted (sharpened from the kept pillars in section 2 of the decisions doc; the substance is unchanged).
 
 1. **Stage the conditions, never move the actor.** The player sets staffing, schedules, rules and moment-level choices; crew and passengers act on their own. Consequence: the flight must run to completion with nobody watching (M1 proves it, AirlineOps depends on it), and a player command is only ever a journaled input that takes precedence over what the crew would have done.
 2. **Decide at the level of a policy or a moment, never per passenger.** A decision either applies to a class of people or situations (a policy) or answers one surfaced event (a moment). Test for any new feature: if the natural UI is a list of 180 rows with a control on each, it fails this pillar.
@@ -33,7 +23,7 @@ Proposed — owner to rule (sharpened from the kept pillars in section 2 of the 
 
 ## 3. Core loop
 
-Proposed — owner to rule.
+Ruled (owner, 2026-09-26): accepted as drafted.
 
 ### A minute of play (M3 onward)
 
@@ -75,7 +65,7 @@ M1 has **no player commands**. Every lever holds a fixed default policy from the
 - **The floor is new and needs a ruling** (question 2). OpenPax clamps at 0 (`Need.cs:53`), so two different classes each at 0.4 give 1 − 0.6 − 0.6 = −0.2, clamped to 0: the need freezes, which is the April 2026 failure coming back through the cross-class sum.
 - **Failure only after a sustained window (kept).** A need at its failure threshold becomes an incident only after it holds there for a window measured in sim time (OpenPax used 75 real seconds, `NeedFailureGate.cs:18`; the working figure here is 10 sim minutes, to tune).
 
-### Option A (recommended): five needs, each tied to a lever
+### Option A (ruled): five needs, each tied to a lever
 
 | Need | Base behaviour | Moved by (lever or crew action) | The story it makes |
 |---|---|---|---|
@@ -117,7 +107,7 @@ M1 seats with a fixed default rule order from the scenario file under any of the
 
 ## 6. Scoring
 
-Proposed — owner to rule. The four outcomes are decided; what each measures is proposed here.
+Ruled (owner, 2026-09-26): the measures below, as set by section 8, questions 4, 5, 6, 8 and 9.
 
 ### Passenger experience (spread, not average)
 
@@ -149,7 +139,7 @@ Traced by: the causes of lateness as moments (the last passenger to sit and why:
 
 ### Rolling them up
 
-The recommendation is no single grade: the report shows the four outcomes side by side, each with a verdict word (Smooth, Rough, Bad), so the trade between them stays visible (pushing crew to serve everyone costs strain). The options are in question 6.
+Ruled: no single grade (section 8, question 6): the report shows the four outcomes side by side, each with a verdict word (Smooth, Rough, Bad), so the trade between them stays visible (pushing crew to serve everyone costs strain). The options are in question 6.
 
 ### The report
 
@@ -157,7 +147,7 @@ In M1 the report is text from `Sky.Sim`: flight header, the four outcomes with t
 
 ## 7. M1 definition of done
 
-Proposed — owner to rule. Numbers are first values, set with the balance-analyst.
+Ruled (owner, 2026-09-26): accepted as drafted; this is the acceptance list of the M1 subplan. Numbers are first values, set with the balance-analyst.
 
 The flight
 - [ ] `Sky.Sim` runs one narrowbody flight from a seed with no Godot: about 180 passengers from the seeded manifest generator, 6 crew, boarding through deboarding, and exits 0 with a text report.
@@ -190,14 +180,14 @@ The report and the levers
 
 ## 8. Open questions for the owner
 
-Each option is ranked; the first is the recommendation.
+Each option is ranked; the first was the recommendation. Every question is ruled; the rulings are in bold.
 
 1. **Which need set does In the Sky use?** **Ruled (owner, 2026-09-26): option 1, five needs, each tied to a lever.**
    1. Five needs, each tied to a lever: Refreshment, Bladder, Rest, Unease, Boredom; comfort becomes a seat-and-cabin modifier and health becomes an event-raised incident. Worst case: passengers are harder to tell apart, and on long flights Refreshment dominates everyone's distress.
    2. Four core needs plus needs that traits bring (Boredom, Connectivity, Nicotine, Attention), authored in Lua. Worst case: balance is scattered across trait content and some trait-borne needs have no lever.
    3. OpenPax's nine, redesigned on the new scale. Worst case: Comfort, Health and Shopping are meters nobody can move mid-flight, which is the passive simulation OpenPax set out to fix.
 
-2. **Does the kept rate-modifier rule get a floor under it?**
+2. **Does the kept rate-modifier rule get a floor under it?** **Ruled (owner, 2026-09-26): option 1, a floor of 0.2x.**
    1. A floor of 0.2x: no combination of modifiers can slow a need below a fifth of its base rate. Worst case: a passenger who should be "fully looked after" still drifts, so perfect service is impossible by a small margin.
    2. No floor, 0 as in OpenPax. Worst case: two helpful modifiers from different classes freeze a need, the April 2026 bug through the cross-class sum.
    3. A floor per need, set in content. Worst case: one more number per need to tune and explain, for little gain over a single floor.
@@ -207,17 +197,17 @@ Each option is ranked; the first is the recommendation.
    2. Seating only as moments: seat conflicts arrive as events with swap choices. Worst case: on a full flight the swap prompts become per-passenger chores.
    3. Seats are not a lever; they come from booking, and the layout editor is the only seat-level tool. Worst case: pre-flight has almost nothing to decide.
 
-4. **How is one passenger's experience computed?**
+4. **How is one passenger's experience computed?** **Ruled (owner, 2026-09-26): option 1, the peak-end blend.**
    1. Peak-end: 40% worst sustained distress, 30% the last 20 minutes, 30% the flight's mean. Worst case: a passenger who suffered a long moderate stretch scores better than one with a short sharp spike, which can read as unfair in the report.
    2. Time-weighted mean distress over the flight. Worst case: a ten-minute panic attack disappears into three hours of fine, so incidents barely touch experience.
    3. Mood at the moment of deboarding only. Worst case: everything before descent stops mattering, and a good landing hides a bad flight.
 
-5. **What is the headline number for the spread of experience?**
+5. **What is the headline number for the spread of experience?** **Ruled (owner, 2026-09-26): option 1, the 10th percentile.**
    1. The 10th percentile (the worst-served tenth), with the median and the count under 40 beside it. Worst case: sensitive to a handful of passengers the seed made hard, so it is noisier across seeds than a mean.
    2. The count of passengers under a threshold ("would complain"). Worst case: a cliff: a passenger at 41 counts the same as one at 95.
    3. The spread itself (interquartile range). Worst case: an evenly miserable flight scores as well as an evenly happy one.
 
-6. **Does the report roll the four outcomes into one grade?**
+6. **Does the report roll the four outcomes into one grade?** **Ruled (owner, 2026-09-26): option 1, no grade; four verdicts side by side.**
    1. No grade: four outcomes side by side, each with a verdict word. Worst case: no single number to compare flights or feed AirlineOps reputation, so a composite has to be designed later anyway.
    2. A weighted composite grade over the four. Worst case: the weights become the game, and the trade between outcomes vanishes into one letter, as OpenPax's six weighted categories did.
    3. Gate then rank: any missed serious incident caps the flight's verdict, otherwise experience ranks it. Worst case: one unlucky incident on a seed flattens an otherwise excellent flight.
@@ -227,12 +217,12 @@ Each option is ranked; the first is the recommendation.
    2. No contagion in M1; add it with the player levers in M3. Worst case: seating has no effect in M1, so the seating lever cannot be tested until M3.
    3. Full mood contagion across all needs, as in OpenPax. Worst case: feedback loops across the cabin that dominate every other system and are hard to trace in the report.
 
-8. **How is crew strain measured?**
+8. **How is crew strain measured?** **Ruled (owner, 2026-09-26): option 1, peak strain of the most-strained crew member plus minutes over the redline.**
    1. The peak strain of the most-strained crew member, plus minutes over the redline. Worst case: a flight with one bad stretch for one crew member scores as badly as one where the whole crew was run ragged.
    2. The team's mean strain. Worst case: one crew member run into the ground is hidden by five who were fine.
    3. Minutes of backlog on the task board (work waiting with no one to take it). Worst case: it measures under-staffing, not what it cost the crew, so a crew that skips breaks to clear the board looks great.
 
-9. **What does "on-time doors" measure?**
+9. **What does "on-time doors" measure?** **Ruled (owner, 2026-09-26): option 1, what the cabin controls.**
    1. What the cabin controls: cabin ready against plan at departure, deboarding duration against a target at arrival. Worst case: in MSFS mode a player can be "on time" by this measure while the aircraft pushes back late for reasons the cabin cannot see.
    2. Actual door close and door open times from the clock and feed. Worst case: the score blames the cabin for ATC and pilot delays.
    3. Departure end only (cabin ready). Worst case: deboarding, where bins and aisle blocking make the best stories, stops counting.

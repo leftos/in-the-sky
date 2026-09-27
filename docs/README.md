@@ -18,24 +18,31 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | ADR | Architecture Decision Record: one numbered file in `docs/decisions/` stating an engineering decision, its context and its consequences. |
 | Allowlist | The licenses an asset may carry: CC0 and public domain, CC-BY 3.0 and 4.0, CC-BY-SA, OFL for fonts, MIT and BSD for shaders and data. |
 | Auto-resolve | Crew make an event's choice on their own, weighted by competence, traits and fatigue. It is used when no player is making the choice. |
+| Cabin ready | The tick at which boarding is complete, bins are closed and every passenger is seated and belted: the part of an on-time door the cabin controls. |
 | Concept pass | The short design sitting before any code that produces `docs/design/CONCEPT.md`. |
 | Crew-observed view | The player's picture of the cabin, built from what crew have seen, which ages and goes stale. A setting switches it to the true state. |
 | Dev inspector | A developer-only surface showing why a character chose what it did, from the top candidate scores each decision records. |
 | Display RNG | The random source for purely visual draws, kept apart from the sim streams so drawing never changes the simulation. |
+| Distress | How far a passenger is from fine at one tick: 0 is fine, 100 is as bad as the sim allows. It is computed from their needs. |
 | Engine | `Sky.Engine`, the simulation library, which references no other project or package. |
+| Experience | A passenger's whole-flight result, 0 to 100, computed from their distress over the flight (`docs/design/CONCEPT.md` section 6). |
 | Invariant fuzzing | Running many seeded flights and checking after every tick that rules which must always hold still hold. |
 | Journal | The record of a flight's inputs (tick counts per frame, commands, observations) that, with the seed, replays the flight exactly. |
-| Nav graph | The graph the engine derives from a layout: aisle slots, seat nodes, galley, lav and door nodes, with capacity and reservations. |
+| Lever | Something the player (from M3) or a policy (in M1) sets that changes the conditions the cabin plays out in: a service schedule, a crew zone, the lighting plan. A lever is never an order to one passenger. |
+| Moment | A journal record that moved an outcome: its tick, what happened, who was involved, the cause chain behind it, and its effect on each scoring outcome. The report is built from moments. |
 | Named stream | A random sequence handed out by the one seeded RNG root under a fixed name, so adding draws in one system never shifts another's. |
+| Nav graph | The graph the engine derives from a layout: aisle slots, seat nodes, galley, lav and door nodes, with capacity and reservations. |
 | Port | An interface the Engine defines and another project implements (`IClockSource`, `ISimFeed`, `IBehaviorScripts`). |
 | Provenance gate | The prek hook and CI job that fail the build on an asset without a ledger entry, a license outside the allowlist, or an entry pointing at a missing file. |
 | Provenance ledger | `assets/PROVENANCE.toml`, one entry per asset recording origin, license, author and source. The gate checks it, and `CREDITS.md` is generated from it. |
+| Rate multiplier | The factor applied to a need's base rate, composed from all active modifiers by the rule in `docs/design/CONCEPT.md` section 4. |
 | RNG root | The one seeded random source of a flight, which hands out named streams. |
 | Sequence executor | The one runner for passenger and crew actions: it orders them by priority, interrupts a lower one for a higher, runs cleanup on interrupt, and holds sync points. |
 | Session | `Sky.Session`'s `ISkySession`: the client pulls views from it and pushes commands to it. |
 | Spike | A short, throwaway experiment on its own branch that measures something a decision depends on. |
 | Squeeze rule | The nav graph rule that lets one character pass another in an aisle slot that is already occupied. |
 | Stage manager | The player's role: they set the conditions the cabin plays out in, rather than moving people. |
+| Strain | A crew member's accumulated load: time on task without a break, pre-emptions, and fatigue. |
 | Sync point | A named moment where several characters' sequences wait for each other, such as two crew working one cart. |
 | Task board | The prioritized list of work (services, call buttons, checks) that crew claim. A higher-priority task can pre-empt a lower one. |
 | Tick | One fixed step of simulation time. The spike sets its size; 250 ms is the working figure. |
