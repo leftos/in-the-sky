@@ -26,5 +26,6 @@ The plan is [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-ca
 
 ## Backlog
 
+- [ ] Review the heavy/light gate slot picks. `tools/gate.ps1` now requires `-Slot heavy|light`, and every call site here (`sky.ps1`, `tools/test-all.ps1`, the docs that quote the usage) was given a kind from outside this repo's agents, as a preliminary pick so the gates kept running. Check each kind against what the command really does (does it fan out across cores, or keep one or two threads busy for its whole run?), measure where unsure, and correct any that are wrong. The pool sizes (`GATE_HEAVY_SLOTS` / `GATE_LIGHT_SLOTS` defaults) belong to the machine-wide gate in `~/.claude/tools/gate/`, not to this repo.
 - [ ] AirlineOps: crew auto-resolve for many flights at once, the booking market as the manifest source
 - [ ] Saves and progression

@@ -16,7 +16,7 @@ You are the studio's balance analyst. You turn "does this feel right" into a num
 
 ## Running
 
-- Every run goes through `tools/gate.ps1` with the ceiling `docs/DEVELOPMENT.md` gives, and its CSV lands under `.tmp/sim/<name>.csv`. Builds and tests use `pwsh sky.ps1 build` and `pwsh sky.ps1 test -Project <P>`, also through the gate. Never run bare `dotnet`.
+- Every run goes through `tools/gate.ps1` with the ceiling `docs/DEVELOPMENT.md` gives and `-Slot light` (a sim run keeps one or two threads busy), and its CSV lands under `.tmp/sim/<name>.csv`. Builds and tests use `pwsh sky.ps1 build` and `pwsh sky.ps1 test -Project <P>`, also through the gate. Never run bare `dotnet`.
 - The balance CSV has one row per seed with the four outcome measures. Pick the seed range so the result's error bar is smaller than the difference you are asked about, and say how you chose it.
 - Read results with a script (`uv run` Python under `.tmp/`, writing with LF line endings), never by printing a whole CSV into your context.
 - A question the sim cannot ask yet (a lever with no scenario key, an outcome with no column) is not worked round: report the switch or column it needs, its name and what it sets, as a request for an implementer, and measure what you can meanwhile.

@@ -156,9 +156,15 @@ function Get-GateKill {
 # own end-of-parameters marker, and a caller's `dotnet test ... -- <runner options>` needs the separator to reach the
 # runner.
 function Invoke-Gate {
-    param([string]$Title, [string]$Log, [int]$Seconds, [string[]]$Gate)
+    param(
+        [string]$Title,
+        [string]$Log,
+        [int]$Seconds,
+        [Parameter(Mandatory)][ValidateSet('heavy', 'light')][string]$Slot,
+        [string[]]$Gate
+    )
     Write-Section $Title
-    & $script:GateScript -Log $Log -TimeoutSeconds $Seconds -- @Gate
+    & $script:GateScript -Log $Log -TimeoutSeconds $Seconds -Slot $Slot -- @Gate
     if ($LASTEXITCODE -eq 124) {
         throw "$Title was killed by the gate: $(Get-GateKill -Log $Log)"
     }
@@ -213,7 +219,7 @@ function Invoke-Build {
     $options = (Split-Rest -Switches 'Release').Options
     $config = if ($options['Release']) { 'Release' } else { 'Debug' }
     Invoke-Gate -Title "dotnet build InTheSky.slnx -c $config -warnaserror" `
-        -Log (Join-Path $script:Tmp 'build.log') -Seconds $script:BuildSeconds `
+        -Log (Join-Path $script:Tmp 'build.log') -Seconds $script:BuildSeconds -Slot heavy `
         -Gate @('dotnet', 'build', 'InTheSky.slnx', '-c', $config, '-warnaserror')
 }
 
@@ -229,13 +235,15 @@ function Invoke-Test {
     # errors, which `dotnet test`'s own build would not carry, and the tests then run with --no-build.
     $buildTarget = if ($project) { $projectPath } else { 'InTheSky.slnx' }
     Invoke-Gate -Title "dotnet build $buildTarget -c Release -warnaserror" -Log (Join-Path $script:Tmp 'test-build.log') `
-        -Seconds $script:BuildSeconds -Gate @('dotnet', 'build', $buildTarget, '-c', 'Release', '-warnaserror')
+        -Seconds $script:BuildSeconds -Slot heavy -Gate @('dotnet', 'build', $buildTarget, '-c', 'Release', '-warnaserror')
     $target = if ($project) { @('--project', $projectPath) } else { @('InTheSky.slnx') }
     $filter = if ($parsed.Options['Filter']) { @('--filter-class', $parsed.Options['Filter']) } else { @() }
     $forwarded = @($parsed.Rest)
     $seconds = if ($parsed.Options['Filter']) { $script:FilteredTestSeconds } else { $script:TestSeconds }
+    # One filtered class keeps a thread or two busy; an unfiltered run spreads across every test assembly and core.
+    $slot = if ($parsed.Options['Filter']) { 'light' } else { 'heavy' }
     $test = @('dotnet', 'test') + $target + @('-c', 'Release', '--no-build') + $filter + $forwarded
-    Invoke-Gate -Title ($test -join ' ') -Log $log -Seconds $seconds -Gate $test
+    Invoke-Gate -Title ($test -join ' ') -Log $log -Seconds $seconds -Slot $slot -Gate $test
 }
 
 function Invoke-Format {
@@ -246,29 +254,29 @@ function Invoke-Format {
     # style and analyzers are named rather than left to a bare `dotnet format`: its whitespace pass undoes what
     # csharpier just wrote, and the two then fight over every file.
     if ($check) {
-        Invoke-Gate -Title 'dotnet csharpier check .' -Log $csharpierLog -Seconds $script:FormatSeconds `
+        Invoke-Gate -Title 'dotnet csharpier check .' -Log $csharpierLog -Seconds $script:FormatSeconds -Slot heavy `
             -Gate @('dotnet', 'csharpier', 'check', '.')
         Invoke-Gate -Title 'dotnet format style InTheSky.slnx --verify-no-changes --severity info' `
-            -Log $formatLog -Seconds $script:FormatSeconds `
+            -Log $formatLog -Seconds $script:FormatSeconds -Slot heavy `
             -Gate @('dotnet', 'format', 'style', 'InTheSky.slnx', '--verify-no-changes', '--severity', 'info')
         Invoke-Gate -Title 'dotnet format analyzers InTheSky.slnx --verify-no-changes --severity info' `
-            -Log $analyzersLog -Seconds $script:FormatSeconds `
+            -Log $analyzersLog -Seconds $script:FormatSeconds -Slot heavy `
             -Gate @('dotnet', 'format', 'analyzers', 'InTheSky.slnx', '--verify-no-changes', '--severity', 'info')
     }
     else {
-        Invoke-Gate -Title 'dotnet csharpier format .' -Log $csharpierLog -Seconds $script:FormatSeconds `
+        Invoke-Gate -Title 'dotnet csharpier format .' -Log $csharpierLog -Seconds $script:FormatSeconds -Slot heavy `
             -Gate @('dotnet', 'csharpier', 'format', '.')
         Invoke-Gate -Title 'dotnet format style InTheSky.slnx --severity info' -Log $formatLog `
-            -Seconds $script:FormatSeconds `
+            -Seconds $script:FormatSeconds -Slot heavy `
             -Gate @('dotnet', 'format', 'style', 'InTheSky.slnx', '--severity', 'info')
         Invoke-Gate -Title 'dotnet format analyzers InTheSky.slnx --severity info' -Log $analyzersLog `
-            -Seconds $script:FormatSeconds `
+            -Seconds $script:FormatSeconds -Slot heavy `
             -Gate @('dotnet', 'format', 'analyzers', 'InTheSky.slnx', '--severity', 'info')
     }
     # Neither formatter wraps a comment or a string literal, so the 150-character line check runs here too: without it
     # a long line surfaces only in the whole gate or at commit. It reads and never writes, so both modes run it last.
     Invoke-Gate -Title 'Test-LineLength.ps1 -All' -Log (Join-Path $script:Tmp 'line-length.log') `
-        -Seconds $script:LineLengthSeconds `
+        -Seconds $script:LineLengthSeconds -Slot light `
         -Gate @('pwsh', (Join-Path $script:Root 'tools\hooks\Test-LineLength.ps1'), '-All')
 }
 
@@ -303,13 +311,13 @@ function Invoke-Analysis {
         $uv = @('uv', 'run', '--locked', '--directory', $project)
         $name = $project -replace '^tools/', ''
         Invoke-Gate -Title "uv run --locked --directory $project $($format -join ' ')" `
-            -Log (Join-Path $script:Tmp "$name-format.log") -Seconds $script:AnalysisSeconds -Gate ($uv + $format)
+            -Log (Join-Path $script:Tmp "$name-format.log") -Seconds $script:AnalysisSeconds -Slot light -Gate ($uv + $format)
         Invoke-Gate -Title "uv run --locked --directory $project $($lint -join ' ')" `
-            -Log (Join-Path $script:Tmp "$name-lint.log") -Seconds $script:AnalysisSeconds -Gate ($uv + $lint)
+            -Log (Join-Path $script:Tmp "$name-lint.log") -Seconds $script:AnalysisSeconds -Slot light -Gate ($uv + $lint)
         Invoke-Gate -Title "uv run --locked ty check $project" -Log (Join-Path $script:Tmp "$name-types.log") `
-            -Seconds $script:AnalysisSeconds -Gate ($uv + @('ty', 'check', '.'))
+            -Seconds $script:AnalysisSeconds -Slot light -Gate ($uv + @('ty', 'check', '.'))
         Invoke-Gate -Title "uv run --locked pytest $project -q" -Log (Join-Path $script:Tmp "$name-tests.log") `
-            -Seconds $script:AnalysisSeconds -Gate ($uv + @('pytest', '.', '-q'))
+            -Seconds $script:AnalysisSeconds -Slot light -Gate ($uv + @('pytest', '.', '-q'))
     }
 }
 
@@ -321,11 +329,11 @@ function Invoke-Provenance {
     $uv = @('uv', 'run', '--locked', '--project', 'tools/provenance', 'python', '-m', 'provenance')
     if (-not $check) {
         Invoke-Gate -Title 'uv run --locked --project tools/provenance python -m provenance credits' `
-            -Log (Join-Path $script:Tmp 'provenance-credits.log') -Seconds $script:ProvenanceSeconds `
+            -Log (Join-Path $script:Tmp 'provenance-credits.log') -Seconds $script:ProvenanceSeconds -Slot light `
             -Gate ($uv + @('credits'))
     }
     Invoke-Gate -Title 'uv run --locked --project tools/provenance python -m provenance check' `
-        -Log (Join-Path $script:Tmp 'provenance-check.log') -Seconds $script:ProvenanceSeconds `
+        -Log (Join-Path $script:Tmp 'provenance-check.log') -Seconds $script:ProvenanceSeconds -Slot light `
         -Gate ($uv + @('check'))
 }
 
@@ -371,7 +379,7 @@ function Test-ImportRedOnMarker {
 # solutions pass against source that no longer compiles reports on the last good one instead.
 function Invoke-ClientBuild {
     Invoke-Gate -Title 'dotnet build src/Sky.Client -c Debug -warnaserror' `
-        -Log (Join-Path $script:Tmp 'client-dotnet-build.log') -Seconds $script:BuildSeconds `
+        -Log (Join-Path $script:Tmp 'client-dotnet-build.log') -Seconds $script:BuildSeconds -Slot heavy `
         -Gate @('dotnet', 'build', "$($script:ClientProject)/Sky.Client.csproj", '-c', 'Debug', '-warnaserror')
 }
 
@@ -386,7 +394,7 @@ function Invoke-Client {
         $name = if ($pass -eq 1) { 'client-import' } else { "client-import-$pass" }
         $log = Join-Path $script:Tmp "$name.log"
         Write-Section "Godot --import --quit (pass $pass of $($script:ImportPasses))"
-        & $script:GateScript -Log $log -TimeoutSeconds $script:ImportSeconds -- @import
+        & $script:GateScript -Log $log -TimeoutSeconds $script:ImportSeconds -Slot light -- @import
         $imported = $LASTEXITCODE
         if ($imported -eq 0) {
             break
@@ -413,7 +421,7 @@ function Invoke-Client {
     $env:UseSharedCompilation = 'false'
     try {
         Invoke-Gate -Title 'Godot --build-solutions --quit' -Log (Join-Path $script:Tmp 'client-build.log') `
-            -Seconds $script:BuildSolutionsSeconds `
+            -Seconds $script:BuildSolutionsSeconds -Slot heavy `
             -Gate @($script:GodotConsole, '--headless', '--path', $script:ClientProject, '--build-solutions', '--quit')
     }
     finally {

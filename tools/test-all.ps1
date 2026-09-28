@@ -22,8 +22,10 @@ the other checks are left to finish. The kill line says which of three things ha
    machine. The command kept working past it: a busy loop, or a ceiling set too tight. Read the log before raising it.
  - `gate: BACKSTOP`: five times the ceiling passed in wall time. With a low machine-free share on that line the
    machine was busy rather than the command wrong: run it once more alone.
-Each gate takes one of the machine's slots (tools/gate.ps1 explains them), so the checks run side by side only when
-enough slots are free; a check that finds none waits for one, and its clocks start when it has it.
+Each gate takes one of the machine's slots of its kind (tools/gate.ps1 explains them): the build, the tests and the
+format check take heavy slots, and the provenance, line-length and analysis checks light ones. The two pools never wait
+on each other, so the checks run side by side only when enough slots of each kind are free; a check that finds none of
+its kind waits for one, and its clocks start when it has it.
 
 The run carries a backstop of its own over all of that: -Ceiling seconds of wall time, after which every check still
 running is stopped where it stands and reported as timed out. Every command is already killed by its own gate at five
@@ -83,12 +85,17 @@ function Start-Check {
         Justification = 'Starts a background job of this run''s own; there is no system state for a caller to confirm.')]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseUsingScopeModifierInNewRunspaces', '',
         Justification = 'The job reads its values from its own param block and -ArgumentList, which $using: cannot be combined with.')]
-    param([string]$Label, [object[]]$Commands, [int]$Seconds)
+    param(
+        [string]$Label,
+        [object[]]$Commands,
+        [int]$Seconds,
+        [Parameter(Mandatory)][ValidateSet('heavy', 'light')][string]$Slot
+    )
     $log = Join-Path $tmp "test-all-$Label.log"
     $pidFile = Join-Path $tmp "test-all-$Label.pid"
     Remove-Item $log, $pidFile -ErrorAction SilentlyContinue
     $job = Start-Job -Name $Label -ScriptBlock {
-        param($workDir, $commands, $log, $pidFile, $label, $seconds)
+        param($workDir, $commands, $log, $pidFile, $label, $seconds, $slot)
         Set-Location $workDir
         # A job runs in a process of its own, and its id is what the tree of a check the run's backstop stops is
         # killed from.
@@ -104,7 +111,8 @@ function Start-Check {
             $header = "== $($command -join ' ') (whole output: $commandLog) =="
             Add-Content -Path $log -Value $header
             $lines.Add($header)
-            $gateArguments = @('-NoProfile', '-File', 'tools/gate.ps1', '-Log', $commandLog, '-TimeoutSeconds', "$seconds", '--') + @($command)
+            $gateArguments = @('-NoProfile', '-File', 'tools/gate.ps1', '-Log', $commandLog, '-TimeoutSeconds', "$seconds", '-Slot', $slot, '--') +
+                @($command)
             # Written to the log as it goes rather than collected at the end: a check stopped at the run's backstop
             # never returns its result, and the log is then the only place its partial output can be read from.
             $text = & pwsh @gateArguments 2>&1 | Out-String -Stream | Tee-Object -FilePath $log -Append
@@ -123,7 +131,7 @@ function Start-Check {
             ExitCode = $code
             KillLine = $kill
         }
-    } -ArgumentList $root, $Commands, $log, $pidFile, $Label, $Seconds
+    } -ArgumentList $root, $Commands, $log, $pidFile, $Label, $Seconds, $Slot
     [pscustomobject]@{
         Label    = $Label
         Job      = $job
@@ -251,7 +259,7 @@ function Complete-Check {
 # here when it fails.
 Write-Host '=== build ===' -ForegroundColor Cyan
 $buildLog = Join-Path $tmp 'test-all-build.log'
-pwsh tools/gate.ps1 -Log $buildLog -TimeoutSeconds $ceilings['build'] -- dotnet build InTheSky.slnx -c Release -warnaserror
+pwsh tools/gate.ps1 -Log $buildLog -TimeoutSeconds $ceilings['build'] -Slot heavy -- dotnet build InTheSky.slnx -c Release -warnaserror
 $buildStatus = $LASTEXITCODE
 $buildSeconds = [math]::Round(((Get-Date) - $startedAt).TotalSeconds)
 $results = @()
@@ -272,7 +280,7 @@ $checks = @()
 $testCommands = @(
     , @('dotnet', 'test', 'InTheSky.slnx', '-c', 'Release', '--no-build')
 )
-$checks += Start-Check 'tests' $testCommands $ceilings['tests']
+$checks += Start-Check -Label 'tests' -Commands $testCommands -Seconds $ceilings['tests'] -Slot heavy
 # The format check is a job beside the tests rather than a step before the build: --verify-no-changes writes nothing,
 # so it reads the same tree the build reads and costs the run nothing but one core. `dotnet format` is never called
 # bare here - its whitespace pass undoes what csharpier wrote - so style and analyzers are named one at a time.
@@ -281,14 +289,14 @@ $formatCommands = @(
     @('dotnet', 'format', 'style', 'InTheSky.slnx', '--verify-no-changes', '--severity', 'info'),
     @('dotnet', 'format', 'analyzers', 'InTheSky.slnx', '--verify-no-changes', '--severity', 'info')
 )
-$checks += Start-Check 'format' $formatCommands $ceilings['format']
+$checks += Start-Check -Label 'format' -Commands $formatCommands -Seconds $ceilings['format'] -Slot heavy
 # The asset provenance gate: every asset file git carries must have a ledger entry, and CREDITS.md must match the ledger.
 # It reads the tree the build reads rather than the build's output, so it runs beside the other checks with no order of
 # its own. The leading comma keeps the one command an array of arrays, as above.
 $provenanceCommands = @(
     , @('uv', 'run', '--locked', '--project', 'tools/provenance', 'python', '-m', 'provenance', 'check')
 )
-$checks += Start-Check 'provenance' $provenanceCommands $ceilings['provenance']
+$checks += Start-Check -Label 'provenance' -Commands $provenanceCommands -Seconds $ceilings['provenance'] -Slot light
 # The 150-character line check is a job here as well as a prek hook: prek runs it at commit and not before, so without
 # this row a green whole gate could still fail the commit. Like the provenance check it reads the tree rather than the
 # build's output, so it runs beside the others with no order of its own. The leading comma keeps the one command an
@@ -296,7 +304,7 @@ $checks += Start-Check 'provenance' $provenanceCommands $ceilings['provenance']
 $lineLengthCommands = @(
     , @('pwsh', 'tools/hooks/Test-LineLength.ps1', '-All')
 )
-$checks += Start-Check 'line-length' $lineLengthCommands $ceilings['line-length']
+$checks += Start-Check -Label 'line-length' -Commands $lineLengthCommands -Seconds $ceilings['line-length'] -Slot light
 
 # Every project under tools/ that carries a pyproject.toml is checked here in the four steps a project
 # `sky.ps1 analysis -Check` runs, none of which writes. The list is read now, so a project landing under tools/ later
@@ -324,7 +332,7 @@ else {
             , @('uv', 'run', '--locked', '--directory', $project, 'pytest', '.', '-q')
         }
     )
-    $analysisCheck = Start-Check 'analysis' $analysisCommands $ceilings['analysis']
+    $analysisCheck = Start-Check -Label 'analysis' -Commands $analysisCommands -Seconds $ceilings['analysis'] -Slot light
     $checks += $analysisCheck
 }
 
