@@ -9,7 +9,7 @@ The project variant of the user-level `changelog-and-commit` skill, which defers
 
 ## In the Sky specifics
 
-- **No bullets before the first release** (owner, 2026-09-26). The repo has no release and no `CHANGELOG.md`. Until one exists, every Step 2 verdict is no-bullet: skip Steps 3, 4 and the changelog half of Step 6, and run the docs sweep, the plan reconciliation and the commit as usual. `CHANGELOG.md` is created by the first release cut, with that release's section and an empty `## Unreleased` above it; from the next commit on, Steps 3 and 4 apply. Never create it from this skill.
+- **No bullets before the first release**. The repo has no release and no `CHANGELOG.md`. Until one exists, every Step 2 verdict is no-bullet: skip Steps 3, 4 and the changelog half of Step 6, and run the docs sweep, the plan reconciliation and the commit as usual. `CHANGELOG.md` is created by the first release cut, with that release's section and an empty `## Unreleased` above it; from the next commit on, Steps 3 and 4 apply. Never create it from this skill.
 - **The changelog is one owner among several.** Before Step 5, walk the Docs map in `.claude/skills/sky-nextup/SKILL.md` against the diff's paths and bring every owning doc into the scope, true for the change.
 - **`Docs: unchanged, <why>`.** A commit staging anything under `src/Sky.Content/` and no `docs/design/` file carries that line in its body, at the start of a line, naming why no design doc changed; the `doc-drift-message` commit-msg hook refuses the commit without it. Write it only when the sweep found nothing to change.
 - **Plan convention.** A resolved `docs/plans/MAIN.md` line leaves the index in this commit, moved ticked to the foot of `docs/plans/archive/YYYY-MM-done.md` with a `Landed YYYY-MM-DD: …` note; it is never ticked in place.
@@ -43,7 +43,7 @@ Match the topmost version heading against `git tag --sort=-creatordate | head -1
 - A genuinely new topic gets its own bullet.
 - Work that extends or supersedes a bullet in the section modifies that bullet to describe the end state; no second bullet.
 - Work that reverts something bulleted drops that bullet.
-- A fix to something first added or changed in this same unreleased section is never a `### Fixed` bullet: nothing is fixed for a reader who never saw it broken (user, 2026-09-20). Fold what the fix makes true into the bullet that introduced the thing; the test for each would-be Fixed bullet is `git tag --contains <the commit that introduced the behaviour>`, and no tag means fold or drop.
+- A fix to something first added or changed in this same unreleased section is never a `### Fixed` bullet: nothing is fixed for a reader who never saw it broken. Fold what the fix makes true into the bullet that introduced the thing; the test for each would-be Fixed bullet is `git tag --contains <the commit that introduced the behaviour>`, and no tag means fold or drop.
 
 **Consolidate the section, not just your own bullets.** Touching the section folds any two bullets about one feature's successive states, or a Fixed bullet under a feature the section adds, in the same edit, and the announcement names the fold: the section reads as the difference between the last release and now, never the history of getting there.
 

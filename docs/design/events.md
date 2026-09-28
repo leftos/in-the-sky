@@ -1,6 +1,6 @@
 # Events
 
-Status: written 2026-09-26 by `event-writer` for M1 step D4 (`docs/plans/2026-09-26-m1-headless-cabin-flight.md`). The owner picked the four M1 events from the brainstorm and ruled the module additions the same day; the specs are in section 10, and their trait, age-band and incident ids are the ones `docs/design/passengers.md` (D1) names. Sections 1, 6 and 7 were brought true to the event port and its Lua adapter (step S3) on 2026-09-27. Owner of this doc: `event-writer`. It follows ruling R27 (the module shape) and owner decisions OD1 (auto-resolve by quality) and OD5 (one seat-conflict event) in that plan, with the additions in section 1. Terms are in the glossary in [docs/README.md](../README.md); the needs, phases and pillars are in [CONCEPT.md](./CONCEPT.md). Every number here marked "first value, D3" is a starting value that `docs/design/balance.md` owns and tunes.
+Status: written by `event-writer` for M1 step D4 (`docs/plans/2026-09-26-m1-headless-cabin-flight.md`). The owner picked the four M1 events from the brainstorm and ruled the module additions; the specs are in section 10, and their trait, age-band and incident ids are the ones `docs/design/passengers.md` (D1) names. Sections 1, 6 and 7 match the event port and its Lua adapter (step S3). Owner of this doc: `event-writer`. It follows ruling R27 (the module shape) and owner decisions OD1 (auto-resolve by quality) and OD5 (one seat-conflict event) in that plan, with the additions in section 1. Terms are in the glossary in [docs/README.md](../README.md); the needs, phases and pillars are in [CONCEPT.md](./CONCEPT.md). Every number here marked "first value, D3" is a starting value that `docs/design/balance.md` owns and tunes.
 
 ## 1. What an event is
 
@@ -14,12 +14,12 @@ A module is a Lua chunk that returns one table:
 | `phases` | A non-empty list of the flight phases (section 2) the event may fire in, by the ids of section 2. A name that is not a stage disables the module at load. The host asks the trigger only in these phases. |
 | `trigger(ctx)` | Reads the cabin through `ctx` (section 7) and returns `nil`, or a facts table recording what it saw: who is involved, how busy the crew are, the phase. It checks the phase first and rolls its own chance (section 3). `facts.subject`, when present, must be the id of a passenger aboard. |
 | `describe(facts)` | The scene, a string: one or two sentences saying what a crew member would notice (section 6). |
-| `choices(facts)` | Two to four choices, each `{ id, label, needs_crew, minutes, quality }`. `needs_crew` says whether the choice becomes a task on the task board; `minutes` is how long that crew work takes (0 for a choice with no crew); `quality` is how good the choice is for these facts, a number in [0, 1] (section 4). A choice the facts rule out (no free seat, no companion) is left out, as long as two to four remain (owner, 2026-09-26). |
+| `choices(facts)` | Two to four choices, each `{ id, label, needs_crew, minutes, quality }`. `needs_crew` says whether the choice becomes a task on the task board; `minutes` is how long that crew work takes (0 for a choice with no crew); `quality` is how good the choice is for these facts, a number in [0, 1] (section 4). A choice the facts rule out (no free seat, no companion) is left out, as long as two to four remain. |
 | `effects(facts, choice_id)` | The chosen branch's delayed consequences: a list of the four kinds below. `choice_id` is always one of the ids `choices` last offered for these facts. |
 
 The facts table is the trigger's own Lua table: the host keeps it and hands the same table to `describe`, `choices` and `effects`, so it records plain values (ids, seat labels, flags, numbers), never `ctx` itself (section 7).
 
-The consequence kinds (R27, plus two added by the owner, 2026-09-26):
+The consequence kinds (R27, plus two more):
 
 | Kind | Shape | What the host does |
 |---|---|---|
@@ -28,7 +28,7 @@ The consequence kinds (R27, plus two added by the owner, 2026-09-26):
 | Seat move | `{ after_minutes, swap = { a, b } }` or `{ after_minutes, target, to_seat }` | Swaps the seats of passengers `a` and `b`, or moves one passenger to a free seat the facts recorded. The host checks it first (both aboard, the seat still free and in the same cabin class, nobody mid-walk to the lavatory); a move that fails the check is dropped and journaled as a moment with the reason, and the rest of the branch still lands. During boarding it changes the seat assignment, and the passenger walks there. |
 | Line | `{ after_minutes, target, line }` | Journals the line as a moment tied to the event, the choice and the target, so the report can cite it. Changes no state. |
 
-Targets are selectors the host resolves: `"subject"` (the passenger the facts name as `subject`), `"neighbours"` (the subject's adjacent seats and across the aisle, the reach of Unease contagion, leaving out any passenger the facts name, so no one named in the event takes a neighbours' delta on top of their own; orchestrator ruling, 2026-09-26), or a passenger id the trigger recorded in the facts. A passenger id is checked only as a whole number when `effects` returns; a consequence whose passenger is no longer aboard when it lands is dropped and journaled.
+Targets are selectors the host resolves: `"subject"` (the passenger the facts name as `subject`), `"neighbours"` (the subject's adjacent seats and across the aisle, the reach of Unease contagion, leaving out any passenger the facts name, so no one named in the event takes a neighbours' delta on top of their own), or a passenger id the trigger recorded in the facts. A passenger id is checked only as a whole number when `effects` returns; a consequence whose passenger is no longer aboard when it lands is dropped and journaled.
 
 **What the host checks** (step S3). Each rule below, broken, disables the module for the flight, and the reason names the field (`'choices[2].minutes' is 3, not 0 for a choice with no crew`).
 
@@ -41,7 +41,7 @@ Targets are selectors the host resolves: `"subject"` (the passenger the facts na
 - `describe` returns a string.
 - `trigger` and `effects` may draw from `math.random`, which reads the random stream the host hands that call; `describe` and `choices` may not, and a draw there disables the module. So does a draw while the module loads.
 
-**What a crew task reveals** (event-writer, 2026-09-27). A module declares nothing about observation; the host derives it from the chosen branch, by one fixed rule. When a crew member starts an event's crew task, every passenger the branch's consequences target by name (`subject`, or a passenger id from the facts; never `neighbours`, whom the crew member does not speak to) has Unease revealed, plus every other need that a Need consequence of that branch lowers (a negative `delta`) on that passenger. The bands are read at the start of the task, before any of the branch's deltas land. A need the branch only raises is not revealed: a later cost, such as the Bladder rise that follows a drink, is not something the crew member reads at the seat. A choice with no crew, and a `leave` applied because nobody came (section 5), reveal nothing. This is the "event's crew task" row of `passengers.md` section 9 (OD3). For the M1 events it gives: `split-group`'s `swap` and `pair` and `nervous-flyer`'s `sit`, Unease only; `armrest-dispute`'s `calm` and `reseat`, Unease, and `drink`, Unease and Refreshment for both passengers; `restless-child`'s `pack` and `play`, Boredom and Unease for the child and Unease for the parent (and for the passenger in front on `play`).
+**What a crew task reveals**. A module declares nothing about observation; the host derives it from the chosen branch, by one fixed rule. When a crew member starts an event's crew task, every passenger the branch's consequences target by name (`subject`, or a passenger id from the facts; never `neighbours`, whom the crew member does not speak to) has Unease revealed, plus every other need that a Need consequence of that branch lowers (a negative `delta`) on that passenger. The bands are read at the start of the task, before any of the branch's deltas land. A need the branch only raises is not revealed: a later cost, such as the Bladder rise that follows a drink, is not something the crew member reads at the seat. A choice with no crew, and a `leave` applied because nobody came (section 5), reveal nothing. This is the "event's crew task" row of `passengers.md` section 9 (OD3). For the M1 events it gives: `split-group`'s `swap` and `pair` and `nervous-flyer`'s `sit`, Unease only; `armrest-dispute`'s `calm` and `reseat`, Unease, and `drink`, Unease and Refreshment for both passengers; `restless-child`'s `pack` and `play`, Boredom and Unease for the child and Unease for the parent (and for the passenger in front on `play`).
 
 The trigger checks the phase itself even though `phases` lists them and the host asks it only there: a meal complaint during boarding is a bug in the module, and the shipped-event test (`ShippedEventTests`, step X4) calls every trigger directly outside its phases to check it returns nothing.
 
@@ -74,7 +74,7 @@ Pillar 4: a competent normal flight is quiet, and the baseline must miss no inci
 | Check cadence: how often the scheduler asks every enabled trigger | 30 sim seconds (first value, D3) |
 | Events active at once | One. While one is unresolved, no trigger is asked. |
 | Minimum gap after an event resolves before the next may fire | 5 sim minutes (first value, D3) |
-| Times one event may fire in a flight | Once (owner, 2026-09-26): after it fires, the scheduler stops asking its trigger for the rest of the flight. |
+| Times one event may fire in a flight | Once: after it fires, the scheduler stops asking its trigger for the rest of the flight. |
 | Base chance a trigger fires on a check when its hard conditions hold | 0.001 (rare) to 0.02 (common in its conditions), rolled in the trigger with the host's `math.random` (first value, D3) |
 | Crew work a choice may take | 1 to 6 minutes (first value, D3) |
 
@@ -82,7 +82,7 @@ A trigger never fires just because its conditions hold: it rolls its chance, so 
 
 ## 4. How auto-resolve reads a choice
 
-M1 has no player, so crew make every choice (OD1). Each choice carries a `quality` in [0, 1], computed in `choices(facts)` from what the trigger saw and relative within the event; the host normalises it. The crew member picks choice `i` of `n` with chance `(1 − s)/n + s · q_i / Σq`, where `s` in [0, 1] rises with competence and falls with fatigue and some crew traits (the shape of `s` is in `docs/design/crew.md`; orchestrator ruling, 2026-09-26). A rested, competent crew member reads the situation right more often than a tired one, and the M1 sweep checks exactly that (CONCEPT section 7).
+M1 has no player, so crew make every choice (OD1). Each choice carries a `quality` in [0, 1], computed in `choices(facts)` from what the trigger saw and relative within the event; the host normalises it. The crew member picks choice `i` of `n` with chance `(1 − s)/n + s · q_i / Σq`, where `s` in [0, 1] rises with competence and falls with fatigue and some crew traits (the shape of `s` is in `docs/design/crew.md`). A rested, competent crew member reads the situation right more often than a tired one, and the M1 sweep checks exactly that (CONCEPT section 7).
 
 What that asks of every event:
 
@@ -94,8 +94,8 @@ What that asks of every event:
 
 Effects never change state; they return delayed consequences the engine applies at their tick.
 
-- **When the clock starts.** For a choice that needs crew, `after_minutes` counts from the moment the crew member starts the task, so relief never lands before anyone arrives; for a choice with no crew, it counts from the choice (orchestrator ruling, 2026-09-26).
-- **When nobody comes.** A crew task nobody starts within the waiting limit, 10 sim minutes (first value, D3), times out: the event resolves with the effects of its `leave` choice (every event gives its `Leave it for now` choice the id `leave`), counted from the timeout, and the host journals a moment that nobody came, naming the task that kept each able crew member away (owner, 2026-09-26). So every event's `Leave it for now` branch is also what neglect costs, and a spec writes it to stand on its own.
+- **When the clock starts.** For a choice that needs crew, `after_minutes` counts from the moment the crew member starts the task, so relief never lands before anyone arrives; for a choice with no crew, it counts from the choice.
+- **When nobody comes.** A crew task nobody starts within the waiting limit, 10 sim minutes (first value, D3), times out: the event resolves with the effects of its `leave` choice (every event gives its `Leave it for now` choice the id `leave`), counted from the timeout, and the host journals a moment that nobody came, naming the task that kept each able crew member away. So every event's `Leave it for now` branch is also what neglect costs, and a spec writes it to stand on its own.
 - **Stagger them.** A need change lands over the resolution in two or three steps, not at once: relief comes as the crew member talks, not the instant they are asked.
 - **Open with a line.** Every branch opens with a line consequence at 0 minutes that sets the scene, so the report has words for it.
 - **Touch the neighbours when it fits.** Relief spreads a little when it goes well; Unease spreads when it escalates.
@@ -170,7 +170,7 @@ The fixed orders are what let a trigger that takes the first passenger or seat t
 
 ## 8. Brainstorm (M1)
 
-The eight candidates weighed for M1, in the order recommended. The owner picked the first four marked **picked** (2026-09-26); the rest stay as a pool for later milestones and are not specced.
+The eight candidates weighed for M1, in the order recommended. The owner picked the first four marked **picked**; the rest stay as a pool for later milestones and are not specced.
 
 1. **`split-group`** (boarding; the OD5 seat conflict). **Picked**; spec in section 10.
 2. **`nervous-flyer`** (taxi-out, climb). **Picked**; spec in section 10.
@@ -188,7 +188,7 @@ Nothing is open for the M1 events. The ids they use from other docs, and the one
 | Id | Kind | Owner | Used by |
 |---|---|---|---|
 | `nervous_flyer` | trait (Unease ×1.5, baseline 15) | `passengers.md` | `nervous-flyer` |
-| `short_tempered` | trait, event-only: no rate modifier and no baseline; only event triggers read it (owner, 2026-09-26) | `passengers.md` | `armrest-dispute` |
+| `short_tempered` | trait, event-only: no rate modifier and no baseline; only event triggers read it | `passengers.md` | `armrest-dispute` |
 | `child`, `adult` | age band; a `child` also carries the `child` trait | `passengers.md` | `split-group`, `restless-child` |
 | group id | the booking a passenger travels on; a child's parent is an `adult` with the same group id | `passengers.md` | `split-group`, `nervous-flyer`, `armrest-dispute`, `restless-child` |
 | `panic` | incident kind (Unease) | `passengers.md` | `nervous-flyer` |

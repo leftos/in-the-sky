@@ -1,6 +1,6 @@
 # Game Concept
 
-Status: ruled by the owner 2026-09-26 in the concept pass; drafted by `game-designer`. Amended the same day by the owner's triage of the OpenPax goals ([the AVSIM goals research](../research/2026-09-26-openpax-avsim-goals.md)), whose rulings T1 to T13 are in section 8 and whose deferred work is in section 9. What the owner decided at kickoff is in [the decisions doc](../plans/2026-09-26-rewrite-decisions.md) and is not reopened here. Section 8 records each ruling; options not taken are kept as the record of what was weighed. Terms are in the glossary in [docs/README.md](../README.md).
+Status: ruled by the owner in the concept pass; drafted by `game-designer`. Amended by the owner's triage of the OpenPax goals ([the AVSIM goals research](../research/2026-09-26-openpax-avsim-goals.md)), whose rulings T1 to T13 are in section 8 and whose deferred work is in section 9. What the owner decided at kickoff is in [the decisions doc](../plans/2026-09-26-rewrite-decisions.md) and is not reopened here. Section 8 records each ruling; options not taken are kept as the record of what was weighed. Terms are in the glossary in [docs/README.md](../README.md).
 
 ## 0. Terms
 
@@ -14,7 +14,7 @@ In the Sky runs beside MSFS or on its own with no simulator. The sim feed port (
 
 ## 2. Pillars
 
-Ruled (owner, 2026-09-26): accepted as drafted (sharpened from the kept pillars in section 2 of the decisions doc; the substance is unchanged).
+Ruled: accepted as drafted (sharpened from the kept pillars in section 2 of the decisions doc; the substance is unchanged).
 
 1. **Stage the conditions, never move the actor.** The player sets staffing, schedules, rules and moment-level choices; crew and passengers act on their own. Consequence: the flight must run to completion with nobody watching (M1 proves it, AirlineOps depends on it), and a player command is only ever a journaled input that takes precedence over what the crew would have done.
 2. **Decide at the level of a policy or a moment, never per passenger.** A decision either applies to a class of people or situations (a policy) or answers one surfaced event (a moment). Test for any new feature: if the natural UI is a list of 180 rows with a control on each, it fails this pillar.
@@ -23,11 +23,11 @@ Ruled (owner, 2026-09-26): accepted as drafted (sharpened from the kept pillars 
 5. **Every number on a player surface serves a lever.** Information that cannot change a decision stays on dev surfaces (the inspector, the balance CSV). Dev surfaces and player surfaces are separate and have separate rules.
 6. **Every system can be switched off and the flight still runs.** Needs, events, contagion, voice, the small model and the MSFS feed each have an off switch. This serves players who want a light companion to MSFS, and it serves testing: a system that cannot be isolated cannot be tuned. Thoughts (section 3) have a switch too.
 
-   **A resource budget beside MSFS (T1).** In the Sky shares a machine with a flight simulator, so it has a memory and CPU budget and stays inside it. Working figures (kept as working figures by the owner, 2026-09-26), to check with the client at M2 and to measure beside MSFS at M5: with voice off, the sim and client together stay under 1 GB of RAM and 512 MB of VRAM, the simulation at 1x uses under 5% of one CPU core, and the client can cap its frame rate. The bundled voice model's ceiling is set at M4, when the model is chosen, and measured in the sim at M5; switching voice off returns a player to the lean budget. A feature that cannot fit the budget ships behind its own switch, off by default.
+   **A resource budget beside MSFS (T1).** In the Sky shares a machine with a flight simulator, so it has a memory and CPU budget and stays inside it. Working figures, to check with the client at M2 and to measure beside MSFS at M5: with voice off, the sim and client together stay under 1 GB of RAM and 512 MB of VRAM, the simulation at 1x uses under 5% of one CPU core, and the client can cap its frame rate. The bundled voice model's ceiling is set at M4, when the model is chosen, and measured in the sim at M5; switching voice off returns a player to the lean budget. A feature that cannot fit the budget ships behind its own switch, off by default.
 
 ## 3. Core loop
 
-Ruled (owner, 2026-09-26): accepted as drafted.
+Ruled: accepted as drafted.
 
 ### A minute of play (M3 onward)
 
@@ -51,11 +51,11 @@ Ruled (owner, 2026-09-26): accepted as drafted.
 
 ### Ways to play: presets of the one role (M3)
 
-Ruled (owner, 2026-09-26; T2): there is one role, the stage manager, and the ways to play OpenPax promised ("play as the Captain with everything automated, or as the Lead Flight Attendant, and every experience in between") are **presets** of it, not modes. A preset is a saved, shareable set of lever values: the service plan, zones and staffing, the lighting plan, announcement and check-in policy, and which kinds of moment reach the player and which the crew auto-resolve without asking. A Captain preset leaves every moment to crew and plays the flight hands-off; a Lead Flight Attendant preset surfaces the moments and leaves the levers to the player. A preset is a data file a player can share, and loading one is the flight's starting lever values in the journal; it adds no mechanic the levers do not already have. That a preset covers moments as well as levers was confirmed by the owner (2026-09-26). Built at M3 with the levers.
+Ruled (T2): there is one role, the stage manager, and the ways to play OpenPax promised ("play as the Captain with everything automated, or as the Lead Flight Attendant, and every experience in between") are **presets** of it, not modes. A preset is a saved, shareable set of lever values: the service plan, zones and staffing, the lighting plan, announcement and check-in policy, and which kinds of moment reach the player and which the crew auto-resolve without asking. A Captain preset leaves every moment to crew and plays the flight hands-off; a Lead Flight Attendant preset surfaces the moments and leaves the levers to the player. A preset is a data file a player can share, and loading one is the flight's starting lever values in the journal; it adds no mechanic the levers do not already have. A preset covers moments as well as levers. Built at M3 with the levers.
 
 ### Passenger thoughts (engine M1, drawn M2, on the HUD M3)
 
-Ruled (owner, 2026-09-26; T12, overriding the recommendation to drop them): passengers have **thoughts**, for the RollerCoaster Tycoon and Planet Coaster feel of a cabin you can overhear. A thought is what one passenger is thinking for a while, raised by what just happened to them (a long lav queue, a drink that came late, being woken, turbulence, a call nobody answered, a call answered at once), and every kind of thought points at the lever or moment that would change it. Thoughts are **fog-of-war**: the observed view shows a passenger's thought only once a crew interaction has revealed it (every interaction does: a round's pass, an answered call, an incident reached, an event's crew task, a check-in walk or stop; owner, 2026-09-26), and it ages like every other observation. The fog is thin during service, when the carts hear nearly everyone, and thick in the quiet stretches between rounds, where the check-in cadence decides whether the player hears the passengers who are suffering without calling. Thoughts are information only: nothing in the sim reads them, switching them off changes no outcome, and they never alert (pillar 4). The player reads them grouped by kind and zone, never as 180 rows (pillar 2). The design is [passengers.md section 10](./passengers.md).
+Ruled (T12, overriding the recommendation to drop them): passengers have **thoughts**, for the RollerCoaster Tycoon and Planet Coaster feel of a cabin you can overhear. A thought is what one passenger is thinking for a while, raised by what just happened to them (a long lav queue, a drink that came late, being woken, turbulence, a call nobody answered, a call answered at once), and every kind of thought points at the lever or moment that would change it. Thoughts are **fog-of-war**: the observed view shows a passenger's thought only once a crew interaction has revealed it (every interaction does: a round's pass, an answered call, an incident reached, an event's crew task, a check-in walk or stop), and it ages like every other observation. The fog is thin during service, when the carts hear nearly everyone, and thick in the quiet stretches between rounds, where the check-in cadence decides whether the player hears the passengers who are suffering without calling. Thoughts are information only: nothing in the sim reads them, switching them off changes no outcome, and they never alert (pillar 4). The player reads them grouped by kind and zone, never as 180 rows (pillar 2). The design is [passengers.md section 10](./passengers.md).
 
 ### M1
 
@@ -63,7 +63,7 @@ M1 has **no player commands**. Every lever holds a fixed default policy from the
 
 ## 4. The need set and its math
 
-**Ruled (owner, 2026-09-26): option A, five needs each tied to a lever** (section 8, question 1). Options B and C are kept below as the record of what was weighed; the floor under the rate rule is still open (question 2).
+**Ruled: option A, five needs each tied to a lever** (section 8, question 1). Options B and C are kept below as the record of what was weighed; the floor under the rate rule is still open (question 2).
 
 ### What is shared by every option
 
@@ -97,7 +97,7 @@ Cascades, all in the Cascade class: Refreshment above 70 gives Unease 1.1x; Rest
 
 ### What passengers bring aboard
 
-Ruled (owner, 2026-09-26) in the triage of the OpenPax goals; the numbers and rules are in [passengers.md](./passengers.md), all first values for balance-analyst.
+Ruled in the triage of the OpenPax goals; the numbers and rules are in [passengers.md](./passengers.md), all first values for balance-analyst.
 
 - **Starting needs from the gate (T11, from M1).** Two scenario fields describe what passengers went through before boarding: `gate_delay_minutes`, how long they waited past the scheduled boarding time, and `concessions_open`, whether the airside food and drink outlets were open while they waited. A long wait with the outlets closed boards a hungrier, more bored and more uneasy cabin, and a long delay makes Unease rise faster until the passenger is first served, which ties the gate to the service plan lever: a delayed flight with the outlets shut wants its drinks early. The fields are conditions, not levers, and do not move the timeline, so cabin ready is still measured against its plan (question 9). Where the fields come from in MSFS mode is M5's question (section 9).
 - **Belongings are traits (T9).** What OpenPax called inventory becomes a small set of traits, drawn on their own roll beside the personality traits: a sleep kit (earplugs and mask), which lets its owner sleep through lights and neighbours, and an own device (a tablet), which keeps its owner entertained through an IFE outage. Each belonging blunts a lever or an event for the passenger who has it; a belonging that would touch nothing (sanitizing wipes, an amenity kit) is not carried. Relationships between passengers move to AirlineOps (section 9).
@@ -117,7 +117,7 @@ Hunger, Thirst, Bladder, Comfort, Entertainment, Health, Fatigue, Anxiety, Shopp
 
 ## 5. "Policy, not per passenger" against "optimize seat assignments"
 
-**Ruled (owner, 2026-09-26): resolution 2, seating is only ever a moment** (section 8, question 3). The other two resolutions are kept below as the record of what was weighed. OpenPax's CabinSim loop had "Optimize seat assignments" (`CabinSim\README.md:59`); its later Pillar v2 removed the seat-assignment panel and seat-compatibility calculator as per-individual surfaces (`AirlineOps\PHASE_9_TIME_SYSTEM.md:76-89`) without putting anything in their place. Seating is still the strongest pre-flight lever there is, because contagion, lav climbs and group splits all run through it.
+**Ruled: resolution 2, seating is only ever a moment** (section 8, question 3). The other two resolutions are kept below as the record of what was weighed. OpenPax's CabinSim loop had "Optimize seat assignments" (`CabinSim\README.md:59`); its later Pillar v2 removed the seat-assignment panel and seat-compatibility calculator as per-individual surfaces (`AirlineOps\PHASE_9_TIME_SYSTEM.md:76-89`) without putting anything in their place. Seating is still the strongest pre-flight lever there is, because contagion, lav climbs and group splits all run through it.
 
 1. **Recommended: seating is a set of rules, and the gate applies them.** Before boarding the player orders a short list of seating rules (keep groups together, families forward, assistance passengers near doors, nervous flyers on the aisle, lone business travellers away from children). The manifest generator seats everyone by those rules, in order, and a full flight forces the rules to conflict: that conflict is the decision. The report attributes moments to the rule that caused them ("keep groups together" split three groups because it ranked below "families forward"). Seat-swap requests during boarding are ordinary Lua events on top, which this composes with. **Worst case:** the player finds one dominant ordering and never touches it again, or the effect is diffuse enough that they cannot tell the rules mattered; the attribution in the report is what has to stop that.
 2. **Seating is only ever a moment.** There is no pre-flight seating; seat conflicts surface as events ("a couple split across rows 12 and 19: ask 14C to swap?"). **Worst case:** purely reactive, and on a full flight swap prompts become a chore, which is per-passenger control wearing an event's clothes.
@@ -127,7 +127,7 @@ M1 seats with a fixed default rule order from the scenario file under any of the
 
 ## 6. Scoring
 
-Ruled (owner, 2026-09-26): the measures below, as set by section 8, questions 4, 5, 6, 8 and 9. They score a flight with cabin crew. A **crewless flight** (T7), with passengers and no cabin crew, is scored on flight smoothness instead; question 9 is reopened for that mode only, and is due at M5.
+Ruled: the measures below, as set by section 8, questions 4, 5, 6, 8 and 9. They score a flight with cabin crew. A **crewless flight** (T7), with passengers and no cabin crew, is scored on flight smoothness instead; question 9 is reopened for that mode only, and is due at M5.
 
 ### Passenger experience (spread, not average)
 
@@ -167,7 +167,7 @@ In M1 the report is text from `Sky.Sim`: flight header, the four outcomes with t
 
 ## 7. M1 definition of done
 
-Ruled (owner, 2026-09-26): accepted as drafted; this is the acceptance list of the M1 subplan. Numbers are first values, set with the balance-analyst.
+Ruled: accepted as drafted; this is the acceptance list of the M1 subplan. Numbers are first values, set with the balance-analyst.
 
 The flight
 - [ ] `Sky.Sim` runs one narrowbody flight from a seed with no Godot: about 180 passengers from the seeded manifest generator, 6 crew, boarding through deboarding, and exits 0 with a text report.
@@ -198,7 +198,7 @@ The report and the levers
 - [ ] The balance CSV has one row per seed with the four outcome measures, ready for the balance-analyst.
 - [ ] The Session produces both the crew-observed and the true view, and a test shows the observed view going stale where no crew member has looked.
 
-Added by the owner, 2026-09-26, from the triage of the OpenPax goals (T11, T12)
+From the triage of the OpenPax goals (T11, T12)
 - [ ] Thoughts are fog-of-war and information only: the observed view shows a passenger's thought only after a crew interaction or a check-in walk revealed it, and a flight with thoughts switched off gives the same end-state hash and the same outcome records as with them on.
 - [ ] The gate conditions matter: across 200 seeds, a scenario that differs from the reference only in a 60-minute gate delay with the concessions closed raises the mean starting Refreshment and the `refreshment` calls in the first hour after the seatbelt sign goes off (thresholds set with the balance-analyst; first values in passengers.md's success criteria).
 
@@ -206,59 +206,59 @@ Added by the owner, 2026-09-26, from the triage of the OpenPax goals (T11, T12)
 
 Each option is ranked; the first was the recommendation. Every question of the concept pass is ruled; the rulings are in bold. Question 9 is reopened for crewless flights only (T7), below the triage rulings.
 
-1. **Which need set does In the Sky use?** **Ruled (owner, 2026-09-26): option 1, five needs, each tied to a lever.**
+1. **Which need set does In the Sky use?** **Ruled: option 1, five needs, each tied to a lever.**
    1. Five needs, each tied to a lever: Refreshment, Bladder, Rest, Unease, Boredom; comfort becomes a seat-and-cabin modifier and health becomes an event-raised incident. Worst case: passengers are harder to tell apart, and on long flights Refreshment dominates everyone's distress.
    2. Four core needs plus needs that traits bring (Boredom, Connectivity, Nicotine, Attention), authored in Lua. Worst case: balance is scattered across trait content and some trait-borne needs have no lever.
    3. OpenPax's nine, redesigned on the new scale. Worst case: Comfort, Health and Shopping are meters nobody can move mid-flight, which is the passive simulation OpenPax set out to fix.
 
-2. **Does the kept rate-modifier rule get a floor under it?** **Ruled (owner, 2026-09-26): option 1, a floor of 0.2x.**
+2. **Does the kept rate-modifier rule get a floor under it?** **Ruled: option 1, a floor of 0.2x.**
    1. A floor of 0.2x: no combination of modifiers can slow a need below a fifth of its base rate. Worst case: a passenger who should be "fully looked after" still drifts, so perfect service is impossible by a small margin.
    2. No floor, 0 as in OpenPax. Worst case: two helpful modifiers from different classes freeze a need, the April 2026 bug through the cross-class sum.
    3. A floor per need, set in content. Worst case: one more number per need to tune and explain, for little gain over a single floor.
 
-3. **How does seating become a player lever?** **Ruled (owner, 2026-09-26): option 2, seating only as moments.** There are no pre-flight seating rules; in M1, seat-conflict events are auto-resolved by crew like any other event.
+3. **How does seating become a player lever?** **Ruled: option 2, seating only as moments.** There are no pre-flight seating rules; in M1, seat-conflict events are auto-resolved by crew like any other event.
    1. Seating rules the player orders before boarding, applied by the gate; a full flight makes the rules conflict. Worst case: one dominant ordering is found and never touched again.
    2. Seating only as moments: seat conflicts arrive as events with swap choices. Worst case: on a full flight the swap prompts become per-passenger chores.
    3. Seats are not a lever; they come from booking, and the layout editor is the only seat-level tool. Worst case: pre-flight has almost nothing to decide.
 
-4. **How is one passenger's experience computed?** **Ruled (owner, 2026-09-26): option 1, the peak-end blend.**
+4. **How is one passenger's experience computed?** **Ruled: option 1, the peak-end blend.**
    1. Peak-end: 40% worst sustained distress, 30% the last 20 minutes, 30% the flight's mean. Worst case: a passenger who suffered a long moderate stretch scores better than one with a short sharp spike, which can read as unfair in the report.
    2. Time-weighted mean distress over the flight. Worst case: a ten-minute panic attack disappears into three hours of fine, so incidents barely touch experience.
    3. Mood at the moment of deboarding only. Worst case: everything before descent stops mattering, and a good landing hides a bad flight.
 
-5. **What is the headline number for the spread of experience?** **Ruled (owner, 2026-09-26): option 1, the 10th percentile.**
+5. **What is the headline number for the spread of experience?** **Ruled: option 1, the 10th percentile.**
    1. The 10th percentile (the worst-served tenth), with the median and the count under 40 beside it. Worst case: sensitive to a handful of passengers the seed made hard, so it is noisier across seeds than a mean.
    2. The count of passengers under a threshold ("would complain"). Worst case: a cliff: a passenger at 41 counts the same as one at 95.
    3. The spread itself (interquartile range). Worst case: an evenly miserable flight scores as well as an evenly happy one.
 
-6. **Does the report roll the four outcomes into one grade?** **Ruled (owner, 2026-09-26): option 1, no grade; four verdicts side by side.**
+6. **Does the report roll the four outcomes into one grade?** **Ruled: option 1, no grade; four verdicts side by side.**
    1. No grade: four outcomes side by side, each with a verdict word. Worst case: no single number to compare flights or feed AirlineOps reputation, so a composite has to be designed later anyway.
    2. A weighted composite grade over the four. Worst case: the weights become the game, and the trade between outcomes vanishes into one letter, as OpenPax's six weighted categories did.
    3. Gate then rank: any missed serious incident caps the flight's verdict, otherwise experience ranks it. Worst case: one unlucky incident on a seed flattens an otherwise excellent flight.
 
-7. **Does mood spread between neighbours in M1?** **Ruled (owner, 2026-09-26): option 1, only Unease spreads.**
+7. **Does mood spread between neighbours in M1?** **Ruled: option 1, only Unease spreads.**
    1. Yes, only Unease spreads, to adjacent seats and across the aisle, as an Event-class modifier. Worst case: a single panicking passenger can tip a row, which may look like an avalanche before it is tuned.
    2. No contagion in M1; add it with the player levers in M3. Worst case: seating has no effect in M1, so the seating lever cannot be tested until M3.
    3. Full mood contagion across all needs, as in OpenPax. Worst case: feedback loops across the cabin that dominate every other system and are hard to trace in the report.
 
-8. **How is crew strain measured?** **Ruled (owner, 2026-09-26): option 1, peak strain of the most-strained crew member plus minutes over the redline.**
+8. **How is crew strain measured?** **Ruled: option 1, peak strain of the most-strained crew member plus minutes over the redline.**
    1. The peak strain of the most-strained crew member, plus minutes over the redline. Worst case: a flight with one bad stretch for one crew member scores as badly as one where the whole crew was run ragged.
    2. The team's mean strain. Worst case: one crew member run into the ground is hidden by five who were fine.
    3. Minutes of backlog on the task board (work waiting with no one to take it). Worst case: it measures under-staffing, not what it cost the crew, so a crew that skips breaks to clear the board looks great.
 
-9. **What does "on-time doors" measure?** **Ruled (owner, 2026-09-26): option 1, what the cabin controls.**
+9. **What does "on-time doors" measure?** **Ruled: option 1, what the cabin controls.**
    1. What the cabin controls: cabin ready against plan at departure, deboarding duration against a target at arrival. Worst case: in MSFS mode a player can be "on time" by this measure while the aircraft pushes back late for reasons the cabin cannot see.
    2. Actual door close and door open times from the clock and feed. Worst case: the score blames the cabin for ATC and pilot delays.
    3. Departure end only (cabin ready). Worst case: deboarding, where bins and aisle blocking make the best stories, stops counting.
 
-   **Reopened for crewless flights only (owner, 2026-09-26; T7).** The ruling above stands for every flight with cabin crew; the crewless mode's question is at the end of this section.
+   **Reopened for crewless flights only (T7).** The ruling above stands for every flight with cabin crew; the crewless mode's question is at the end of this section.
 
-10. **What is M1's reference flight?** **Ruled (owner, 2026-09-26): option 1, about 2.5 hours, one drinks round and one meal, day departure.**
+10. **What is M1's reference flight?** **Ruled: option 1, about 2.5 hours, one drinks round and one meal, day departure.**
     1. About 2.5 hours, one drinks round and one meal, day departure. Worst case: long enough that a 500-seed sweep at 64x takes minutes, which slows the balance loop.
     2. About 1 hour, drinks only. Worst case: too short for Rest, Boredom or a lav wave to matter, so half the need set goes untested.
     3. About 5 hours, overnight, two services. Worst case: the sweep takes several times longer, and a night flight's sleep dominates everything else.
 
-### Rulings from the triage of the OpenPax goals (owner, 2026-09-26)
+### Rulings from the triage of the OpenPax goals
 
 The owner triaged the goals the [AVSIM goals research](../research/2026-09-26-openpax-avsim-goals.md) found CONCEPT missing, adopting, deferring or dropping each. Where a ruling differs from `game-designer`'s recommendation in that triage, it says so.
 
@@ -276,7 +276,7 @@ The owner triaged the goals the [AVSIM goals research](../research/2026-09-26-op
 - **T12. Passenger thoughts are adopted,** for a RollerCoaster Tycoon or Planet Coaster feel, and are fog-of-war: the observed view shows a thought only once a crew check-in reveals it (section 3; passengers.md section 10). This overrides the recommendation to drop them as a player surface. The owner widened the reveal to every crew interaction in a follow-up ruling (below).
 - **T13. Overrides of the derived layout work** (crew positions, service zones) wait for the M6 layout editor.
 
-Follow-up rulings on the fold (owner, 2026-09-26, answering `game-designer`'s questions):
+Follow-up rulings on the fold, answering `game-designer`'s questions:
 - **T12, the reveal:** every crew interaction reveals a thought (passengers.md section 9's table and the check-in walk), not only check-ins. This overrides the recommendation of check-ins only; the owner accepted its worst case, a thin fog during service.
 - **T12, the report:** the M1 text report does not quote thoughts; the balance CSV counts grumbles born by lever tag.
 - **T2, presets:** a preset covers the moments that reach the player as well as the levers.

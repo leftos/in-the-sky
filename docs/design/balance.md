@@ -1,6 +1,6 @@
 # Balance
 
-Status: owned by `balance-analyst`. Seeded 2026-09-26 for M1 step D3 (`docs/plans/2026-09-26-m1-headless-cabin-flight.md`), from the owner-approved `docs/design/passengers.md` (D1) and `docs/design/crew.md` (D2) — both drafted and approved 2026-09-26 — and `docs/design/events.md` (D4), landed 2026-09-26. `Sky.Sim` does not exist yet: none of waves M1-A through M1-Z (except D1, D2, D4) has landed, so there is no seed to run and nothing here is measured. Every number below is a first value reached by arithmetic against CONCEPT's own targets, and is **computed, unmeasured** unless a row in section 6's Runs log says a seed sweep checked it. Amended 2026-09-26 by `balance-analyst` for three owner rulings landed after this doc's first draft: the thought reveal widened from check-ins to every crew interaction (`passengers.md` section 9, P12), the due galley break's hold raised from 35 to 50 and a crew member on a break made the last choice for pre-emption (`crew.md` ruled 13), and only a full break resetting the 60-minute no-break strain clock (`crew.md` ruled 14). Terms are in the glossary in [docs/README.md](../README.md).
+Status: owned by `balance-analyst`. Seeded for M1 step D3 (`docs/plans/2026-09-26-m1-headless-cabin-flight.md`), from the owner-approved `docs/design/passengers.md` (D1) and `docs/design/crew.md` (D2) and `docs/design/events.md` (D4). `Sky.Sim` does not exist yet: none of waves M1-A through M1-Z (except D1, D2, D4) has landed, so there is no seed to run and nothing here is measured. Every number below is a first value reached by arithmetic against CONCEPT's own targets, and is **computed, unmeasured** unless a row in section 6's Runs log says a seed sweep checked it. It carries three owner rulings: every crew interaction reveals a thought (`passengers.md` section 9, P12), the due galley break holds 50 and a crew member on a break is the last choice for pre-emption (`crew.md` ruled 13), and only a full break resets the 60-minute no-break strain clock (`crew.md` ruled 14). Terms are in the glossary in [docs/README.md](../README.md).
 
 How to read this doc: section 1 restates CONCEPT's targets (rates, the rate rule, the sustain window, the four outcome formulas, the section 7 acceptance numbers) — quoted, not this doc's to change. Section 2 collects every number `passengers.md` and `crew.md` mark `[D3]` or `(FV)`, one table per subsystem, each citing its source line and the outcome(s) it moves. Section 3 gives the numbers D1, D2 and D4 name as D3's to author outright — a formula, a cadence, a threshold nobody set a value for yet — rather than a marked constant. Section 4 is a scope note, not a correction, since no arithmetic error turned up in D1/D2's own worked examples. Section 5 lists what a future implementer needs that no scenario switch or CSV column covers yet. Section 6 is the empty Runs log Z6 appends to.
 
@@ -12,7 +12,7 @@ How to read this doc: section 1 restates CONCEPT's targets (rates, the rate rule
 |---|---|---|
 | Refreshment | rises, full scale in 4 sim hours → **25.00 per hour** | a served drink −40, a meal −70, a call-button drink −30 (CONCEPT) |
 | Bladder | rises, full scale in 6 sim hours → **16.67 per hour** | any drink (served, or riding with a meal) adds +15 spread over the next 30 minutes — the drink-to-Bladder pulse (CONCEPT) |
-| Rest | rises by the body clock (passengers.md section 6: 5 per hour × a time-of-day factor, Trait class); falls only while asleep | falls 25 per hour with the cabin dimmed, 15 per hour with lights up (passengers.md `[D3]`) — `needs.json`'s `rest_fall_per_hour` schema field carries only the single dimmed figure (25); the lights-up figure (15) is not a schema rate but a Phase-class modifier X3's `sleep` activity effects apply on top of it (confirmed X1, 2026-09-27) |
+| Rest | rises by the body clock (passengers.md section 6: 5 per hour × a time-of-day factor, Trait class); falls only while asleep | falls 25 per hour with the cabin dimmed, 15 per hour with lights up (passengers.md `[D3]`) — `needs.json`'s `rest_fall_per_hour` schema field carries only the single dimmed figure (25); the lights-up figure (15) is not a schema rate but a Phase-class modifier X3's `sleep` activity effects apply on top of it (confirmed X1) |
 | Unease | not a clock: pulled toward the passenger's baseline, half-life ≈15 sim minutes → pull constant λ = ln 2 / 0.25 h ≈ **2.773 per hour** (per-tick factor 0.5^(1/3600), since 15 min = 3,600 ticks at 250 ms) | pushed by push sources (section 2.2) |
 | Boredom | rises, full scale in 3 sim hours → **33.33 per hour** (children ×2.0, CONCEPT → 66.67 per hour); paused while asleep or on IFE | a drink pass −10, a meal pass −10, `stretch` −15, `chat` −20 per hour (passengers.md `[D3]`) |
 
@@ -41,7 +41,7 @@ Sustain window: CONCEPT's working figure is 10 sim minutes. `passengers.md`'s in
 | Performance | **64x** at full cabin: at least **256 ticks per wall-clock second** at 250 ms ticks |
 | Events | at least **3** new events fire across a 500-seed sweep, every one auto-resolved; low-competence or high-fatigue crew pick an event's worse choice measurably more often than competent, rested crew |
 | Pillar 4 (`passengers.md`'s own success criteria, carried here since it bounds the same sweeps) | no incident kind raises on more than **10%** of seeds; every kind raises on at least one seed of the reference or a lever variant; `nervous_flyer` passengers' mean peak Unease during takeoff/climb is at least **15** above passengers with no Unease trait; with contagion off, the 10th-percentile experience moves by no more than **5** points against contagion on |
-| Gate and thoughts (`passengers.md`'s success criteria, added in the 2026-09-26 triage amendment, section 2.25/2.28 below) | every revealed thought traces to a crew interaction or a check-in walk at its reveal tick (fog-of-war, H4's test), and thoughts-off gives the same end-state hash as thoughts-on over seeds 1-16; at least **60%** of thoughts revealed in cruise on the reference are praise or `nothing to report`; each lever variant moves its matching thought kind over seeds 1-200; a 60-minute closed-concessions scenario raises mean starting Refreshment by at least **20** and at least doubles first-hour `refreshment` calls, over seeds 1-200 |
+| Gate and thoughts (`passengers.md`'s success criteria, added in the triage amendment, section 2.25/2.28 below) | every revealed thought traces to a crew interaction or a check-in walk at its reveal tick (fog-of-war, H4's test), and thoughts-off gives the same end-state hash as thoughts-on over seeds 1-16; at least **60%** of thoughts revealed in cruise on the reference are praise or `nothing to report`; each lever variant moves its matching thought kind over seeds 1-200; a 60-minute closed-concessions scenario raises mean starting Refreshment by at least **20** and at least doubles first-hour `refreshment` calls, over seeds 1-200 |
 
 ## 2. First values collected from `passengers.md` (D1) and `crew.md` (D2)
 
@@ -371,9 +371,9 @@ Moves: Incidents (event auto-resolve, section 2.19), Experience (need-read accur
 | Crew work per choice | 1 to 6 minutes | Strain, Doors (competes with the round) |
 | Event-work waiting limit | 10 sim minutes (same number as crew.md's event-work row, section 2.17) | Incidents |
 
-### `passengers.md` (D1), amended 2026-09-26 by `game-designer` for the owner's triage of the OpenPax goals (CONCEPT T9-T12)
+### `passengers.md` (D1), amended by `game-designer` for the owner's triage of the OpenPax goals (CONCEPT T9-T12)
 
-This amendment landed in the main checkout while this doc was being seeded (git diff, 2026-09-26); the four subsections below cover every `[D3]` mark it added, appended here rather than renumbered into 2.1-2.24 to avoid touching already-cited line numbers.
+This amendment landed while this doc was being seeded; the four subsections below cover every `[D3]` mark it added, appended here rather than renumbered into 2.1-2.24 to avoid touching already-cited line numbers.
 
 ### 2.25 Gate conditions and their starting-need effects (`passengers.md`, CONCEPT T11, ruling P9)
 
@@ -549,7 +549,7 @@ Every worked example in `passengers.md` and `crew.md` was re-derived by hand whi
 
 ## 5. Open requests for implementers
 
-None open. Section 3.7's `inches_per_tick` row (added 2026-09-27, orchestrator steer) answers the one request this section briefly carried: `BoardingFlow` (F3) now has a walking pace to turn the reference layout's pitches and fixture distances into ticks. Otherwise none yet — `Sky.Sim` does not exist, so there is no scenario key or CSV column to be missing from. This section is for a lever with no scenario switch, or an outcome with no balance-CSV column, once a run needs one.
+None open. Section 3.7's `inches_per_tick` row gives `BoardingFlow` (F3) a walking pace to turn the reference layout's pitches and fixture distances into ticks. Otherwise none yet — `Sky.Sim` does not exist, so there is no scenario key or CSV column to be missing from. This section is for a lever with no scenario switch, or an outcome with no balance-CSV column, once a run needs one.
 
 ## 6. Runs
 
