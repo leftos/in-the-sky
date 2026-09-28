@@ -7,9 +7,9 @@
     Subcommands (`.\sky.ps1 help` prints the same list at runtime):
 
       build      dotnet build InTheSky.slnx with warnings as errors. -Release for Release.
-      test       dotnet test InTheSky.slnx. -Project P runs one test project, P in Engine, Content, Scripting, Session,
-                 Sim, SimConnect, Voice, Client; -Filter "*X" one class (a wildcard on the full class name). The rest
-                 forwards.
+      test       dotnet build InTheSky.slnx -c Release -warnaserror, then dotnet test -c Release --no-build. -Project P
+                 builds and runs one test project, P in Engine, Content, Scripting, Session, Sim, SimConnect, Voice,
+                 Client; -Filter "*X" one class (a wildcard on the full class name). The rest forwards.
       format     dotnet csharpier format ., then dotnet format style and dotnet format analyzers at --severity info,
                  then the 150-character line check (tools/hooks/Test-LineLength.ps1 -All). -Check only verifies.
       analysis   ruff format, ruff check, ty and pytest over every project under tools/ that carries a pyproject.toml,
@@ -177,8 +177,8 @@ Usage: .\sky.ps1 <subcommand> [args]
 
 Build and check
   build [-Release]                    dotnet build InTheSky.slnx -warnaserror; -Release builds Release
-  test [-Project P] [-Filter "*X"]    dotnet test; P in Engine, Content, Scripting, Session, Sim, SimConnect,
-                                      Voice, Client; the rest forwards
+  test [-Project P] [-Filter "*X"]    Release build, then dotnet test -c Release --no-build; P in Engine,
+                                      Content, Scripting, Session, Sim, SimConnect, Voice, Client; the rest forwards
   format [-Check]                     csharpier, then dotnet format style and analyzers (--severity info), then
                                       the 150-character line check; -Check verifies only and writes nothing
   analysis [-Check]                   ruff format, ruff check, ty and pytest over every project under tools/ with a
@@ -224,12 +224,18 @@ function Invoke-Test {
         throw "test -Project takes one of $($script:TestProjects -join ', '), not '$project'"
     }
     $log = Join-Path $script:Tmp 'test.log'
-    $target = if ($project) { @('--project', (Join-Path $script:Root "tests\Sky.$project.Tests")) } else { @('InTheSky.slnx') }
+    $projectPath = Join-Path $script:Root "tests\Sky.$project.Tests"
+    # Tests run in Release, as tools/test-all.ps1 runs them: the build goes first under its own gate with warnings as
+    # errors, which `dotnet test`'s own build would not carry, and the tests then run with --no-build.
+    $buildTarget = if ($project) { $projectPath } else { 'InTheSky.slnx' }
+    Invoke-Gate -Title "dotnet build $buildTarget -c Release -warnaserror" -Log (Join-Path $script:Tmp 'test-build.log') `
+        -Seconds $script:BuildSeconds -Gate @('dotnet', 'build', $buildTarget, '-c', 'Release', '-warnaserror')
+    $target = if ($project) { @('--project', $projectPath) } else { @('InTheSky.slnx') }
     $filter = if ($parsed.Options['Filter']) { @('--filter-class', $parsed.Options['Filter']) } else { @() }
     $forwarded = @($parsed.Rest)
     $seconds = if ($parsed.Options['Filter']) { $script:FilteredTestSeconds } else { $script:TestSeconds }
-    Invoke-Gate -Title "dotnet test $target $filter $forwarded" -Log $log -Seconds $seconds `
-        -Gate (@('dotnet', 'test') + $target + $filter + $forwarded)
+    $test = @('dotnet', 'test') + $target + @('-c', 'Release', '--no-build') + $filter + $forwarded
+    Invoke-Gate -Title ($test -join ' ') -Log $log -Seconds $seconds -Gate $test
 }
 
 function Invoke-Format {
