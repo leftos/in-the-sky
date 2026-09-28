@@ -138,22 +138,57 @@ function Test-Running {
     return $Check.Job.State -eq 'Running' -or $Check.Job.State -eq 'NotStarted'
 }
 
-# A check still running at the run's backstop is stopped where it stands. Its job's process goes with its whole tree,
-# in one taskkill /T: the gate a check started, the dotnet below it and the test hosts below that all sit under the
-# job's own process, and stopping the job alone would orphan them. The job itself is stopped after that.
-function Stop-Check {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
-        Justification = 'Stops a background job of this run''s own; there is no system state for a caller to confirm.')]
+# The pid a check's job process wrote, or 0 before it has.
+function Read-CheckPid {
     param($Check)
     $processId = 0
     if (Test-Path $Check.PidFile) {
         [void][int]::TryParse((Get-Content -Path $Check.PidFile -Raw).Trim(), [ref]$processId)
     }
-    if ($processId -gt 0) {
-        & taskkill.exe /PID $processId /T /F 2>&1 | Out-Host
+    return $processId
+}
+
+# The processes a check's job process started since it began: the gate it is running, when it is running one.
+function Get-CheckChild {
+    param([int]$ParentId)
+    $parent = Get-Process -Id $ParentId -ErrorAction SilentlyContinue
+    if (-not $parent) { return @() }
+    return @(Get-Process | Where-Object { $_.Parent -and $_.Parent.Id -eq $ParentId -and $_.StartTime -ge $parent.StartTime } |
+            ForEach-Object { $_.Id })
+}
+
+function Invoke-StopTree {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'Stops processes of this run''s own; there is no system state for a caller to confirm.')]
+    param([int]$Id)
+    # A child that exits between being listed and being stopped leaves nothing to stop, and -StopTree says so with
+    # status 2 and its usage; that is not worth printing.
+    if (-not (Get-Process -Id $Id -ErrorAction SilentlyContinue)) { return }
+    & pwsh -NoProfile -File tools/gate.ps1 -StopTree $Id 2>&1 | Out-Host
+}
+
+# Every check still running at the run's backstop is stopped where it stands, with tools/gate.ps1 -StopTree on the gate
+# its job's process is running: that ends the gate's job, and with it every process the gate's command started, then
+# the tree under the gate. A job holds what a parent chain loses: taskkill /T follows parent pids, so a test host whose
+# parent had already exited survived it, where the gate's job still holds it. The job's own process is left alive, so
+# it reads the gate's non-zero status, stops its loop and completes: once a job's process is killed, PowerShell's job
+# transport takes about a minute to notice, and Stop-Job, Remove-Job and the run's own exit all wait on it (measured
+# 2026-09-27). A job still running 10 s later, caught between two of its commands, has its own process stopped too.
+function Stop-Running {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'Stops background jobs of this run''s own; there is no system state for a caller to confirm.')]
+    param([object[]]$Running)
+    foreach ($check in $Running) {
+        Write-Host "the run reached its backstop of $Ceiling s (-Ceiling); stopping $($check.Label)." -ForegroundColor Red
+        $processId = Read-CheckPid $check
+        if ($processId -gt 0) { foreach ($child in (Get-CheckChild $processId)) { Invoke-StopTree $child } }
+        $check.TimedOut = $true
     }
-    Stop-Job -Job $Check.Job -ErrorAction SilentlyContinue
-    $Check.TimedOut = $true
+    $null = Wait-Job -Job @($Running | ForEach-Object { $_.Job }) -Timeout 10
+    foreach ($check in @($Running | Where-Object { Test-Running $_ })) {
+        $processId = Read-CheckPid $check
+        if ($processId -gt 0) { Invoke-StopTree $processId }
+    }
 }
 
 # Prints one finished check's captured output and returns its row of the table.
@@ -299,10 +334,7 @@ while ($true) {
     $running = @($checks | Where-Object { Test-Running $_ })
     if ($running.Count -eq 0) { break }
     if ((Get-Date) -ge $whole) {
-        foreach ($check in $running) {
-            Write-Host "the run reached its backstop of $Ceiling s (-Ceiling); stopping $($check.Label)." -ForegroundColor Red
-            Stop-Check $check
-        }
+        Stop-Running $running
         break
     }
     Start-Sleep -Milliseconds 500
