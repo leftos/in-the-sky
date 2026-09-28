@@ -1,7 +1,7 @@
 ---
 name: sky-explore
-description: Read-only explorer for In the Sky. Use instead of the generic Explore or general-purpose agents whenever a question is "where is X", "how does Y work" or "what does a change to Z touch". Starts from the docs (docs/README.md, docs/ARCHITECTURE.md's task index, docs/decisions/, docs/design/), then confirms against source, asking Roslyn before grepping for a C# symbol, and reports doc-versus-code drift naming which doc owns the fix. Never edits.
-tools: Read, Glob, Grep, Bash, mcp__plugin_claude-roslyn-lsp_roslyn__getWorkspaceStatus, mcp__plugin_claude-roslyn-lsp_roslyn__resolveSymbol, mcp__plugin_claude-roslyn-lsp_roslyn__findReferences, mcp__plugin_claude-roslyn-lsp_roslyn__getTypeMembers, mcp__plugin_claude-roslyn-lsp_roslyn__getDiagnostics, SendMessage, mcp__plugin_mem0_mem0__search_memories
+description: Read-only explorer for In the Sky. Use instead of the generic Explore or general-purpose agents whenever a question is "where is X", "how does Y work" or "what does a change to Z touch". Starts from the docs (docs/README.md, docs/ARCHITECTURE.md's task index, docs/decisions/, docs/design/), then confirms against source, and reports doc-versus-code drift naming which doc owns the fix. Never edits.
+tools: Read, Glob, Grep, Bash, SendMessage, mcp__plugin_mem0_mem0__search_memories
 model: sonnet
 ---
 
@@ -33,8 +33,6 @@ Several of these are still being seeded in M0: a doc the map names that does not
 5. **Only then the source**, starting from the files the docs named. Trust the code over the doc when they disagree, and report the drift.
 6. Search the tree with Grep and Glob for what no doc covers, and say so in the report. Bash is for `git rev-parse` and read-only `git -C D:/openpax log` / `git -C D:/openpax show` alone: a guard denies `grep` and `find` over files.
 7. **Prior art in OpenPax** (owner, 2026-09-27), for every exploration of a subsystem, not only when asked. `D:\openpax` is the read-only predecessor this rewrite replaces; never edit it. Find how it built the same subsystem (Grep and Read under `D:\openpax`), what its history shows was fixed there (`git -C D:/openpax log --oneline -- <paths>`, then `git -C D:/openpax show <sha>` for a fix whose subject names a bug, a deadlock, a race or a crash), and what `docs/plans/2026-09-26-rewrite-decisions.md` says the rewrite kept or dropped of it. OpenPax is evidence of what went wrong, never a design to copy: the design docs and ADRs rule, and a lesson that contradicts them is reported as a question, not applied.
-
-**A C# symbol is asked of Roslyn before it is grepped for.** Once the docs have named the class or member, `findReferences` answers "who calls this" and "what does changing it touch", `resolveSymbol` where it is declared, and `getTypeMembers` what a type carries, each by name (`ISkySession`) or by position (`<path>:<line>:<column>`), with paths relative to the repo root and lines counted from 1. They understand the code where `rg` matches text: a name in a comment, a string or another type's member of the same name is not a hit. The server has the main checkout's `InTheSky.slnx` open and nothing else: it knows nothing of a worktree, of `.tscn` scenes, of Lua modules, of the docs or of a string a scene wires a signal by, so those stay with Grep, and under a worktree root Grep answers for everything. While the solution loads a tool answers `status: "loading"`; `getWorkspaceStatus` says how far it has got, and if it has not loaded in two minutes, fall back to Grep and say so in the report. `getDiagnostics` is a design-time pass, never a build: report what it says as that.
 
 ## Reporting
 
