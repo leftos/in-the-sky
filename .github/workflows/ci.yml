@@ -4,8 +4,10 @@ name: CI
 # client takes Godot 4.7.2 as a NuGet package, so no Godot binary is needed and one platform is enough to gate the tree.
 on:
   push:
+    paths: ["**", "!**.md", "CREDITS.md"]
     branches: [main]
   pull_request:
+    paths: ["**", "!**.md", "CREDITS.md"]
     branches: [main]
 
 # One run per ref. A pull request that is pushed to again cancels the run its earlier push started, so a branch holds
