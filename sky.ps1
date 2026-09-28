@@ -9,7 +9,8 @@
       build      dotnet build InTheSky.slnx with warnings as errors. -Release for Release.
       test       dotnet build InTheSky.slnx -c Release -warnaserror, then dotnet test -c Release --no-build. -Project P
                  builds and runs one test project, P in Engine, Content, Scripting, Session, Sim, SimConnect, Voice,
-                 Client; -Filter "*X" one class (a wildcard on the full class name). The rest forwards.
+                 Client; -Filter "*X" one class (a wildcard on the full class name), in whichever projects hold it; a
+                 filter that runs no test anywhere fails (exit 9). The rest forwards.
       format     dotnet csharpier format ., then dotnet format style and dotnet format analyzers at --severity info,
                  then the 150-character line check (tools/hooks/Test-LineLength.ps1 -All). -Check only verifies.
       analysis   ruff format, ruff check, ty and pytest over every project under tools/ that carries a pyproject.toml,
@@ -184,7 +185,8 @@ Usage: .\sky.ps1 <subcommand> [args]
 Build and check
   build [-Release]                    dotnet build InTheSky.slnx -warnaserror; -Release builds Release
   test [-Project P] [-Filter "*X"]    Release build, then dotnet test -c Release --no-build; P in Engine,
-                                      Content, Scripting, Session, Sim, SimConnect, Voice, Client; the rest forwards
+                                      Content, Scripting, Session, Sim, SimConnect, Voice, Client; -Filter runs the
+                                      class wherever it is and fails when no test ran; the rest forwards
   format [-Check]                     csharpier, then dotnet format style and analyzers (--severity info), then
                                       the 150-character line check; -Check verifies only and writes nothing
   analysis [-Check]                   ruff format, ruff check, ty and pytest over every project under tools/ with a
@@ -237,11 +239,20 @@ function Invoke-Test {
     Invoke-Gate -Title "dotnet build $buildTarget -c Release -warnaserror" -Log (Join-Path $script:Tmp 'test-build.log') `
         -Seconds $script:BuildSeconds -Slot heavy -Gate @('dotnet', 'build', $buildTarget, '-c', 'Release', '-warnaserror')
     $target = if ($project) { @('--project', $projectPath) } else { @('InTheSky.slnx') }
-    $filter = if ($parsed.Options['Filter']) { @('--filter-class', $parsed.Options['Filter']) } else { @() }
+    # A filtered run over the solution leaves most assemblies with nothing to run, and each of those exits 8 (zero
+    # tests), which SDK 10 does not forgive for the whole run. So each assembly's 8 is ignored, and the run as a whole
+    # must still run at least one test, exiting 9 when the filter matched nothing anywhere.
+    $filter = if ($parsed.Options['Filter']) {
+        @('--filter-class', $parsed.Options['Filter'], '--ignore-exit-code', '8', '--minimum-expected-tests', '1')
+    }
+    else {
+        @()
+    }
     $forwarded = @($parsed.Rest)
     $seconds = if ($parsed.Options['Filter']) { $script:FilteredTestSeconds } else { $script:TestSeconds }
-    # One filtered class keeps a thread or two busy; an unfiltered run spreads across every test assembly and core.
-    $slot = if ($parsed.Options['Filter']) { 'light' } else { 'heavy' }
+    # Over the solution every test assembly starts in parallel, filter or not, which keeps many threads busy; a filtered
+    # run in one project on --no-build is one class in one assembly and keeps one or two.
+    $slot = if ($parsed.Options['Filter'] -and $project) { 'light' } else { 'heavy' }
     $test = @('dotnet', 'test') + $target + @('-c', 'Release', '--no-build') + $filter + $forwarded
     Invoke-Gate -Title ($test -join ' ') -Log $log -Seconds $seconds -Slot $slot -Gate $test
 }
