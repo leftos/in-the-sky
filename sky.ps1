@@ -30,8 +30,10 @@
     same from every shell.
 
     Every gate - build, test, the formatters - runs through tools/gate.ps1 under a ceiling of its own, writing the whole
-    output to a log under .tmp and printing its tail; one that reaches its ceiling is killed with its children and exits
-    124.
+    output to a log under .tmp and printing its tail. The ceiling runs on a load-adjusted clock, which slows when other
+    work keeps the machine busy; the gate also kills a run that stalls (no output and no CPU for 120 s) and one that
+    reaches five times its ceiling in wall time. Any of the three kills it with its children and exits 124, and the error
+    names which one it was.
 
     Godot is $env:GODOT_PATH when it is set, F:\Godot\Godot_console.exe otherwise.
 
@@ -66,8 +68,9 @@ $script:Root = $PSScriptRoot
 $script:Tmp = Join-Path $script:Root '.tmp'
 # Every build, test, format, analysis, provenance, Godot import and Godot build-solutions run this script makes on the
 # caller's behalf goes through tools/gate.ps1: the whole output to a log, the tail on the screen, the command's own exit
-# status, and 124 when the ceiling below killed it and its children. A ceiling is a few times what the command takes
-# today, so a run that reaches one has hung rather than slowed - read its log, do not raise it.
+# status, and 124 when the gate's watchdog killed it and its children - stalled, past the ceiling below on the
+# load-adjusted clock, or at the wall-time backstop of five times it. A ceiling is a few times what the command takes on
+# an idle machine today.
 $script:GateScript = Join-Path $script:Root 'tools\gate.ps1'
 $script:BuildSeconds = 300
 $script:FormatSeconds = 180
@@ -132,18 +135,32 @@ function Split-Rest {
     return @{ Options = $options; Rest = $left.ToArray() }
 }
 
+# The gate's kill line from a log whose gate exited 124, with what that kind of kill means for the next step.
+function Get-GateKill {
+    param([string]$Log)
+    $line = Select-String -Path $Log -Pattern 'gate: (STALLED|TIMED OUT|BACKSTOP)' -ErrorAction SilentlyContinue |
+        Select-Object -Last 1
+    if (-not $line) { return "no kill line in $Log" }
+    $reading = switch ($line.Matches[0].Groups[1].Value) {
+        'STALLED' { "It hung: read $Log for where it stopped." }
+        'TIMED OUT' {
+            "It kept working past its ceiling even allowing for load: a busy loop or a ceiling set too tight; read $Log before raising it."
+        }
+        default { 'The machine was busy: run it once more alone.' }
+    }
+    return "$($line.Line) $reading"
+}
+
 # Runs one gate under tools/gate.ps1 and stops the script when it fails, so a chain of steps ends at the first red one.
 # The command is handed over as an array rather than as words on this line: PowerShell's parser eats a bare -- as its
-# own end-of-parameters marker, and `dotnet test ... -- --timeout 2m` needs the separator to reach the runner.
+# own end-of-parameters marker, and a caller's `dotnet test ... -- <runner options>` needs the separator to reach the
+# runner.
 function Invoke-Gate {
-    param([string]$Title, [string]$Log, [int]$Seconds, [string[]]$Gate, [string]$Hint)
+    param([string]$Title, [string]$Log, [int]$Seconds, [string[]]$Gate)
     Write-Section $Title
     & $script:GateScript -Log $Log -TimeoutSeconds $Seconds -- @Gate
     if ($LASTEXITCODE -eq 124) {
-        $message = "$Title reached its ceiling of $Seconds s and was killed with its children; read $Log rather than raise it."
-        # A gate whose stall has a known first thing to try says so here, where the ceiling is reported.
-        if ($Hint) { $message = "$message $Hint" }
-        throw $message
+        throw "$Title was killed by the gate: $(Get-GateKill -Log $Log)"
     }
     if ($LASTEXITCODE -ne 0) {
         throw "$Title failed (exit $LASTEXITCODE); the whole output is in $Log"
@@ -183,8 +200,10 @@ MSBuild switches are written in dash form (-warnaserror, -p:Name=Value): Git Bas
 path, and MSBuild then reports MSB1008.
 
 Every gate - build, test, the formatters - runs through tools/gate.ps1 under a ceiling of its own, writing the whole
-output to a log under .tmp and printing its tail; one that reaches its ceiling is killed with its children and exits
-124.
+output to a log under .tmp and printing its tail. The ceiling runs on a load-adjusted clock, which slows when other
+work keeps the machine busy; the gate also kills a run that stalls (no output and no CPU for 120 s) and one that
+reaches five times its ceiling in wall time. Any of the three kills it with its children and exits 124, and the error
+names which one it was.
 '@
 }
 
@@ -208,10 +227,6 @@ function Invoke-Test {
     $target = if ($project) { @('--project', (Join-Path $script:Root "tests\Sky.$project.Tests")) } else { @('InTheSky.slnx') }
     $filter = if ($parsed.Options['Filter']) { @('--filter-class', $parsed.Options['Filter']) } else { @() }
     $forwarded = @($parsed.Rest)
-    # The runner's own guard beside the ceiling: --timeout is a global test execution timeout the platform forwards to
-    # every test module, so a single test that never completes ends its module rather than holding the whole run. A
-    # caller who forwarded a separator of their own has already said what they want after it.
-    if ($forwarded -notcontains '--') { $forwarded += @('--', '--timeout', '2m') }
     $seconds = if ($parsed.Options['Filter']) { $script:FilteredTestSeconds } else { $script:TestSeconds }
     Invoke-Gate -Title "dotnet test $target $filter $forwarded" -Log $log -Seconds $seconds `
         -Gate (@('dotnet', 'test') + $target + $filter + $forwarded)
@@ -356,7 +371,7 @@ function Invoke-ClientBuild {
 
 # The fresh-clone order: --import before --build-solutions, because with nothing under .godot/imported the editor cannot
 # load the project and the solutions pass can die before it builds. The first import can end red on the pre-import lines
-# alone, so a pass that ends red on those lines alone is run again, up to three passes; a ceiling or any other red stops
+# alone, so a pass that ends red on those lines alone is run again, up to three passes; a gate kill or any other red stops
 # here. The client is built first: until the assembly exists the importer reports the C# scripts as not compiling.
 function Invoke-Client {
     Invoke-ClientBuild
@@ -371,7 +386,7 @@ function Invoke-Client {
             break
         }
         if ($imported -eq 124) {
-            throw "Godot --import reached its ceiling of $($script:ImportSeconds) s and was killed; read $log rather than raise it."
+            throw "Godot --import was killed by the gate: $(Get-GateKill -Log $log)"
         }
         if (-not (Test-ImportRedOnMarker -Log $log)) {
             throw "Godot --import failed (exit $imported) on lines the pre-import markers do not explain; read $log"

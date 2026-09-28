@@ -13,18 +13,29 @@ The checks then run as jobs. Each job's output is held back and printed whole un
 finished: two checks writing to one console interleave into something unreadable exactly when one of them fails. None
 waits on another, so the run costs what its longest one costs.
 
-Every check carries a ceiling of its own, a few times what it takes on this machine today, and the run carries -Ceiling
-over all of them. A check that reaches its ceiling is stopped where it stands with every process it started, and its
-row reads `timed out after <n> s` with the verdict failed while the rest are left to finish. A red `timed out` row is a
-hang and not a slow machine: read the check's log under .tmp rather than raise the ceiling.
+Every command a check runs goes through tools/gate.ps1 with the check's ceiling, a few times what it takes on an idle
+machine today, and its whole output in a log of its own, .tmp/test-all-<check>-<n>.log. The gate's watchdog kills a
+command with every process it started and exits 124, the check fails with the gate's kill line as its row's note, and
+the other checks are left to finish. The kill line says which of three things happened:
+ - `gate: STALLED`: no output and no CPU for the stall time. The command hung; read its log for where it stopped.
+ - `gate: TIMED OUT`: the ceiling ran out on the load-adjusted clock, which already allows for other work on the
+   machine. The command kept working past it: a busy loop, or a ceiling set too tight. Read the log before raising it.
+ - `gate: BACKSTOP`: five times the ceiling passed in wall time. With a low machine-free share on that line the
+   machine was busy rather than the command wrong: run it once more alone.
+Each gate takes one of the machine's slots (tools/gate.ps1 explains them), so the checks run side by side only when
+enough slots are free; a check that finds none waits for one, and its clocks start when it has it.
+
+The run carries a backstop of its own over all of that: -Ceiling seconds of wall time, after which every check still
+running is stopped where it stands and reported as timed out. Every command is already killed by its own gate at five
+times its ceiling at the latest, so this stop only has to catch a gate that hung itself.
 
 MSBuild switches are written in dash form (-warnaserror): Git Bash's path conversion rewrites /warnaserror into a
 Windows path and MSBuild then reports MSB1008, while the dash form reads the same from every shell.
 
 .PARAMETER Ceiling
-How long the whole run may take, in seconds, counted from its first line. Defaults to 600, which is the largest
-check's ceiling with the build's and a margin beside it. Every check still running then is stopped and reported as
-timed out, and the run exits non-zero.
+The run's wall-time bound in seconds, counted from its first line. When it is not given it is five times the largest
+check's ceiling plus 60 s: the longest any one gate can run before its own backstop kills it, and a margin. Every check
+still running at the bound is stopped and reported as timed out, and the run exits non-zero.
 
 .OUTPUTS
 Every check's output whole under its own heading, then a table of what ran, how it went and how long it took with the
@@ -34,7 +45,7 @@ note a stopped check carries, then the wall time.
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '',
     Justification = 'Interactive dev script; coloured status to the console is the UX.')]
 param(
-    [int]$Ceiling = 600
+    [int]$Ceiling
 )
 
 Set-StrictMode -Version Latest
@@ -48,7 +59,7 @@ $startedAt = Get-Date
 
 # Every check's ceiling in seconds, against what it took on a machine like this: build seconds, format tens of seconds,
 # tests seconds, the Python analysis seconds, the provenance check seconds, the line check a second or two. A ceiling is
-# a few times that, so a check that reaches one has hung rather than slowed.
+# a few times that, counted on the gate's load-adjusted clock, so a busy machine does not use it up.
 $ceilings = [ordered]@{
     build         = 300
     format        = 180
@@ -57,10 +68,16 @@ $ceilings = [ordered]@{
     provenance    = 60
     'line-length' = 60
 }
+# The run's own bound: every gate is killed at five times its ceiling at the latest, so past the largest of those and a
+# margin only a gate that hung itself can still be running.
+if (-not $PSBoundParameters.ContainsKey('Ceiling')) {
+    $Ceiling = 5 * ($ceilings.Values | Measure-Object -Maximum).Maximum + 60
+}
 
 # Starts one check as a job of its own. Its commands are handed over as arrays rather than as a line to parse, so an
 # argument holding a space stays one argument and a bare -- reaches the runner instead of PowerShell's own parser. The
-# commands run in order and the first non-zero status ends the check.
+# commands run in order, each through tools/gate.ps1 under the check's ceiling, and the first non-zero status ends the
+# check.
 function Start-Check {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
         Justification = 'Starts a background job of this run''s own; there is no system state for a caller to confirm.')]
@@ -71,57 +88,48 @@ function Start-Check {
     $pidFile = Join-Path $tmp "test-all-$Label.pid"
     Remove-Item $log, $pidFile -ErrorAction SilentlyContinue
     $job = Start-Job -Name $Label -ScriptBlock {
-        param($workDir, $commands, $log, $pidFile)
+        param($workDir, $commands, $log, $pidFile, $label, $seconds)
         Set-Location $workDir
-        # A job runs in a process of its own, and its id is what the tree of a check that overruns is killed from.
+        # A job runs in a process of its own, and its id is what the tree of a check the run's backstop stops is
+        # killed from.
         Set-Content -Path $pidFile -Value $PID
-        # On Windows a bare command name is resolved to the first file on PATH that Windows can start (an extension
-        # PATHEXT lists). An extensionless script earlier on PATH - the bash shims a Claude Code plugin puts in front of
-        # `uv` and `python` for the Bash tool, which a pwsh started from Bash inherits - is otherwise what `&` runs, and
-        # it fails with "Cannot run a document in the middle of a pipeline". tools/gate.ps1 resolves the same way.
-        function Resolve-Runnable {
-            param([string]$Name)
-            if (-not $IsWindows -or [System.IO.Path]::GetExtension($Name) -or [System.IO.Path]::GetDirectoryName($Name)) {
-                return $Name
-            }
-            $runnable = $env:PATHEXT -split ';'
-            $found = Get-Command $Name -CommandType Application -All -ErrorAction SilentlyContinue |
-                Where-Object { $runnable -contains $_.Extension } |
-                Select-Object -First 1
-            if ($found) { return $found.Source }
-            return $Name
-        }
 
         $lines = [System.Collections.Generic.List[string]]::new()
         $code = 0
+        $kill = ''
+        $index = 0
         foreach ($command in $commands) {
-            $exe = Resolve-Runnable ([string]$command[0])
-            $arguments = @($command | Select-Object -Skip 1)
-            $header = "== $exe $($arguments -join ' ') =="
+            $index++
+            $commandLog = ".tmp/test-all-$label-$index.log"
+            $header = "== $($command -join ' ') (whole output: $commandLog) =="
             Add-Content -Path $log -Value $header
             $lines.Add($header)
-            # Written to the log as it goes rather than collected at the end: a check stopped at its ceiling never
-            # returns its result, and the log is then the only place its partial output can be read from.
-            $text = & $exe @arguments 2>&1 | Out-String -Stream | Tee-Object -FilePath $log -Append
+            $gateArguments = @('-NoProfile', '-File', 'tools/gate.ps1', '-Log', $commandLog, '-TimeoutSeconds', "$seconds", '--') + @($command)
+            # Written to the log as it goes rather than collected at the end: a check stopped at the run's backstop
+            # never returns its result, and the log is then the only place its partial output can be read from.
+            $text = & pwsh @gateArguments 2>&1 | Out-String -Stream | Tee-Object -FilePath $log -Append
             foreach ($line in $text) { $lines.Add([string]$line) }
             if ($LASTEXITCODE -ne 0) {
                 $code = $LASTEXITCODE
+                if ($code -eq 124) {
+                    $kill = [string](Select-String -Path $commandLog -Pattern 'gate: (STALLED|TIMED OUT|BACKSTOP)' |
+                            Select-Object -Last 1 | ForEach-Object { $_.Line })
+                }
                 break
             }
         }
         [pscustomobject]@{
             Output   = $lines
             ExitCode = $code
+            KillLine = $kill
         }
-    } -ArgumentList $root, $Commands, $log, $pidFile
+    } -ArgumentList $root, $Commands, $log, $pidFile, $Label, $Seconds
     [pscustomobject]@{
-        Label     = $Label
-        Job       = $job
-        Seconds   = $Seconds
-        Log       = $log
-        PidFile   = $pidFile
-        StartedAt = Get-Date
-        TimedOut  = $false
+        Label    = $Label
+        Job      = $job
+        Log      = $log
+        PidFile  = $pidFile
+        TimedOut = $false
     }
 }
 
@@ -130,9 +138,9 @@ function Test-Running {
     return $Check.Job.State -eq 'Running' -or $Check.Job.State -eq 'NotStarted'
 }
 
-# A check that reached its ceiling is stopped where it stands. The job's children go first, while the tree is still
-# whole and taskkill /T can walk it: the dotnet a check started and the test hosts below it all sit under the job's own
-# process, and stopping the job alone would orphan them. The job itself is stopped after that.
+# A check still running at the run's backstop is stopped where it stands. Its job's process goes with its whole tree,
+# in one taskkill /T: the gate a check started, the dotnet below it and the test hosts below that all sit under the
+# job's own process, and stopping the job alone would orphan them. The job itself is stopped after that.
 function Stop-Check {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
         Justification = 'Stops a background job of this run''s own; there is no system state for a caller to confirm.')]
@@ -142,10 +150,7 @@ function Stop-Check {
         [void][int]::TryParse((Get-Content -Path $Check.PidFile -Raw).Trim(), [ref]$processId)
     }
     if ($processId -gt 0) {
-        $children = @(Get-CimInstance Win32_Process -Filter "ParentProcessId = $processId" -ErrorAction SilentlyContinue)
-        foreach ($child in $children) {
-            & taskkill.exe /PID $child.ProcessId /T /F 2>&1 | Out-Null
-        }
+        & taskkill.exe /PID $processId /T /F 2>&1 | Out-Host
     }
     Stop-Job -Job $Check.Job -ErrorAction SilentlyContinue
     $Check.TimedOut = $true
@@ -165,11 +170,12 @@ function Complete-Check {
     # A stopped job returns no result at all, so what it did manage to say is read back from the log it was writing.
     if ($Check.TimedOut) {
         if (Test-Path $Check.Log) { Get-Content -Path $Check.Log -Tail 100 | Out-Host }
-        Write-Host "FAILED: $($Check.Label) (timed out after $($Check.Seconds) s; its output so far is in $($Check.Log))" -ForegroundColor Red
+        $why = "stopped at the run's backstop of $Ceiling s; its output so far is in $($Check.Log)"
+        Write-Host "FAILED: $($Check.Label) ($why)" -ForegroundColor Red
         Remove-Job -Job $job -Force
         Remove-Item $Check.PidFile -ErrorAction SilentlyContinue
         return [pscustomobject]@{
-            Check = $Check.Label; Verdict = 'failed'; Seconds = $seconds; Note = "timed out after $($Check.Seconds) s"
+            Check = $Check.Label; Verdict = 'failed'; Seconds = $seconds; Note = "timed out at the run's backstop of $Ceiling s"
         }
     }
 
@@ -195,7 +201,10 @@ function Complete-Check {
     $result.Output | Out-Host
     if ($result.ExitCode -ne 0) {
         Write-Host "FAILED: $($Check.Label) (exit $($result.ExitCode))" -ForegroundColor Red
-        return [pscustomobject]@{ Check = $Check.Label; Verdict = 'failed'; Seconds = $seconds; Note = "see $($Check.Log)" }
+        # A command the gate's watchdog killed carries the gate's own line, which says whether it stalled, ran past its
+        # ceiling or met the backstop on a busy machine.
+        $note = if ($result.ExitCode -eq 124 -and $result.KillLine) { $result.KillLine } else { "see $($Check.Log)" }
+        return [pscustomobject]@{ Check = $Check.Label; Verdict = 'failed'; Seconds = $seconds; Note = $note }
     }
 
     Write-Host "OK: $($Check.Label)" -ForegroundColor Green
@@ -223,12 +232,10 @@ Write-Host "build passed in $buildSeconds s." -ForegroundColor Green
 $results += [pscustomobject]@{ Check = 'build'; Verdict = 'passed'; Seconds = $buildSeconds; Note = '' }
 
 $checks = @()
-# The leading comma keeps one command an array of arrays; @() alone would flatten it into its words. The runner's own
-# guard after the separator sits beside the ceiling this script keeps: --timeout is a global test execution timeout the
-# platform forwards to every test module, so one test that never completes ends its module rather than the whole run.
-# The solution is handed to a single runner invocation, which runs its test assemblies side by side.
+# The leading comma keeps one command an array of arrays; @() alone would flatten it into its words. The solution is
+# handed to a single runner invocation, which runs its test assemblies side by side.
 $testCommands = @(
-    , @('dotnet', 'test', 'InTheSky.slnx', '-c', 'Release', '--no-build', '--', '--timeout', '2m')
+    , @('dotnet', 'test', 'InTheSky.slnx', '-c', 'Release', '--no-build')
 )
 $checks += Start-Check 'tests' $testCommands $ceilings['tests']
 # The format check is a job beside the tests rather than a step before the build: --verify-no-changes writes nothing,
@@ -286,21 +293,14 @@ else {
     $checks += $analysisCheck
 }
 
-Write-Host "`nRunning $($checks.Count) checks side by side, each under its own ceiling..." -ForegroundColor Cyan
+Write-Host "`nRunning $($checks.Count) checks side by side, each command under the gate's watchdog..." -ForegroundColor Cyan
 $whole = $startedAt.AddSeconds($Ceiling)
 while ($true) {
     $running = @($checks | Where-Object { Test-Running $_ })
     if ($running.Count -eq 0) { break }
-    $now = Get-Date
-    foreach ($check in $running) {
-        if ($now -ge $check.StartedAt.AddSeconds($check.Seconds)) {
-            Write-Host "$($check.Label) reached its ceiling of $($check.Seconds) s; stopping it and leaving the rest to finish." -ForegroundColor Red
-            Stop-Check $check
-        }
-    }
     if ((Get-Date) -ge $whole) {
-        foreach ($check in @($checks | Where-Object { Test-Running $_ })) {
-            Write-Host "the run reached its own ceiling of $Ceiling s; stopping $($check.Label)." -ForegroundColor Red
+        foreach ($check in $running) {
+            Write-Host "the run reached its backstop of $Ceiling s (-Ceiling); stopping $($check.Label)." -ForegroundColor Red
             Stop-Check $check
         }
         break
@@ -324,7 +324,7 @@ $results | Format-Table -AutoSize | Out-Host
 
 $failed = @($results | Where-Object { $_.Verdict -eq 'failed' })
 $elapsed = [math]::Round(((Get-Date) - $startedAt).TotalSeconds)
-$wall = "Wall time: $elapsed s (no check waits past its own ceiling and the run stops itself at $Ceiling s)."
+$wall = "Wall time: $elapsed s (every command runs under the gate's watchdog, and the run stops itself at $Ceiling s)."
 if ($failed.Count -gt 0) {
     Write-Host "$($failed.Count) of $($results.Count) checks failed." -ForegroundColor Red
     Write-Host $wall

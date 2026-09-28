@@ -28,6 +28,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | AssemblyMarker | The one public class in each project; its `Dependencies` field names a type from every project it references, so the compiler keeps each reference and `ReferenceTests` can see it. |
 | Auto-resolve | Crew make an event's choice on their own, weighted by competence, traits and fatigue. It is used when no player is making the choice. |
 | Back to your seat | The crew task posted when a passenger leaves their seat with the seatbelt sign on in cruise (only at Bladder 85 or more); `docs/design/crew.md`. |
+| Backstop | The gate's last-resort kill at five times the ceiling in wall time (`gate: BACKSTOP`); with a low "machine free" figure it means the machine was busy, and the run is re-run once alone. `tools/test-all.ps1` has a wall bound of its own, `-Ceiling` (by default five times its largest check ceiling plus 60 s). |
 | Balance CSV | `Sky.Sim`'s output from a sweep: one row per seed with the four outcome measures, read by `balance-analyst`. |
 | Belonging | Something a passenger carries aboard (`sleep_kit`, `own_device`), modelled as a trait drawn on its own roll that blunts a lever or event for its owner (`docs/design/passengers.md` section 4). |
 | Bin help | A crew task standing at a row where a passenger has been stowing or retrieving a bag too long, cutting their remaining bin time (`docs/design/crew.md`). |
@@ -42,7 +43,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Cascade | One system's effect setting off another's, such as a drinks round filling the lav queue that then blocks the cart. In the needs model, a cascade rule (`CascadeRule`) makes one need above its threshold speed another up: a Cascade-class rate modifier, such as Rest above 80 driving Unease ×1.2. |
 | Catch-up drink | A crew task posted when a crew member reads a passenger's Refreshment as `urgent`, bringing them the drink an answered call would. |
 | Catch-up service | A crew task serving, after a round ends, the passengers the round skipped because they were asleep or away from their seat. |
-| Ceiling | The longest a gate may run before `tools/gate.ps1` or `tools/test-all.ps1` kills it with its children (exit 124); a few times what it takes today, so reaching one means a hang. |
+| Ceiling | A gate's `-TimeoutSeconds`: how long it may run on the load-adjusted clock before `tools/gate.ps1` kills it with its children as `gate: TIMED OUT` (exit 124), a busy loop or a ceiling set too tight; a few times what it takes on an idle machine today. `tools/test-all.ps1 -Ceiling` is only the run's backstop. |
 | Character id | The id the executor and occupancy know a character by: crew hold 0 to crew count − 1, and a passenger is the crew count plus their manifest id. |
 | Check cadence | How often the event scheduler asks every enabled event trigger whether to fire (`docs/design/events.md` section 3). |
 | Check-in follow-up | A crew task posted some minutes after a crew member reads a passenger's Unease as `urgent`: a return visit that calms them and reads Unease again. |
@@ -86,7 +87,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Frame record | The journal's record of one `Step` call: the tick it started on and how many ticks it ran, so a replay steps the same way. |
 | Full break | A galley break that ran its 10-minute minimum; only a full break restarts a crew member's 60-minute no-break clock (`docs/design/crew.md`, strain). |
 | Galley break | A crew task at the galley that lowers strain; it is posted when strain or time since the last break runs high, and call buttons can interrupt it. |
-| Gate | A check that must pass before work lands (a build, a test run, a format check, a hook), run under `tools/gate.ps1`; `tools/test-all.ps1` is the whole gate. |
+| Gate | A check that must pass before work lands (a build, a test run, a format check, a hook), run under `tools/gate.ps1` with a ceiling and a log under `.tmp/`; the gate kills a run that stalls, passes its ceiling on the load-adjusted clock, or reaches the backstop. `tools/test-all.ps1` is the whole gate. |
 | Gate conditions | The two scenario fields describing the wait before boarding, `gate_delay_minutes` and `concessions_open`, which add to passengers' starting needs (`docs/design/passengers.md` section 2). |
 | Golden flight | A seed whose end-state hash is pinned in a test, recorded on Windows, so a run on another OS shows whether replay is byte-identical across platforms. |
 | Hard condition | The one condition an event's trigger requires before it rolls its chance (compare soft condition). |
@@ -113,6 +114,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Lever tag | The lever or moment a thought kind points at (`service_plan`, `lavs`, `lighting_plan`, `crew_staffing`, `check_in_cadence`, `announcement_policy`, `moment`); a kind without one fails the content validator. |
 | Lever variant | A scenario file that differs from the reference scenario in exactly one lever, swept against it to show the lever matters. |
 | Line consequence | An event consequence that journals a sentence as a moment tied to the event and a passenger, changing no state, so the report has words for it. |
+| Load-adjusted clock | The clock a gate's ceiling counts on: each few seconds it advances by the share of the machine the run's own processes did not have to share with other work, so it keeps wall time on an idle machine and slows while other agents load it. |
 | Milestone | A numbered stage of the roadmap (M0 to M6) in `docs/plans/MAIN.md`; each has a definition of done. |
 | Misread | A need read recorded one band below the true one (toward fine), possible only when the true value is just above a band edge. |
 | Moment | Two senses. (1) A surfaced situation the player or crew answers with a choice, as opposed to a policy ("decide at the level of a moment"; seat conflicts arrive as moments). (2) In the report, a journal record that moved an outcome: its tick, what happened, who was involved, the cause chain behind it, and its effect on each scoring outcome. The report is built from moments. |
@@ -155,6 +157,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Service plan | The lever listing a flight's rounds in order, each with its start time and direction (front to back or back to front). |
 | Session | `Sky.Session`'s `ISkySession`: the client pulls views from it and pushes commands to it. |
 | Slice | The plan items one `/nextup` session explores and builds: the first cluster of lines plus the next ones with disjoint files, up to three implementers. |
+| Slot | One of the `(logical processors - 1) / 4` places machine-wide a gate must hold to run (`GATE_SLOTS` overrides the count; a waiting gate logs `gate: waiting for a slot`); a gate inside another gate uses its parent's. |
 | Smoothness | How gently a crewless flight was flown (G-rates, turbulence met, prompt departure and arrival), its scoring direction; the shape is open until M5 (`docs/design/CONCEPT.md` section 8). |
 | Soft condition | A condition that multiplies an event trigger's chance (a trait, a busy board) without being required (compare hard condition). |
 | Source class | The origin a rate modifier is grouped by: modifiers from the same source multiply, different sources add. |
@@ -166,6 +169,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Stage handler | The `IStageHandler` the stage machine calls once, with the tick, as the flight enters that handler's stage. |
 | Stage machine | `StageMachine` in the Engine: it moves the flight forward through the flight phases as the sim feed reports them, running every crossed stage's handler in order when the feed jumps several in one tick, and ignoring a report of an earlier stage. |
 | Stage manager | The player's role: they set the conditions the cabin plays out in, rather than moving people. |
+| Stall | A gate run whose log has not grown and whose processes (with any MSBuild or compiler server started during the run) have used no CPU for `-StallSeconds`, 120 by default; the gate kills it as hung (`gate: STALLED`). |
 | Stow | A cart's return to the galley as the cleanup of a pre-empted round, such as when the landing secure check ends a meal still in the aisle. |
 | Strain | A crew member's accumulated load: time on task without a break, pre-emptions, and fatigue. |
 | Studio agent | One of the project's own agents in `.claude/agents/` (game-designer, event-writer, balance-analyst, art-director, ux-reviewer, playtester, godot-reviewer, sky-explore), each owning a kind of work and, for most, a design doc. |
