@@ -15,6 +15,8 @@ The generic loop is the user-level `nextup` skill; this file supplies only what 
 
 The owner directs; the orchestrator settles every non-game technical decision itself (build config, test layout, a data shape, a name, an API surface, a tool choice, where a step's scope ends), records it in its owning doc, an ADR, or the subplan's Decisions list marked `(orchestrator)` with its reason, and names it in the next status note. The round asks the owner only a design, player-facing or public choice (a push, a GitHub post), with previews on the options and the recommended one first; when the owner asks to discuss two options, lay out their pros and cons in prose before asking again. A design question goes to its domain expert first (Agents), and the expert's recommendation rides on the option.
 
+A feature-branch verdict (an explorer's `BRANCH: feat/<name>`, or a hygiene pass's branch proposal) is always the owner's, asked with its evidence in the option, never settled by the orchestrator as a technical call (user-level `nextup` §3).
+
 ## Concurrency
 
 - Ceiling: **three** implementers, each in its own worktree: `git worktree add ../in-the-sky.wt/<slug> -b <slug> <base>` from the main checkout, then `branch.<slug>.base` and `branch.<slug>.landOn` recorded as the user-level `nextup` §3 **Base and target** says (`main` and `main` by default).
