@@ -367,7 +367,7 @@ Source: global `CLAUDE.md` (replace, don't deprecate; flag dead code); `F:\Godot
 ### No bridge override left after a drive
 <!-- rule: no-mcp-bridge-at-commit -->
 
-The godot MCP server injects its bridge through an `override.cfg` beside `project.godot` whose first line is `; godot-mcp: bridge injection, removed when the run stops`. `.git/info/exclude` hides it, so `git status` never shows it, and `stop_project` or `detach_project` removes it; a crashed or killed run can leave it behind, and a leftover one loads the bridge autoload into every later run of the project, headless test runs included. After every drive, `Test-Path <client project>/override.cfg` is false; a leftover whose first line is that marker is deleted, and one without it is the project's own and is left alone.
+The godot MCP server injects its bridge through an `override.cfg` beside `project.godot` whose first line is `; godot-mcp: bridge injection, removed when the run stops`. `.git/info/exclude` hides it, so `git status` never shows it, and `stop_project` or `detach_project` removes it. The server also removes it when the game exits, crash included, and when the server shuts down; a server killed while a session is live (an `install` run during a drive, a killed Claude session) leaves it behind, and a leftover one loads the bridge autoload into every later run of the project, headless test runs included. After every drive, `Test-Path <client project>/override.cfg` is false; a leftover whose first line is that marker is deleted, and one without it is the project's own and is left alone.
 Source: the project's `CLAUDE.md` (its note on the MCP bridge). Seen: 0 here (seeded from delve-the-dungeon).
 
 ### Hoist a side effect out of a condition

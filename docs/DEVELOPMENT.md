@@ -136,15 +136,17 @@ A scratch scene is a Debug-only scene under `src/Sky.Client/Scratch/` that shows
 
 ### The godot MCP server
 
-The `godot` MCP server is the owner's own ([github.com/leftos/godot-mcp](https://github.com/leftos/godot-mcp), checked out at `D:\godot-mcp`), registered per machine at local scope, never in a tracked `.mcp.json`. It is not needed until M2, when the client has something to drive. To set it up on a machine, run `pwsh run.ps1 install` in the godot-mcp checkout, which publishes the server to `%LOCALAPPDATA%\godot-mcp\godot-mcp.exe` and links its `godot-mcp` skill, then register it from this repo's root:
+The `godot` MCP server is the owner's own ([github.com/leftos/godot-mcp](https://github.com/leftos/godot-mcp), checked out at `D:\godot-mcp`), registered per machine at local scope, never in a tracked `.mcp.json`. It is not needed until M2, when the client has something to drive. To set it up on a machine, run `pwsh run.ps1 install` in the godot-mcp checkout, which publishes the server to `%LOCALAPPDATA%\godot-mcp\godot-mcp.exe` and links its `godot-mcp` and `godot-agent-sweep` skills, then register it from this repo's root:
 
 ```
 claude mcp add --scope local godot -e GODOT_PATH=F:/Godot/Godot_console.exe -- "C:\Users\<you>\AppData\Local\godot-mcp\godot-mcp.exe"
 ```
 
-No Node is needed. After pulling `D:\godot-mcp`, stop the Claude sessions using the server and run `install` again; it fails while a session holds the exe.
+No Node is needed; building the server needs the .NET 10 SDK, PowerShell 7 and Visual Studio Build Tools 2022 with the C++ workload. After pulling `D:\godot-mcp`, `stop_project` any game a session is driving and run `install` again: it stops every running godot-mcp server itself and prints the Claude session each one served, and each of those sessions reconnects with `/mcp`.
 
-An agent driving the client loads the `godot-mcp` skill first; every tool's arguments and edges are in `D:\godot-mcp\docs\TOOLS.md`. The server injects its bridge through an `override.cfg` beside `project.godot`, hidden by `.git/info/exclude` and removed by `stop_project` or `detach_project`; nothing is written into `project.godot`, and there is no addon in the repo. Friction with the server is filed upstream with `gh issue create -R leftos/godot-mcp`, one issue a friction.
+`install` also sweeps the agent files: every `.claude/agents/*.md` carrying a `<!-- godot-mcp tool classes: ... -->` marker gets the godot tools of those classes on its `tools:` line, committed by the sweep, so that line is never edited by hand.
+
+An agent driving the client loads the `godot-mcp` skill first; every tool's arguments and edges are in `D:\godot-mcp\docs\TOOLS.md`. Every drive passes `options: {session: "<name>"}` to `run_project` (the worktree's slug, or the agent's name in the main checkout) and the returned `session` on every later call: a session is named after its project folder by default, every checkout's client folder is `Sky.Client`, and a second live session under one name is refused. The server injects its bridge through an `override.cfg` beside `project.godot`, hidden by `.git/info/exclude` and removed by `stop_project` or `detach_project`; nothing is written into `project.godot`, and there is no addon in the repo. Screenshots, baselines and recordings land under `src/Sky.Client/.godot/godot-mcp/`, which is ignored. A headless scene tool that references a script with no `.uid` writes it and names it in `uidFilesWritten`; that file is committed with the scene. Friction with the server is filed upstream with `gh issue create -R leftos/godot-mcp`, one issue a friction.
 
 ## Layout
 
