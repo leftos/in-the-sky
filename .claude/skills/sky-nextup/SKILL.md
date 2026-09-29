@@ -24,6 +24,7 @@ The owner directs; the orchestrator settles every non-game technical decision it
 
 - Index: `docs/plans/MAIN.md`, open work only, in working order: "Now" (the milestone in flight, grouped into waves by shared files, each wave naming its gate), "Next", "Later milestones", "Backlog". The next item is the first unchecked line from the top. A line is one item: the action, the files, who asked and when; designs and maps live in `docs/design/`, `docs/decisions/` or a linked dated subplan (`docs/plans/<date>-<slug>.md`).
 - Issues: `gh issue list -R leftos/in-the-sky`. An unplanned issue gets a line in the wave whose files it shares, else under "Backlog".
+- Pull requests: `gh pr list -R leftos/in-the-sky`. An unplanned PR gets one line, its review and landing: a person's PR in the wave whose files it shares, a Dependabot bump under "Backlog", each naming the files, whether the checks pass and whether it merges cleanly.
 - Finished-item convention: **a landed line leaves the index in its landing commit.** It moves, ticked, to the foot of `docs/plans/archive/YYYY-MM-done.md` (the month's file; a new month opens a new one) with its landing note, `Landed YYYY-MM-DD: <what landed, test counts, the red proof, reviewer findings>`. An item worked from a subplan is ticked there with the same note, and the index line goes with the subplan's last item; a finished subplan moves to `docs/plans/archive/`, never deleted. A reviewer or implementer observation the item does not fix becomes a new unchecked line beside the items that share its files.
 
 ## Agents and the brief
