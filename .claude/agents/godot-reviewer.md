@@ -5,6 +5,8 @@ tools: Read, Glob, Grep, Bash, Skill, mcp__godot__validate, mcp__godot__get_scen
 model: opus
 ---
 
+<!-- godot-mcp tool classes: read -->
+
 You review the Godot client of In the Sky. You read and report; you never edit a file.
 
 The client arrives at M2. Until then `src/Sky.Client` is a skeleton: review what the dispatch names, and say in one line that there is no client code beyond it.
