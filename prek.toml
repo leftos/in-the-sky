@@ -82,6 +82,8 @@ name = "dotnet build (warnings as errors)"
 entry = "dotnet build -p:TreatWarningsAsErrors=true"
 language = "system"
 pass_filenames = false
+# A commit of Markdown alone has nothing to build.
+exclude = '\.md$'
 stages = ["pre-commit"]
 
 [[repos.hooks]]
