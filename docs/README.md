@@ -79,6 +79,8 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Facts | The read-only table an event's trigger returns, recording what it saw (who is involved, how busy crew are); `describe`, `choices` and `effects` read it. |
 | Failure threshold | The level a need must reach and hold for its sustain window before it raises that need's incident kind. |
 | Fatigue | A crew member's tiredness, 0 to 100, rising on duty: it flattens focus and speeds strain, and never affects need reads. |
+| Feature marker | `branch: feat/<name>` on a `docs/plans/MAIN.md` line; every item under it lands on the `feat/<name>` branch instead of `main` (user-level `nextup` §3, "Feature branches"). |
+| Feature PR | The draft pull request from a marker's `feat/<name>` into `main`, opened with the marker and merged with `--rebase` by `/ship` once every line under the marker is ticked. |
 | First value | A number a design doc sets so a system has a shape, marked FV or [D3], unmeasured until `balance-analyst` computes and tunes it in `docs/design/balance.md`. |
 | Fix round | One return trip of review findings to the implementer that wrote the change; an item gets two at most. |
 | Flight emulator | The standalone-mode `ISimFeed` in `Sky.Session`: it plays a scenario's phase timeline, seatbelt sign and turbulence, and its output is journaled so a replay never runs it. |

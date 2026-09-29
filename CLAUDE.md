@@ -32,7 +32,7 @@ Everything runs from the repo root through `sky.ps1` (`pwsh ./sky.ps1 help`). Ev
 - The orchestrator settles non-game technical decisions itself (build config, test layout, tool choices) and records each in the owning doc or an ADR; only design, player-facing or public choices (a push, a GitHub post) go to the owner, through `AskUserQuestion`. The owner answers design questions well with previews on the options; when they ask to discuss the tradeoffs of two options, lay out the pros and cons in prose before asking again.
 - Source and test edits go to the user-level `implementer` agent with a brief naming the worktree root, the files, the change and a proving command per step; the main session owns docs, plans, config, ADRs and commits.
 - `/nextup` runs the plan through the project profile `.claude/skills/sky-nextup/SKILL.md` (agents, reviewers, gates, the Docs map, landing); every commit follows `.claude/skills/sky-changelog-and-commit/SKILL.md`.
-- Git: commit often inside the `/nextup` loop, push at milestones, and use feature branches for major, experimental or spike work.
+- Git: commit often inside the `/nextup` loop, push at milestones, put major or experimental work under a feature marker (a `feat/<name>` branch with a draft PR, `sky-nextup` Landing), and keep throwaway spikes on `spike/<topic>`.
 - Studio agents in `.claude/agents/`, the owner directing:
   - `game-designer`: design decisions, mechanics, design reviews and specs; owns `docs/design/CONCEPT.md` and every design doc no other agent owns.
   - `event-writer`: cabin events, their Lua modules and all player-facing words; owns `docs/design/events.md`.
