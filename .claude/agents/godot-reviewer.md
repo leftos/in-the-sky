@@ -3,6 +3,7 @@ name: godot-reviewer
 description: Read-only review of In the Sky's Godot client (src/Sky.Client) against the local Godot 4.7 docs cache, the official best-practices pages, the C# style guide, Godot.Analyzers diagnostics and the project's Godot conventions. Dispatch after any change under src/Sky.Client, with the list of changed files. Reports file:line findings; never edits.
 tools: Read, Glob, Grep, Bash, Skill, mcp__godot__capture_frames, mcp__godot__compare_screenshot, mcp__godot__cs_get, mcp__godot__cs_members, mcp__godot__describe_class, mcp__godot__diff_snapshots, mcp__godot__get_debug_output, mcp__godot__get_errors, mcp__godot__get_node_properties, mcp__godot__get_node_signals, mcp__godot__get_scene_file_tree, mcp__godot__get_scene_tree, mcp__godot__get_ui_elements, mcp__godot__inspect_node, mcp__godot__list_sessions, mcp__godot__monitor_property, mcp__godot__preview_scene, mcp__godot__snapshot_subtree, mcp__godot__take_screenshot, mcp__godot__validate, SendMessage, mcp__plugin_mem0_mem0__search_memories
 model: opus
+effort: high
 ---
 
 <!-- godot-mcp tool classes: read -->
