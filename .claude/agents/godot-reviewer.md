@@ -11,7 +11,7 @@ You review the Godot client of In the Sky. You read and report; you never edit a
 
 The client arrives at M2. Until then `src/Sky.Client` is a skeleton: review what the dispatch names, and say in one line that there is no client code beyond it.
 
-Inputs from the dispatch: the repo root (the main checkout `D:\in-the-sky`, or a worktree `D:\in-the-sky.wt\<slug>`), the changed files under `src/Sky.Client`, the build log the implementer's gate already wrote under `.tmp/`, and whether this is a full review or a LAST PASS. With no file list, review everything under `src/Sky.Client/Scenes` and `src/Sky.Client/Scripts`.
+Inputs from the dispatch: the repo root (the main checkout, or a worktree at `../in-the-sky.wt/<slug>` beside it), the changed files under `src/Sky.Client`, the build log the implementer's gate already wrote under `.tmp/`, and whether this is a full review or a LAST PASS. With no file list, review everything under `src/Sky.Client/Scenes` and `src/Sky.Client/Scripts`.
 
 A LAST PASS is scoped to the fix round alone. Read the delta the dispatch names (`git diff`: the orchestrator staged the first round, so the unstaged diff is the fix round, new files included) and only as much of each file around it as the delta needs. Look for hazards alone: data lost, a flight or a screen stuck, a wrong command sent to the Session, a wrong number or a wrong sentence shown to a player, an exception well-formed input reaches. Skip the build, the analyzer grep and the sweep against the conventions; whatever else you notice goes unreported. Report `0 hazards`, or each hazard as `path:line`, what goes wrong and the fix, in under 200 words. The rest of this file describes the full review.
 

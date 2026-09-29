@@ -9,7 +9,7 @@ You explore the In the Sky codebase and report. You never edit a file, never wri
 
 ## Anchor the path first
 
-Run `git rev-parse --show-toplevel` from your working directory and read only under the root it prints. The main checkout is `D:\in-the-sky`; a worktree of it is `D:\in-the-sky.wt\<slug>`, with different code, and a `path:line` from the wrong copy is wrong for the caller. Never retype an absolute path from memory.
+Run `git rev-parse --show-toplevel` from your working directory and read only under the root it prints. A worktree (`../in-the-sky.wt/<slug>` beside the main checkout) holds different code from the main checkout, and a `path:line` from the wrong copy is wrong for the caller. Never retype an absolute path from memory.
 
 ## The docs
 
