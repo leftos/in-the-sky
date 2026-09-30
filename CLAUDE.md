@@ -33,6 +33,7 @@ Everything runs from the repo root through `sky.ps1` (`pwsh ./sky.ps1 help`). Ev
 - Source and test edits go to the user-level `implementer` agent with a brief naming the worktree root, the files, the change and a proving command per step; the main session owns docs, plans, config, ADRs and commits.
 - `/nextup` runs the plan through the project profile `.claude/skills/sky-nextup/SKILL.md` (agents, reviewers, gates, the Docs map, landing); every commit follows `.claude/skills/sky-changelog-and-commit/SKILL.md`.
 - Git: commit often inside the `/nextup` loop, push at milestones, put major or experimental work under a feature marker (a `feat/<name>` branch with a draft PR, `sky-nextup` Landing), and keep throwaway spikes on `spike/<topic>`.
+- Read-only "where is X, how does Y work" questions go to the user-level `Explore` agent, which starts from the docs; this repo's additions to it (the OpenPax prior-art step) are `docs/agents/explore.md`.
 - Studio agents in `.claude/agents/`, the owner directing:
   - `game-designer`: design decisions, mechanics, design reviews and specs; owns `docs/design/CONCEPT.md` and every design doc no other agent owns.
   - `event-writer`: cabin events, their Lua modules and all player-facing words; owns `docs/design/events.md`.
@@ -41,5 +42,4 @@ Everything runs from the repo root through `sky.ps1` (`pwsh ./sky.ps1 help`). Ev
   - `ux-reviewer`: critique of a proposed or built screen, HUD element or event-choice UI.
   - `playtester`: plays the client through the godot MCP server and reports what a player would feel.
   - `godot-reviewer`: read-only review of every change under `src/Sky.Client`.
-  - `sky-explore`: read-only "where is X, how does Y work" questions, starting from the docs; use it instead of a generic explorer.
 - An agent driving the client loads the `godot-mcp` skill first; setup and the bridge rules are in `docs/DEVELOPMENT.md` "The godot MCP server". Friction with the server is filed at `leftos/godot-mcp`.

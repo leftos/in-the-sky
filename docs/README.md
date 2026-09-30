@@ -176,7 +176,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Stall | A gate run whose log has not grown and whose processes (with any MSBuild or compiler server started during the run) have used no CPU for `-StallSeconds`, 120 by default; the gate kills it as hung (`gate: STALLED`). |
 | Stow | A cart's return to the galley as the cleanup of a pre-empted round, such as when the landing secure check ends a meal still in the aisle. |
 | Strain | A crew member's accumulated load: time on task without a break, pre-emptions, and fatigue. |
-| Studio agent | One of the project's own agents in `.claude/agents/` (game-designer, event-writer, balance-analyst, art-director, ux-reviewer, playtester, godot-reviewer, sky-explore), each owning a kind of work and, for most, a design doc. |
+| Studio agent | One of the project's own agents in `.claude/agents/` (game-designer, event-writer, balance-analyst, art-director, ux-reviewer, playtester, godot-reviewer), each owning a kind of work and, for most, a design doc. |
 | Sustain gate | `SustainGate`, one per passenger and need: it raises a failure once, on the tick a need has held at or above its failure threshold for its sustain window, then stays disarmed until the need drops below the threshold minus the re-arm margin (30 in M1). |
 | Sustain window | How long a need must stay past its threshold before it counts as a failure, so a spike at spawn has no consequence. |
 | Sweep | Running the same scenario over many seeds (a seed sweep) and collecting one balance CSV row per seed. |
