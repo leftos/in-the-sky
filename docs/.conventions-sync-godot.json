@@ -129,8 +129,8 @@
       "user": "4813a7130060f85c"
     },
     "no-mcp-bridge-at-commit": {
-      "repo": "48e1c21c7d299f80",
-      "user": "48e1c21c7d299f80"
+      "repo": "8cd898eb0abe1339",
+      "user": "8cd898eb0abe1339"
     },
     "no-underscore-private-fields": {
       "repo": "6c60ddfbe4d59951",
@@ -249,5 +249,5 @@
       "user": "6edebf4c9ed57ef7"
     }
   },
-  "user_revision": 13
+  "user_revision": 15
 }

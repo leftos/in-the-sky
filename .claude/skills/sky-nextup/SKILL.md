@@ -5,11 +5,13 @@ description: Profile for the user-level `nextup` skill in the In the Sky repo, l
 
 # In the Sky profile for `nextup`
 
-The generic loop is the user-level `nextup` skill; this file supplies only what is In the Sky's. Siblings: none, one repository. Hotspots: none named yet. Terms (wave, slice, landing note, fix round, red proof) are in the glossary in `docs/README.md`.
+The generic loop is the user-level `nextup` skill; this file supplies only what is In the Sky's. Hotspots: none named yet. Terms (wave, slice, landing note, fix round, red proof) are in the glossary in `docs/README.md`.
+
+siblings: none
 
 ## Pre-loop hook
 
-**Trade Godot lessons with the other projects.** Run the user-level `godot-conventions-sync` skill once, before the index is read. When it changed anything, `docs/GODOT_CONVENTIONS.md` and `docs/.godot-conventions-sync.json` land on `main` as their own `docs:` commit (`git commit -F .tmp/commit-msg.txt -- <the two paths>`) before the first worktree is cut, since an implementer reads the conventions in its worktree. The skill commits its side of `~/.claude` itself.
+**Trade Godot and .NET lessons with the other projects.** Run the user-level `conventions-sync` skill once with `--stack godot,dotnet`, before the index is read. When it changed anything, `docs/GODOT_CONVENTIONS.md`, `docs/DOTNET_CONVENTIONS.md` and their `docs/.conventions-sync-<stack>.json` ledgers land on `main` as their own `docs:` commit (`git commit -F .tmp/commit-msg.txt -- <those four paths>`) before the first worktree is cut, since an implementer reads the conventions in its worktree. The skill commits its side of `~/.claude` itself.
 
 **Check the driving docs against godot-mcp.** Run the user-level `godot-mcp-docs-sync` skill once, after the conventions sync and before the index is read. Its driving docs: `docs/DEVELOPMENT.md` ("The Godot client", with "Scratch scenes" and "The godot MCP server"), `CLAUDE.md` (its godot MCP lines), the body of every agent file under `.claude/agents/` that names a godot tool, and `docs/GODOT_CONVENTIONS.md` (the `no-mcp-bridge-at-commit` rule). When it changed anything, the docs it edited and `docs/.godot-mcp-sync.json` land on `main` as their own `docs:` commit (`git commit -F .tmp/commit-msg.txt -- <those paths>`) before the first worktree is cut, since an implementer drives the client by them.
 
