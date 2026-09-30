@@ -15,7 +15,7 @@ A passenger and crew cabin simulator: the player is the stage manager of an airl
 
 ## Commands
 
-Everything runs from the repo root through `sky.ps1` (`pwsh ./sky.ps1 help`). Every build, test and format gate runs through `tools/gate.ps1` with one log per gate under `.tmp/`, the ceilings `docs/DEVELOPMENT.md` lists and a heavy or light slot, as that page sorts them. `pwsh tools/test-all.ps1` is the whole gate: the build alone, then the tests, the format check, the Python checks, the provenance check and the 150-character line check side by side, each command under the gate, one table, one exit code. The gate is a copy of `~/.claude/tools/gate/gate.ps1`, which `sync-gate.ps1` keeps in step: change it there, never here.
+Everything runs from the repo root through `sky.ps1` (`pwsh ./sky.ps1 help`). Every build, test and format gate runs through `tools/gate.ps1` with one log per gate under `.tmp/`, the ceilings `docs/DEVELOPMENT.md` lists and a heavy or light slot, as that page sorts them. `pwsh tools/test-all.ps1` is the whole gate: the build alone, then the tests, the format check, the Python checks, the provenance check and the 150-character line check side by side, each command under the gate, one table, one exit code. `tools/gate.ps1` is a launcher for `~/.claude/tools/gate/gate.ps1`: change the gate there, never here.
 
 ## Non-negotiables
 
