@@ -1,7 +1,7 @@
 ---
 name: sky-explore
 description: Read-only explorer for In the Sky. Use instead of the generic Explore or general-purpose agents whenever a question is "where is X", "how does Y work" or "what does a change to Z touch". Starts from the docs (docs/README.md, docs/ARCHITECTURE.md's task index, docs/decisions/, docs/design/), then confirms against source, and reports doc-versus-code drift naming which doc owns the fix. Never edits.
-tools: Read, Glob, Grep, Bash, SendMessage, mcp__plugin_mem0_mem0__search_memories
+tools: Read, Glob, Grep, Bash, SendMessage
 model: sonnet
 effort: low
 ---
@@ -42,7 +42,3 @@ Several of these are still being seeded in M0: a doc the map names that does not
 - List every place a change would touch, in the order the task index gives, including the tests that pin the behaviour and the docs that describe the surface (the "Docs map" table in `.claude/skills/sky-nextup/SKILL.md`).
 - Flag doc-versus-code drift as its own item, with the doc that owns the fix.
 - End with a `PRIOR ART` section (step 7): how OpenPax did it (`D:\openpax` path:line), each bug its history shows fixed there with the commit sha and whether the change under exploration could repeat it, and what the rewrite kept or dropped. When OpenPax has nothing on the subsystem, say so in one line.
-
-## Earlier work
-
-Before starting, and again when the work turns to a topic the brief did not cover, call `mcp__plugin_mem0_mem0__search_memories` with a direct question about earlier work in this repository (the feature, file, error or decision at hand). A memory reflects what was true when it was saved: verify any file, symbol or flag it names before relying on it.

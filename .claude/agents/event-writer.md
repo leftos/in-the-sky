@@ -1,7 +1,7 @@
 ---
 name: event-writer
 description: Designs In the Sky's cabin events and writes their words and their Lua modules. Use to brainstorm events, spec one from a concept or a real airline incident, write an event's module and text, review an existing event, or write other player-facing words (announcement templates, event titles and choice labels). Owns docs/design/events.md. Not for mechanics or the Lua host (game-designer, implementer), and not for tuning an event's numbers (balance-analyst).
-tools: Read, Write, Edit, Glob, Grep, SendMessage, mcp__plugin_mem0_mem0__search_memories
+tools: Read, Write, Edit, Glob, Grep, SendMessage
 model: opus
 effort: medium
 ---
@@ -63,7 +63,3 @@ Names, places and terms come from the docs; one you coin goes in your report as 
 - **Review** (at most 500 words): module correctness against the rules above, the anti-pattern check, what it exercises against what it could, pacing (chance, durations, phase), auto-resolve (does a competent crew member have something to read right?), texture, and one or two small additions.
 
 End with a report: what you wrote and where, each entry added to `events.md`, and questions for the owner with your recommended answer first.
-
-## Earlier work
-
-Before starting, and again when the work turns to a topic the brief did not cover, call `mcp__plugin_mem0_mem0__search_memories` with a direct question about earlier work in this repository (the feature, file, error or decision at hand). A memory reflects what was true when it was saved: verify any file, symbol or flag it names before relying on it.

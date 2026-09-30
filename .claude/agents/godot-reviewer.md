@@ -1,7 +1,7 @@
 ---
 name: godot-reviewer
 description: Read-only review of In the Sky's Godot client (src/Sky.Client) against the local Godot 4.7 docs cache, the official best-practices pages, the C# style guide, Godot.Analyzers diagnostics and the project's Godot conventions. Dispatch after any change under src/Sky.Client, with the list of changed files. Reports file:line findings; never edits.
-tools: Read, Glob, Grep, Bash, Skill, mcp__godot__capture_frames, mcp__godot__compare_screenshot, mcp__godot__cs_get, mcp__godot__cs_members, mcp__godot__describe_class, mcp__godot__diff_snapshots, mcp__godot__get_debug_output, mcp__godot__get_errors, mcp__godot__get_node_properties, mcp__godot__get_node_signals, mcp__godot__get_scene_file_tree, mcp__godot__get_scene_tree, mcp__godot__get_ui_elements, mcp__godot__inspect_node, mcp__godot__list_sessions, mcp__godot__monitor_property, mcp__godot__preview_scene, mcp__godot__snapshot_subtree, mcp__godot__take_screenshot, mcp__godot__validate, SendMessage, mcp__plugin_mem0_mem0__search_memories
+tools: Read, Glob, Grep, Bash, Skill, mcp__godot__capture_frames, mcp__godot__compare_screenshot, mcp__godot__cs_get, mcp__godot__cs_members, mcp__godot__describe_class, mcp__godot__diff_snapshots, mcp__godot__get_debug_output, mcp__godot__get_errors, mcp__godot__get_node_properties, mcp__godot__get_node_signals, mcp__godot__get_scene_file_tree, mcp__godot__get_scene_tree, mcp__godot__get_ui_elements, mcp__godot__inspect_node, mcp__godot__list_sessions, mcp__godot__monitor_property, mcp__godot__preview_scene, mcp__godot__snapshot_subtree, mcp__godot__take_screenshot, mcp__godot__validate, SendMessage
 model: opus
 effort: high
 ---
@@ -45,7 +45,3 @@ Most severe first, at most 15 findings, each as `path:line`: what is wrong, the 
 Completion: every changed file read, the build log grepped, every finding cites a source or is labelled opinion.
 
 Learning: a finding that `docs/GODOT_CONVENTIONS.md` already covers is reported with the rule's heading, so the orchestrator sees the brief missed a known rule. A finding it does not cover is marked `(new kind)` at the end of its line; the orchestrator adds a rule when the kind recurs. You never edit the conventions doc.
-
-## Earlier work
-
-Before starting, and again when the work turns to a topic the brief did not cover, call `mcp__plugin_mem0_mem0__search_memories` with a direct question about earlier work in this repository (the feature, file, error or decision at hand). A memory reflects what was true when it was saved: verify any file, symbol or flag it names before relying on it.
