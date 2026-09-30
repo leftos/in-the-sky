@@ -35,7 +35,7 @@ A feature-branch verdict (an explorer's `BRANCH: feat/<name>`, or a hygiene pass
 
 ## Agents and the brief
 
-- Domain experts (`.claude/agents/`), each consulted before the brief when the item's kind is theirs; their open questions go into the interview:
+- Domain experts (`.claude/agents/`, or user-level with this repo's overlay in `docs/agents/<agent>.md`), each consulted before the brief when the item's kind is theirs; their open questions go into the interview:
   - `game-designer`: a mechanic, system or pillar question `docs/design/` leaves open, a design item's draft, or a design-lens review of a spec or built feature.
   - `balance-analyst`: any number a decision rests on (a need rate, threshold, lever default, event chance, crew count) is its `Sky.Sim` sweep, never a guess; also the M1 acceptance numbers.
   - `event-writer`: a cabin event, its Lua module, or any player-facing words (event titles, choice labels, announcements), which the brief then carries verbatim.
@@ -77,7 +77,7 @@ Match the diff's paths and the implementer's `SURFACES` line against this table 
 | A Godot client rule | `docs/GODOT_CONVENTIONS.md` |
 | A new term | the glossary in `docs/README.md`, in the commit that first uses it |
 | A new or moved doc | `docs/README.md`, and this table when the doc owns a surface |
-| A working rule for agents | `CLAUDE.md`, `.claude/agents/`, `.claude/skills/` |
+| A working rule for agents | `CLAUDE.md`, `.claude/agents/`, `.claude/skills/`, the user-level agents' overlays under `docs/agents/` |
 | A user-visible change | nothing before the first release (`sky-changelog-and-commit`) |
 
 ## Landing

@@ -34,7 +34,7 @@ Everything runs from the repo root through `sky.ps1` (`pwsh ./sky.ps1 help`). Ev
 - `/nextup` runs the plan through the project profile `.claude/skills/sky-nextup/SKILL.md` (agents, reviewers, gates, the Docs map, landing); every commit follows `.claude/skills/sky-changelog-and-commit/SKILL.md`.
 - Git: commit often inside the `/nextup` loop, push at milestones, put major or experimental work under a feature marker (a `feat/<name>` branch with a draft PR, `sky-nextup` Landing), and keep throwaway spikes on `spike/<topic>`.
 - Read-only "where is X, how does Y work" questions go to the user-level `Explore` agent, which starts from the docs; this repo's additions to it (the OpenPax prior-art step) are `docs/agents/explore.md`.
-- Studio agents in `.claude/agents/`, or user-level with this repo's overlay in `docs/agents/<agent>.md` (`playtester`, `godot-reviewer`), the owner directing:
+- Studio agents in `.claude/agents/`, or user-level with this repo's overlay in `docs/agents/<agent>.md` (`game-designer`, `balance-analyst`, `art-director`, `playtester`, `godot-reviewer`), the owner directing:
   - `game-designer`: design decisions, mechanics, design reviews and specs; owns `docs/design/CONCEPT.md` and every design doc no other agent owns.
   - `event-writer`: cabin events, their Lua modules and all player-facing words; owns `docs/design/events.md`.
   - `balance-analyst`: runs `Sky.Sim` seed sweeps and reads the balance CSV; owns `docs/design/balance.md`.
