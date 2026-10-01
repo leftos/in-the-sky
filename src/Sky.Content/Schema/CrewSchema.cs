@@ -25,11 +25,15 @@ public sealed record CrewFile(
 /// <param name="Trait">The id of their one crew trait, or null for none; the field is required either way.</param>
 public sealed record CrewMemberSpec(string Id, double Competence, double Empathy, double StartingFatigue, string? Trait);
 
-/// <summary>One crew trait: factors on the crew member's focus, strain, service and relief, each 1 when the trait leaves it alone.</summary>
+/// <summary>One crew trait: the zones it carries free of covering strain, and factors on the crew member's focus, strain,
+/// service and relief, each 1 when the trait leaves it alone.</summary>
 public sealed record CrewTraitSpec
 {
     /// <summary>Gets the trait's content id.</summary>
     public required string Id { get; init; }
+
+    /// <summary>Gets the number of zones the trait covers free of covering strain, 0 for a trait that carries none.</summary>
+    public int FreeZones { get; init; }
 
     /// <summary>Gets the factor on the fatigue term in focus.</summary>
     [JsonInclude]

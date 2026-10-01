@@ -1,0 +1,22 @@
+{
+  "traits": [
+    { "id": "steady", "focus_fatigue_weight_factor": 0.5, "preemption_strain_factor": 0.5 },
+    { "id": "brisk", "service_time_factor": 0.85, "on_task_strain_factor": 1.15 },
+    { "id": "warm", "unease_relief_factor": 1.4, "dwell_factor": 1.5 },
+    { "id": "short_fuse", "focus_factor_over_redline": 0.7, "preemption_strain_factor": 1.5 },
+    { "id": "floater", "free_zones": 1, "dwell_factor": 0.8, "unease_relief_factor": 0.85 }
+  ],
+  "roster": [
+    { "id": "purser", "competence": 0.85, "empathy": 0.7, "starting_fatigue": 20, "trait": "steady" },
+    { "id": "fa2", "competence": 0.7, "empathy": 0.4, "starting_fatigue": 30, "trait": "brisk" },
+    { "id": "fa3", "competence": 0.6, "empathy": 0.8, "starting_fatigue": 15, "trait": "warm" },
+    { "id": "fa4", "competence": 0.45, "empathy": 0.3, "starting_fatigue": 35, "trait": "short_fuse" },
+    { "id": "fa5", "competence": 0.75, "empathy": 0.5, "starting_fatigue": 10, "trait": null },
+    { "id": "fa6", "competence": 0.35, "empathy": 0.75, "starting_fatigue": 25, "trait": "warm" }
+  ],
+  "fatigue": { "rise_per_hour": 6, "over_redline_factor": 2, "break_fall_per_minute": 0.2 },
+  "service": {
+    "cart_speed_factor": 0.5, "drinks_seconds_per_row": 40, "meal_seconds_per_row": 70, "sign_on_return_minutes": 10,
+    "hand_service_lead_minutes": 3, "hand_drinks_seconds_per_row": 60, "hand_meal_seconds_per_row": 120
+  }
+}

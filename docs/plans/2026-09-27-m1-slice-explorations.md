@@ -101,7 +101,7 @@ F4 needs F3a, F3b and C3 (landed), and runs after the in-flight F3b follow-up fi
 
 **Gap: the `floater` field.** crew.md line 82 says the Floater trait's content field is the number of zones it carries free (1); `CrewTraitSpec` has no such field and nothing in `src/` names it. X2 adds it to `CrewSchema.cs`, a file the X2 line does not list.
 
-**Numbers.** All in crew.md and mirrored in `balance.md` 2.16 to 2.22: the roster (lines 167-174), task priorities (109-127), fatigue and service timings (152, 262-276), the reference timeline (308-326), the six- and four-crew zone tables (29-51). Nothing missing.
+**Numbers.** All in crew.md and mirrored in `balance.md` 2.16 to 2.22: the roster (lines 167-174), task priorities (109-127), fatigue and service timings (152, 262-276), the reference timeline (308-326), the six- and four-crew zone tables (29-51). Missing: the reference flight's `lighting_plan` (its dimmed periods), which no doc gives a number for (found by X2's implementer, 2026-10-01; X2b waits on it).
 
 **Variants.** The X2 line names `service-back-to-front`, `one-lav-locked`, `lights-up`, `four-crew` and a covering variant; plan line 9's T-rulings also give X2 `gate-delay-closed.json` (60 minutes, outlets closed) and `reference.json` at 0 minutes with outlets open.
 

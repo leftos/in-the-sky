@@ -1,8 +1,8 @@
 namespace Sky.Content.Validation;
 
 /// <summary>
-/// Runs every content validator in a fixed order: the layouts, then the needs, then the scenarios, then the thought
-/// catalogue.
+/// Runs every content validator in a fixed order: the layouts, then the needs, then the crew, then the scenarios, then the
+/// thought catalogue.
 /// </summary>
 public static class ContentValidator
 {
@@ -10,6 +10,7 @@ public static class ContentValidator
     [
         new LayoutValidator(),
         new NeedsValidator(),
+        new CrewValidator(),
         new ScenarioValidator(),
         new ThoughtCatalogueValidator(),
     ];

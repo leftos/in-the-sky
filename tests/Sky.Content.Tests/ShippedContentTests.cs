@@ -1,3 +1,4 @@
+using Sky.Content.Schema;
 using Sky.Content.Validation;
 using Sky.Engine.Cabin;
 using Sky.Engine.Manifest;
@@ -8,8 +9,8 @@ namespace Sky.Content.Tests;
 /// <summary>
 /// Pins the shipped content under <c>src/Sky.Content/Data</c> against the docs it was written from: the hybrid tree loads
 /// and validates (R10), the reference layout is OD2's 180 seats in two classes, its <see cref="LayoutAscii"/> dump matches
-/// the pinned file, and the shipped manifest rules book no more than the layout's seats over seeds 1 to 20
-/// (<c>passengers.md</c> section 5).
+/// the pinned file, the shipped crew carries the Floater trait's one free zone (<c>crew.md</c>), and the shipped manifest
+/// rules book no more than the layout's seats over seeds 1 to 20 (<c>passengers.md</c> section 5).
 /// </summary>
 public sealed class ShippedContentTests
 {
@@ -81,6 +82,17 @@ public sealed class ShippedContentTests
     }
 
     private static int SeatsIn(IEnumerable<CabinRow> rows) => rows.Sum(row => row.Groups.Sum(group => group.Seats.Count));
+
+    /// <summary>The shipped crew's <c>floater</c> trait carries one zone free of covering strain (<c>crew.md</c> line 82).</summary>
+    [Fact]
+    public void ShippedFloaterTraitCarriesOneFreeZone()
+    {
+        using var tree = HybridTree.Create();
+
+        CrewFile crew = tree.Load().Crew;
+
+        Assert.Equal(1, crew.Traits.Single(trait => trait.Id == "floater").FreeZones);
+    }
 
     /// <summary>Reads the pinned dump, its line endings normalised to LF and its closing newline dropped.</summary>
     /// <returns>The dump's text, as <see cref="LayoutAscii.Render"/> writes it.</returns>
