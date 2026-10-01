@@ -55,7 +55,7 @@ The phases are the stage machine's stages (M1 step F1), in order. An event names
 | `taxi-out` | Belted, sign on, crew finishing the secure check | Nervous flyers before takeoff. |
 | `takeoff` | Crew seated | **Named by no M1 event**: a choice that needs crew cannot be worked while crew are seated. |
 | `climb` | Sign on, then off; Unease peaks for nervous flyers | Nervous flyers, the first requests once the sign goes off. |
-| `cruise` | The drinks round and meal, then quiet cruise: lights down, sleepers, lav traffic | Most events. Service running or not is a trigger condition, not a phase. |
+| `cruise` | The drinks round, a dimmed stretch of about 20 minutes, the meal, then about 7 dimmed minutes before descent: sleepers and lav traffic in the dimmed stretches, carts in the aisle between them | Most events. Service running or not is a trigger condition, not a phase. |
 | `descent` | Cabin secure, the last lav rush; Unease raised here and left unrelieved runs into the "end" of peak-end (the last 20 minutes before a passenger leaves the aircraft) | Worries about arrival, children's ears, the last requests. |
 | `landing` | Crew seated | **Named by no M1 event**, as for `takeoff`. |
 | `taxi-in` | Belted, some passengers standing early | Rare; nothing in M1. |
@@ -63,7 +63,7 @@ The phases are the stage machine's stages (M1 step F1), in order. An event names
 
 `pre-boarding` and `done` have no passengers aboard, so no event names them.
 
-CONCEPT section 3 splits cruise into "cruise service" and "quiet cruise"; the engine has one `cruise` stage, so an event that belongs to one half reads whether a service round is running (section 7).
+CONCEPT section 3 splits cruise into "cruise service" and "quiet cruise"; the engine has one `cruise` stage, so an event that belongs to one half reads whether a service round is running (section 7). Quiet cruise is not one long stretch: on the reference flight the cabin is dimmed twice, from the end of the drinks round to the meal and from the end of the meal to descent (`docs/design/crew.md`, the reference lighting plan). The dimmed windows are fixed minutes, not tied to the rounds, so a long round can still be running after the lights go down; `ctx` has no lighting read, and an event that needs a dimmed cabin reads sleepers (`ctx:asleep`) instead.
 
 ## 3. Pacing
 

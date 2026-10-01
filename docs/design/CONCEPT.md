@@ -44,7 +44,7 @@ Ruled: accepted as drafted.
 | Boarding | Passengers find seats, bins fill, aisle blocks | Boarding order policy, when to call bins full and gate-check | On-time doors (cabin ready) |
 | Taxi, takeoff, climb | Belted, seatbelt sign on, Unease peaks for nervous flyers | Announcement policy, which crew check on whom after the sign goes off | Experience (nervous flyers' peak) |
 | Cruise service | Carts in the aisle, call buttons, first lav wave | Service order and direction, when to pause for turbulence, call-button priority | Experience spread, crew strain |
-| Quiet cruise | Lights down, sleepers, lav traffic, events | Lighting plan, check-in cadence, event choices | Incidents handled or missed |
+| Quiet cruise | Between and after the rounds: lights down in two windows (after the drinks, and after the meal until descent), sleepers, lav traffic, events | Lighting plan, check-in cadence, event choices | Incidents handled or missed |
 | Descent, landing | Cabin secure, last lav rush, collection | When to call cabin secure, last service cutoff | Incidents, experience (the end of it) |
 | Deboarding | Aisle stands up at once, bins empty | Deboarding order, assistance passengers | On-time doors (deboard time), experience end |
 | Report | Score and moments | Read it; carry lessons into the next flight's staffing and policies | |

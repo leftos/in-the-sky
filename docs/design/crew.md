@@ -316,13 +316,18 @@ A day departure; sim clock times are local at origin (FV). T is time from boardi
 | 0:45 | 11:15 | climb | on, off at 0:56 | Released at sign off; check-in walks posted |
 | 1:01 | 11:31 | climb | off | Drinks round starts (sign off +5) |
 | 1:05 | 11:35 | cruise | off | Service, call buttons, lav checks, breaks |
+| 1:15 | 11:45 | cruise | off | Cabin dimmed (sign off +19), after the drinks round |
+| 1:35 | 12:05 | cruise | off | Lights up (sign off +39) for the meal |
 | 1:36 | 12:06 | cruise | off | Meal starts (sign off +40) |
-| 2:05 | 12:35 | descent | off | A running round serves on without catch-ups |
+| 1:58 | 12:28 | cruise | off | Cabin dimmed (sign off +62), after the meal |
+| 2:05 | 12:35 | descent | off | Lights up (sign off +69); a running round serves on without catch-ups |
 | 2:12 | 12:42 | descent | on | Landing secure checks posted; any cart still out is stowed |
 | 2:24 | 12:54 | landing | on | Seated |
 | 2:25 | 12:55 | taxi-in | on | Seated until stop |
 | 2:31 | 13:01 | deboarding | off | Doors open; purser on door station; bin help |
 | about 2:44 | 13:14 | done | | Last passenger off; the target is D3's formula |
+
+**The reference lighting plan.** The cabin is dimmed in cruise between the service rounds, in two windows, and lit everywhere else: from the end of the drinks round to just before the meal, and from the end of the meal to descent. In the scenario's `lighting_plan`, which counts sim minutes from the seatbelt sign first going off after takeoff (T 0:56), they are 19 to 39 and 62 to 69. The windows are fixed minutes, not tied to the rounds: a round that runs long (the one-cart meal below) is still out when the lights go down, and the dimmed reach and the cart then work against each other, which is a cost the staffing lever should show rather than hide.
 
 Expected round lengths, to be measured: with two carts the drinks round runs about 12 min and the meal about 20; with one cart, about 21 and 35, which runs the four-crew meal past descent start into the landing check. Turbulence comes from the flight emulator's `feed` stream (H1), with its first chance set in D3.
 
