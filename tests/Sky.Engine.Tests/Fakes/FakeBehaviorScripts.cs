@@ -6,7 +6,8 @@ using Sky.Engine.Randomness;
 namespace Sky.Engine.Tests.Fakes;
 
 /// <summary>
-/// The behaviour port in plain C#, with no Lua: each activity scores what the test set for it (0 when unset), every scoring
+/// The behaviour port in plain C#, with no Lua: each activity scores what the test set for it (0 when unset) or, when
+/// <see cref="Scorer"/> is set, what that function gives it; every scoring
 /// call's facts are recorded, and no event is loaded.
 /// </summary>
 internal sealed class FakeBehaviorScripts : IBehaviorScripts
@@ -21,6 +22,9 @@ internal sealed class FakeBehaviorScripts : IBehaviorScripts
     /// <summary>Gets the facts of every <see cref="ScoreActivities"/> call, in call order; each holds the live need set it was given.</summary>
     public IReadOnlyList<PassengerFacts> ScoredFacts => scoredFacts;
 
+    /// <summary>Gets or sets a function scoring each candidate from the facts; when set, the scores <see cref="SetScore"/> set are ignored.</summary>
+    public Func<PassengerFacts, ActivityId, double>? Scorer { get; set; }
+
     /// <summary>Sets the score an activity gets from every later call.</summary>
     /// <param name="activity">The activity.</param>
     /// <param name="score">Its score, at least 0.</param>
@@ -32,7 +36,7 @@ internal sealed class FakeBehaviorScripts : IBehaviorScripts
         scoredFacts.Add(facts);
         for (int index = 0; index < candidates.Length; index++)
         {
-            scores[index] = activityScores.GetValueOrDefault(candidates[index]);
+            scores[index] = Scorer is null ? activityScores.GetValueOrDefault(candidates[index]) : Scorer(facts, candidates[index]);
         }
     }
 

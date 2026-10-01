@@ -34,6 +34,9 @@ public sealed class Passenger(ManifestPassenger manifest, NeedSet needs, bool la
     /// <summary>Gets whether the passenger has left the aircraft at the end of the flight; one who has not yet boarded is not off.</summary>
     public bool IsOff { get; internal set; }
 
+    /// <summary>Gets the activity the passenger is on: the rules' initial one until their first decision, then the last one chosen.</summary>
+    public ActivityId CurrentActivity { get; internal set; }
+
     /// <summary>Gets whether the passenger carries the late-and-fed-up Unease modifier.</summary>
     public bool LateAndFedUp { get; internal set; } = lateAndFedUp;
 }

@@ -55,6 +55,7 @@ public sealed class FlightTests
         [nameof(FlightSetup.StartingNeeds)] = setup => setup with { StartingNeeds = null! },
         [nameof(FlightSetup.Conditions)] = setup => setup with { Conditions = null! },
         [nameof(FlightSetup.Traits)] = setup => setup with { Traits = null! },
+        [nameof(FlightSetup.Decisions)] = setup => setup with { Decisions = null! },
     };
 
     /// <summary>Each step advances the tick by the count it was given.</summary>
@@ -188,6 +189,7 @@ public sealed class FlightTests
     [InlineData(nameof(FlightSetup.StartingNeeds))]
     [InlineData(nameof(FlightSetup.Conditions))]
     [InlineData(nameof(FlightSetup.Traits))]
+    [InlineData(nameof(FlightSetup.Decisions))]
     public void ConstructionRefusesAMissingInput(string input)
     {
         FlightSetup setup = WithoutInput[input](Setup(StartingNeedsTests.Manifest(1)));
@@ -228,7 +230,8 @@ public sealed class FlightTests
             StartingNeeds = StartingNeedsTests.Rules(),
             Conditions = StartingNeedsTests.Conditions(0, true),
             Traits = StartingNeedsTests.Traits(),
-            Movement = BoardingFlowTests.Rules(),
+            Movement = TestFlights.Rules(),
+            Decisions = TestFlights.Decisions(),
         };
 
     /// <summary>Builds a flight and seats every passenger in their booked seat, as boarding would.</summary>

@@ -9,41 +9,17 @@ using Sky.Engine.Randomness;
 using Sky.Engine.Tests.Cabin;
 using Sky.Engine.Tests.Fakes;
 using Sky.Engine.Tests.Passengers;
+using static Sky.Engine.Tests.Flight.TestFlights;
 
 namespace Sky.Engine.Tests.Flight;
 
 /// <summary>Proves boarding and deboarding: the order passengers enter in, the blocking in the aisle, and that everyone sits and leaves.</summary>
 public sealed class BoardingFlowTests
 {
-    /// <summary>The rows of the test cabin seated in business, at the front.</summary>
-    private const int BusinessRows = 2;
-
-    /// <summary>The tick the feed moves to boarding.</summary>
-    private const long BoardingTick = 10;
-
-    /// <summary>The tick the feed moves to deboarding, well after every passenger is seated.</summary>
-    private const long DeboardingTick = 20_000;
-
-    /// <summary>The most ticks a test runs before it gives up on the condition it waits for.</summary>
-    private const long TickLimit = 60_000;
-
     private const ulong Seed = 9;
 
     /// <summary>A priority above every movement action's.</summary>
     private const int BusyPriority = 100;
-
-    private static readonly NodeCapacities Capacities = new()
-    {
-        AisleSlot = 1,
-        Seat = 1,
-        Door = 2,
-        Lav = 1,
-        LavQueue = 3,
-        Galley = 2,
-    };
-
-    /// <summary>Booking sizes, cycled along each row.</summary>
-    private static readonly int[] BookingSizes = [2, 1, 3];
 
     private static readonly Dictionary<string, Func<MovementRules, MovementRules>> BadRules = new()
     {
@@ -538,36 +514,6 @@ public sealed class BoardingFlowTests
     private static List<int> StowingTickEnds(IReadOnlyList<MoverState> tickEnds) =>
         [.. tickEnds.Select((state, tick) => (state, tick)).Where(entry => entry.state == MoverState.Stowing).Select(entry => entry.tick)];
 
-    /// <summary>The movement numbers the tests use: stowing 8 to 24 ticks, retrieval 4 to 12, a 4-tick squeeze, four-row zones.</summary>
-    /// <returns>The rules.</returns>
-    internal static MovementRules Rules() =>
-        new()
-        {
-            StowTicks = new IntRange(8, 24),
-            RetrievalTicks = new IntRange(4, 12),
-            SqueezeExtraTicks = 4,
-            OccupiedSeatCrossTicks = 4,
-            EconomyZoneRows = 4,
-        };
-
-    /// <summary>
-    /// Builds the ten-row test cabin: rows 0 and 1 are 2-2 business rows, rows 2 to 9 are 3-3 economy rows, one aisle at 74
-    /// inches, a forward door at row 0 and a galley behind row 9.
-    /// </summary>
-    /// <returns>The layout.</returns>
-    internal static CabinLayout TenRowLayout()
-    {
-        var business = new CabinRow(36, [NavGraphBuilderTests.Group(6, 26, "A", "C"), NavGraphBuilderTests.Group(90, 26, "D", "F")]);
-        var economy = new CabinRow(31, [NavGraphBuilderTests.Group(4, 18, "A", "B", "C"), NavGraphBuilderTests.Group(90, 18, "D", "E", "F")]);
-        return new CabinLayout(
-            "ten-row",
-            148,
-            [.. Enumerable.Repeat(business, BusinessRows), .. Enumerable.Repeat(economy, 8)],
-            [new Aisle(74, 20)],
-            [new CabinFixture("door-1L", FixtureKind.Door, 0, 0, 30), new CabinFixture("galley-aft", FixtureKind.Galley, 9, 0, 30)]
-        );
-    }
-
     /// <summary>The ten-row cabin with row 9's seat A in a group of its own, cut off from the aisle by the group B-C beside it.</summary>
     private static CabinLayout CutOffSeatLayout()
     {
@@ -578,58 +524,6 @@ public sealed class BoardingFlowTests
         );
         return layout with { Rows = [.. layout.Rows.Take(9), cutOff] };
     }
-
-    private static NavGraph Graph() => NavGraphBuilder.Build(TenRowLayout(), 10);
-
-    /// <summary>A manifest filling every seat, each row split into bookings of 2, 1 and 3 in turn, no booking spanning two rows.</summary>
-    private static PassengerManifest FullManifest()
-    {
-        NavGraph graph = Graph();
-        List<int[]> bookings = [];
-        foreach (IGrouping<int, int> row in graph.SeatNodes.GroupBy(seat => graph.Nodes[seat].RowIndex))
-        {
-            int[] seats = [.. row];
-            int taken = 0;
-            for (int turn = 0; taken < seats.Length; turn++)
-            {
-                int size = Math.Min(BookingSizes[turn % BookingSizes.Length], seats.Length - taken);
-                bookings.Add(seats[taken..(taken + size)]);
-                taken += size;
-            }
-        }
-
-        return ManifestOf(graph, bookings);
-    }
-
-    /// <summary>A manifest of the given bookings, each a list of seat nodes; passengers in rows 0 and 1 sit in business.</summary>
-    private static PassengerManifest ManifestOf(NavGraph graph, IReadOnlyList<int[]> bookingSeats)
-    {
-        List<ManifestPassenger> passengers = [];
-        List<Booking> bookings = [];
-        foreach (int[] seats in bookingSeats)
-        {
-            SeatClass seatClass = graph.Nodes[seats[0]].RowIndex < BusinessRows ? SeatClass.Business : SeatClass.Economy;
-            int[] ids = [.. Enumerable.Range(passengers.Count, seats.Length)];
-            passengers.AddRange(seats.Select((seat, index) => Passenger(ids[index], bookings.Count, seatClass, seat)));
-            bookings.Add(new Booking(bookings.Count, TripPurpose.Leisure, seatClass, 390, ids));
-        }
-
-        return new PassengerManifest(passengers, bookings);
-    }
-
-    private static ManifestPassenger Passenger(int id, int bookingId, SeatClass seatClass, int seat) =>
-        new()
-        {
-            Id = id,
-            BookingId = bookingId,
-            TripPurpose = TripPurpose.Leisure,
-            AgeBand = AgeBand.Adult,
-            SeatClass = seatClass,
-            Profession = null,
-            Traits = Array.Empty<TraitId>(),
-            SeatNode = seat,
-            WakeMinute = 390,
-        };
 
     /// <summary>A row's seat node at a place from the left, 0 for the window seat.</summary>
     private static int SeatIn(NavGraph graph, int row, int fromLeft) =>
@@ -660,46 +554,8 @@ public sealed class BoardingFlowTests
     private static IEnumerable<long> EntryTicksWhere(FlightWorld flight, long[] entryTicks, Func<Passenger, bool> predicate) =>
         flight.Passengers.Where(predicate).Select(passenger => entryTicks[passenger.Id]);
 
-    private static FlightSetup Setup(PassengerManifest manifest, ulong seed) =>
-        new()
-        {
-            Layout = TenRowLayout(),
-            InchesPerTick = 10,
-            Capacities = Capacities,
-            Manifest = manifest,
-            CrewCount = 2,
-            Seed = seed,
-            Feed = new StagedFeed(BoardingTick, DeboardingTick),
-            Scripts = new FakeBehaviorScripts(),
-            NeedRates = new NeedRates(
-                new NeedRateSettings
-                {
-                    RefreshmentPerHour = 25,
-                    BladderPerHour = 20,
-                    RestRisePerHour = 5,
-                    RestFallPerHour = 10,
-                    BoredomPerHour = 15,
-                    UneaseHalfLifeMinutes = 15,
-                }
-            ),
-            AboardUneasePushPerHour = 30,
-            StartingNeeds = StartingNeedsTests.Rules(),
-            Conditions = StartingNeedsTests.Conditions(0, true),
-            Traits = StartingNeedsTests.Traits(),
-            Movement = Rules(),
-        };
-
     /// <summary>A full flight whose feed never leaves pre-boarding, for moving crew by hand.</summary>
     private static FlightWorld NeverBoardingFlight() => new(Setup(FullManifest(), Seed) with { Feed = new StagedFeed(long.MaxValue, long.MaxValue) });
-
-    private static void RunUntil(FlightWorld flight, Func<FlightWorld, bool> done)
-    {
-        while (!done(flight))
-        {
-            Assert.True(flight.Tick < TickLimit, $"The condition was not met by tick {TickLimit}.");
-            flight.Step(1);
-        }
-    }
 
     /// <summary>Runs a flight until every passenger is seated, recording the tick each entered the door and each sat down.</summary>
     private static FlightWorld RunBoarding(FlightSetup setup, out long[] entryTicks, out long[] seatTicks)
@@ -886,19 +742,6 @@ public sealed class BoardingFlowTests
         }
 
         return flight.Tick - lastStowing;
-    }
-
-    /// <summary>A feed in pre-boarding, boarding from <paramref name="boardingTick"/>, deboarding from <paramref name="deboardingTick"/>.</summary>
-    private sealed class StagedFeed(long boardingTick, long deboardingTick) : ISimFeed
-    {
-        public FeedObservation Observe(long tick)
-        {
-            FlightStage stage =
-                tick >= deboardingTick ? FlightStage.Deboarding
-                : tick >= boardingTick ? FlightStage.Boarding
-                : FlightStage.PreBoarding;
-            return new FeedObservation(stage, false, Turbulence.None);
-        }
     }
 
     /// <summary>A higher-priority action than any movement, running until a tick.</summary>

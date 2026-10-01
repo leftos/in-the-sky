@@ -10,8 +10,8 @@ namespace Sky.Engine.Tests.Passengers;
 /// <summary>Proves the starting needs: the draw, the gate conditions on top of it, the group spread and the Unease baseline.</summary>
 public sealed class StartingNeedsTests
 {
-    /// <summary>The boarding start of the reference day departure, 09:30 origin local.</summary>
-    internal const int MorningBoardingStart = 570;
+    /// <summary>The boarding start of the reference day departure, 10:30 origin local.</summary>
+    internal const int MorningBoardingStart = 630;
 
     /// <summary>The Unease baseline of a passenger with no Unease trait.</summary>
     internal const double DefaultBaseline = 20;
@@ -196,11 +196,11 @@ public sealed class StartingNeedsTests
     /// <param name="boardingStartMinute">The minute boarding starts.</param>
     /// <param name="expected">The expected Rest at boarding.</param>
     [Theory]
-    [InlineData(330, 570, 39.0)]
-    [InlineData(480, 570, 9.0)]
-    [InlineData(600, 570, 0.0)]
+    [InlineData(330, 630, 45.0)]
+    [InlineData(480, 630, 15.0)]
+    [InlineData(660, 630, 0.0)]
     [InlineData(330, 300, 15.0)]
-    [InlineData(60, 570, 60.0)]
+    [InlineData(60, 630, 60.0)]
     public void StartingRestFollowsTheBodyClock(int wakeMinute, int boardingStartMinute, double expected) =>
         Assert.Equal(expected, BodyClock.StartingRest(ReferenceBodyClock(), wakeMinute, boardingStartMinute), Tolerance);
 
@@ -361,7 +361,7 @@ public sealed class StartingNeedsTests
             BodyClock = ReferenceBodyClock(),
         };
 
-    /// <summary>The gate conditions, with boarding starting at 09:30.</summary>
+    /// <summary>The gate conditions, with boarding starting at 10:30 origin local.</summary>
     /// <param name="delayMinutes">The gate delay.</param>
     /// <param name="concessionsOpen">Whether the outlets were open.</param>
     /// <returns>The conditions.</returns>
