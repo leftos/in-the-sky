@@ -4,8 +4,9 @@
 
 ## M1-F the flight
 
+- [ ] SKY-52 F4a: oracle's three nits
 - [ ] SKY-2 F4: Passenger decisions, activities, cascades and contagion
-  - [ ] SKY-4 F4a: Decision core: cadence, keep-current bias scoring, DecisionLog
+  - [x] SKY-4 F4a: Decision core: cadence, keep-current bias scoring, DecisionLog
   - [ ] SKY-3 F4b: Activities as executor actions, cascades and Unease contagion
 - [ ] SKY-5 F5: Crew in the flight: board claims, service rounds, observations
 - [ ] SKY-6 F6: Events, auto-resolve and incidents
@@ -19,14 +20,19 @@
 ## M1-X content data
 
 - [ ] SKY-10 X1 review observations: thought tags, manifest drift, trait hooks, sources
-- [!] SKY-11 X2b: The seven scenario files and the one-lever check
-- [ ] SKY-12 Name ranges for crew trait factors and service timing; CrewValidator refuses
-- [ ] SKY-13 Add the Floater trait's row to balance.md section 2.18
-- [ ] SKY-14 Reconcile passengers.md's 09:30 boarding start with crew.md's 10:30
+- [x] SKY-14 Reconcile passengers.md's 09:30 boarding start with crew.md's 10:30
+- [ ] SKY-51 Content validators: oracle's three nits
+- [x] SKY-12 Name ranges for crew trait factors and service timing; CrewValidator refuses
+- [ ] SKY-50 Event ctx reads for cabin class and side-by-side seats
+- [x] SKY-11 X2b: The seven scenario files and the one-lever check
+- [ ] SKY-49 ScenarioValidator checks the service plan, lighting plan and timeline
+- [ ] SKY-48 ShippedEventTests: oracle's three nits
+- [x] SKY-46 Add the covering factor and backlog-cap scaling rows to balance.md 2.20
+- [x] SKY-13 Add the Floater trait's row to balance.md section 2.18
 - [ ] SKY-15 X3: activities.json and the activity modules
 - [/] SKY-16 X4: The M1 event modules
-  - [/] SKY-17 X4a: ShippedEventTests: oracle's fix round, then land
-  - [ ] SKY-19 X4b: event-writer writes the four M1 event modules
+  - [x] SKY-17 X4a: ShippedEventTests: oracle's fix round, then land
+  - [x] SKY-19 X4b: event-writer writes the four M1 event modules
   - [ ] SKY-18 Decide a trigger-direction check for the shipped events
 
 ## M1-H the session
@@ -65,6 +71,8 @@
 
 ## Backlog
 
+- [ ] SKY-47 Route godot-mcp's prep build through the gate (prepWrapper)
+- [x] SKY-45 Add the Agent Mail lease guard to prek
 - [ ] SKY-42 Review the heavy/light gate slot picks
 - [ ] SKY-43 Review and land Dependabot PR #1 (uv-build in tools/provenance)
 - [ ] SKY-44 AirlineOps: crew auto-resolve at scale, the booking market as manifest source
