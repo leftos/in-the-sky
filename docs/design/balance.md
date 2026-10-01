@@ -102,7 +102,7 @@ Moves: what the crew-observed view shows (M3+); in M1 it is a dev-surface field 
 | `chat` | 5 to 20 min; Boredom falls 20/hour | Boredom down | Experience |
 | `lav_visit` | walk + queue + use, 2 to 5 min (child 3 to 6) + walk back; Bladder to 0 on completion | Bladder down | Experience, Incidents (`accident`), Doors (a queue in the aisle blocks a cart, CONCEPT pillar 3) |
 | `stretch` | 3 to 8 min; Boredom −15 on completion | Boredom down | Experience |
-| `call_crew` | instant press | posts a task (crew.md) | Incidents (median time to crew arrival) |
+| `call_refreshment`, `call_reassurance`, `call_lav_permission` (one activity per call reason) | instant press | posts a task (crew.md) | Incidents (median time to crew arrival) |
 | `drink_served` | 3 to 6 min; Boredom −10 on the pass | Refreshment −40, Bladder +15 over 30 min (CONCEPT), Boredom −10 | Experience, Bladder's lav wave (Incidents, `accident`) |
 | `meal_served` | 15 to 25 min, then tray down until collected; after it, Rest ×1.3 Service class for 60 min | Refreshment −70 (CONCEPT), Bladder +15, Boredom −10, then the post-meal Rest slump | Experience, Doors (a tray-down passenger cannot squeeze past for the secure check) |
 
@@ -114,12 +114,15 @@ Moves: what the crew-observed view shows (M3+); in M1 it is a dev-surface field 
 | `screen` | scores from Boredom 20 upward; zero when an outage event has removed it | Experience (Boredom) |
 | `lav_visit` | scores from Bladder 55, rises steeply past 75; zero with the sign on except in cruise at Bladder ≥85 (defies the sign); descent Bladder ≥40 gets the last-chance bonus | Experience, Incidents (`accident`) |
 | `stretch` | only in cruise with the sign off, from Boredom 50 | Experience |
-| `call_crew: refreshment` | Refreshment ≥65, not served in the last 30 min, cart not in zone | Experience, crew catch-up drink (crew.md 2.19) |
-| `call_crew: reassurance` | Unease ≥55 | Experience, Incidents (`panic`) |
-| `call_crew: lav_permission` | Bladder ≥75 with the sign on | Experience, Incidents (`accident`) |
+| `call_refreshment` | Refreshment ≥65, not served in the last 30 min, cart not in zone | Experience, crew catch-up drink (crew.md 2.19) |
+| `call_reassurance` | Unease ≥55 | Experience, Incidents (`panic`) |
+| `call_lav_permission` | Bladder ≥75 with the sign on | Experience, Incidents (`accident`) |
 | `demanding` trait | lowers each of the three thresholds above by 15 | Experience, Incidents (more calls posted, sooner) |
 | `patient` trait | raises each threshold by 15 | Experience, Incidents (fewer, later calls) |
 | accept a served drink/meal | accept when Refreshment ≥15, decline otherwise | Experience (a passenger who declines at 12 stays hungry to descent, by design) |
+| the utility scale the thresholds above sit on (not in `passengers.md`) | section 3.9: utility points, 0 unavailable, a score of 10 or more at an activity's own threshold, `idle` 5 | Experience |
+| keep-current bias (engine, not a module) | +4 utility points on the current activity's positive score (section 3.9) | Experience, Incidents (`accident`: it must not hold a passenger past Bladder 75) |
+| trait score bonuses (`frequent_flyer` `sleep`, `sociable` `chat`, `restless` `stretch`) | additive +8, +5 and +20 utility points (section 3.10) | Experience, Incidents (`noise_complaint`), the `lights-up` lever check |
 
 ### 2.7 Answering a call (`passengers.md:69`)
 
@@ -141,6 +144,7 @@ Moves: Experience, Incidents (a refused `lav_permission` at high Bladder is what
 | Reading light beside a `light_sleeper` | halves their `sleep` score | Experience (Rest) |
 | Lav pick cost | lowest path ticks + 3 minutes per person already queued | Experience, Incidents (`accident`), Doors (queue length feeds cart blocking) |
 | Overflow-to-seat threshold | 8 minutes waiting with Bladder under 80 sends the passenger back to their seat | Experience, Incidents |
+| Queue length that makes a lav unreachable (`passengers.md` section 3, clause 3) | Q = 2 people ahead, counting the occupant (section 3.11) | Experience (the Bladder cascade's Unease), Incidents (`panic`, `accident` via the cascade's report cause) |
 
 ### 2.9 Traits (`passengers.md:81-100`)
 
@@ -150,15 +154,15 @@ Baseline Unease with no Unease trait: **10**. Every value below is `[D3]`.
 |---|---|---|---|
 | `anxious` | Unease ×1.3 | 25 | 12 |
 | `nervous_flyer` | Unease ×1.5 | 15 | 10 (5 on `business` trips) |
-| `frequent_flyer` | Unease ×0.8, `sleep` bonus | 5 | 8 (30 on `business` trips) |
+| `frequent_flyer` | Unease ×0.8, `sleep` bonus +8 utility points (section 3.10) | 5 | 8 (30 on `business` trips) |
 | `small_bladder` | Bladder ×1.3 | — | 10 |
 | `big_appetite` | Refreshment ×1.25 | — | 10 |
-| `restless` | Boredom ×1.4, `stretch` bonus | — | 12 |
+| `restless` | Boredom ×1.4, `stretch` bonus +20 utility points (section 3.10) | — | 12 |
 | `patient` | Boredom ×0.8, Unease ×0.9, calls 15 later | — | 10 |
 | `demanding` | Unease ×1.1, calls 15 earlier | — | 8 |
 | `light_sleeper` | wake chance ×2 (capped 1), no sleep with lights up | — | 12 |
 | `heavy_sleeper` | wake chance ×0.3 | — | 8 |
-| `sociable` | Boredom ×0.9, `chat` bonus | — | 15 |
+| `sociable` | Boredom ×0.9, `chat` bonus +5 utility points (section 3.10) | — | 15 |
 | `child` | Boredom ×2.0 (CONCEPT), Bladder ×1.2, Refreshment ×1.1 | 10 | given to every child |
 | `short_tempered` | none (event-only) | — | 8 |
 
@@ -449,7 +453,7 @@ Formula: `distress = clamp(Σ_i weight_i × max(0, need_i − threshold_i), 0, 1
 |---|---|---|---|
 | Unease | 40 | 1.5 | matches the contagion push threshold (section 2.12), and CONCEPT calls Unease "where the other needs converge" |
 | Bladder | 55 | 1.2 | matches the `lav_visit` scoring threshold (section 2.6) |
-| Refreshment | 65 | 1.0 | matches the `call_crew: refreshment` threshold |
+| Refreshment | 65 | 1.0 | matches the `call_refreshment` threshold |
 | Rest | 45 | 0.8 | matches the `sleep` scoring threshold |
 | Boredom | 50 | 0.6 | matches the `stretch` scoring threshold; Boredom is the mildest of the five (no need-read decision consults it) |
 
@@ -459,7 +463,7 @@ Check against the bands: Unease alone at 60 (the contagion-threshold passenger, 
 
 F4 (the M1 plan) gives passengers a "staggered re-evaluation cadence" alongside "when an activity ends," with no number. `idle` is the one activity with no drawn duration (section 2.5: "until the next decision point"), so this cadence is what makes an idle passenger notice a need has crossed a scoring threshold (Bladder past 55, Refreshment past 65) without a full tick-by-tick re-score of 180 passengers.
 
-Value: **2 sim minutes (480 ticks)**, staggered per passenger by `passenger id mod 480`, so the 180 re-evaluations spread evenly across the 2-minute window instead of landing on one tick (keeps R6's per-id iteration order deterministic and keeps the per-tick cost flat). Derivation: at the fastest push rates a needs-off-cadence passenger sees (Unease under moderate turbulence, ≈1.33 per minute combined with the aboard baseline before any trait multiplier), 2 minutes between checks is at most a 2.7-point miss — well inside the 15-point band `passengers.md`'s misread ranges already tolerate elsewhere, and well under the 5/10-minute sustain windows an incident needs to raise. Moves: Experience (how promptly a passenger acts once a need crosses a threshold), and indirectly Incidents (a longer cadence would let more needs coast past their threshold unaddressed for longer).
+Value: **2 sim minutes (480 ticks)**, staggered per passenger by `passenger id mod 480`, so the 180 re-evaluations spread evenly across the 2-minute window instead of landing on one tick (keeps R6's per-id iteration order deterministic and keeps the per-tick cost flat). Derivation: at the fastest push rates a needs-off-cadence passenger sees (Unease under moderate turbulence, ≈1.33 per minute combined with the aboard baseline before any trait multiplier), 2 minutes between checks is at most a 2.7-point miss — well inside the 15-point band `passengers.md`'s misread ranges already tolerate elsewhere, and well under the 5/10-minute sustain windows an incident needs to raise. Moves: Experience (how promptly a passenger acts once a need crosses a threshold), and indirectly Incidents (a longer cadence would let more needs coast past their threshold unaddressed for longer). The keep-current bias that rides on this cadence, and the utility scale it is measured in, are section 3.9.
 
 ### 3.3 The F7 task-wait invariant threshold
 
@@ -543,13 +547,99 @@ The link to boarding time: F3's `BoardingFlow` walks each passenger from the for
 | `lav_queue` | 4 | judged | matches passengers.md's own thought trigger: `lav_queue_long` fires when a passenger "joins a lav queue with 3 or more ahead, or overflows into the aisle" (section 2.28); a capacity of 4 means the passenger who joins as the 4th (3 ahead) still fits on the queue node, and the next arrival is the one who overflows into the aisle slot behind it (passengers.md:94) — the thought's two clauses then map exactly onto the queue's last slot and its overflow boundary; diverges from `ContentTree`'s test fixture (2), sized for a much smaller test layout |
 | `galley` | 4 | judged | covers the reference crew's up-to-2-on-break cap (crew.md 2.20, six-crew roster) plus a working crew member or a stretching passenger (passengers.md's `stretch` activity walks to the aft galley) without the galley itself becoming a bottleneck |
 
+### 3.9 The utility scale and the keep-current bias
+
+`passengers.md` section 3 has each activity's `utility(facts)` return a number of 0 or more, 0 meaning unavailable. The host (`LuaBehaviorScripts.ScoreActivities`) accepts any finite number of 0 or more and sets no upper bound, and no document fixes what a score means. The keep-current bias and the trait bonuses (3.10) are sums with such scores, so they need one scale; this section defines it. Every number here is **computed, unmeasured**: `Sky.Sim` runs no scenario and the decision loop (F4) is not built, so nothing here has been run. They are first values for X3's modules and F4a's decision loop, for Z6 to measure.
+
+**The scale.** A score is in utility points. 0 is unavailable: the need is under the activity's threshold, or a guard in `passengers.md` section 3 holds (call light on, tray down, sign on for `lav_visit`, lights up for a `light_sleeper`, and so on). A positive score is `min(cap, onset + slope × (need − threshold))` plus any trait bonus, where `onset` is the score at the threshold itself. The cap is a module's own `math.min`; the host does not enforce it.
+
+| Activity | Threshold (0 below it) | Onset | Slope per need point | Cap |
+|---|---|---|---|---|
+| `idle` | always available | 5 | none | 5 |
+| `screen` | Boredom 20 | 12 | 0.5 | 40 |
+| `chat` | Boredom 20, with an awake adjacent group member | 10 | 0.5 | 40 |
+| `stretch` | Boredom 50, cruise, sign off | 10 | 0.5 | 40 |
+| `sleep` | Rest 45 | 10 | 0.8 | 50 |
+| `lav_visit` | Bladder 55 | 10 | 1.75 up to Bladder 75 (score 45, the knee), then 5 | none |
+| `call_refreshment` | Refreshment 65 | 30 | 1.0 | none |
+| `call_reassurance` | Unease 55 | 30 | 1.0 | none |
+| `call_lav_permission` | Bladder 75, sign on | 30 | 1.0 | none |
+
+`lav_visit` is 10 at Bladder 55, 27.5 at 65, 45 at 75, then 50 at 76, 70 at 80, 95 at 85 and 120 at 90 (the `accident` threshold). `chat`'s threshold is not stated in `passengers.md`; Boredom 20, the same as `screen`, is this section's first value. The shapes carry three orderings. Every need-driven activity has an onset of 10 or more against `idle`'s 5, so a passenger whose need crosses a threshold leaves `idle` at once. The comfort activities (`screen`, `chat`, `stretch`) cap at 40, under `lav_visit`'s 45 at its knee, so no comfort activity outweighs a full bladder; `sleep` caps at 50 so a truly tired passenger outranks a comfort activity but not a bladder well into the steep zone. The three call activities start at 30 and rise 1 per point: a call outbids a passenger holding a capped comfort activity (40 plus the bias of 4, so 44) once the need is 15 points past its threshold (Refreshment 80), and outbids a sleeper (50 plus 4, so 54) 25 points past it (Refreshment 90, where `food_demand` raises first), so a hungry sleeper does not call before Refreshment 90. In cruise with the sign on, `call_lav_permission` (30 at Bladder 75, 39 at 84) is the only lav-side activity from Bladder 75 to 84; from 85 the defiance (`lav_visit` at 95) outbids it, so a permission call has a window of 10 Bladder points, about 36 minutes at the base rate (10 ÷ 16.67 per hour).
+
+**The keep-current bias.** The engine, not a module, adds **b = 4 utility points** to the current activity's score when that score is positive, then takes the highest score. A tie keeps the current activity; a tie between two others goes to the lowest activity id, so the pick is deterministic (R6; F4a fixes the order). A zero is never lifted: a sleeper whose call light comes on, whose neighbour starts chatting (a `light_sleeper`) or whose tray goes down drops `sleep` whatever b is. The call activities are instant presses and the light zeroes their score until answered, so none is ever current at a cadence and the bias never touches them.
+
+The form is additive. A bias of a fixed number of points is a fixed lead a challenger must show; a multiplicative bias grows with the score, so the more engaged a passenger is, the harder they are to move, which is the opposite of what the bias is for. The arithmetic against the one case that must not be held, `lav_visit` past its knee, is the first Bladder at which `lav_visit` outbids the current activity (computed from the shapes above):
+
+| Current activity | Its highest score | Additive +4 | Multiplied ×1.2 | Multiplied ×1.4 |
+|---|---|---|---|---|
+| `idle` | 5 | 55 (at the threshold: 10 beats 9) | 55 | 55 |
+| `screen`, `chat` or `stretch`, at the cap | 40 | 74.4 | 75.6 | 77.2 |
+| `sleep`, at the cap | 50 | 76.8 | 78.0 | 80.0 |
+
+With +4, `idle` is left at its threshold and a capped `screen` before the knee at 75, so neither is kept past the steep zone; a sleeper holds 1.8 Bladder points past the knee, 6.5 minutes at the base rate and at most four decision points. A multiplied bias of ×1.2 already keeps a capped `screen` past 75, and ×1.4 keeps a sleeper to Bladder 80.
+
+Why 4: it has to clear what one decision interval moves a score by, and sit under two ceilings. At the 2.5x rate cap (section 1.1) over one cadence (2 minutes, section 3.2), `screen`'s Boredom shape drifts 1.39 points (83.3 per hour × 2 min × 0.5), `lav_visit`'s pre-knee shape 2.43 (41.7 per hour × 2 min × 1.75) and a sleeper's own Rest fall 0.67 (25 per hour × 2 min × 0.8). A bias above 2.43 means one interval's drift cannot by itself swap two activities, and a swap needs a lead of more than 4, which is 1.6 intervals of the fastest pre-knee drift at the cap, so two. The steep zone drifts 6.9 points per interval at the cap (2.8 at 1.0x), more than the bias on purpose: past the knee `lav_visit` outruns it within one interval. The ceilings: `idle` current scores 5 + b and must stay under the onset of 10, or a passenger lingers in `idle` past their thresholds (at b = 5 a tie, above it a lag of (b − 5) ÷ slope need points), and the comfort cap 40 + b must stay under the knee's 45. So b lies in (2.43, 5), and 4 is the whole number nearest the upper end that keeps both ceilings with room. In need points the bias is 8 Boredom points on the comfort shapes, 5 Rest points on `sleep`, 2.3 Bladder points on `lav_visit` before its knee and 0.8 past it. Moves: Experience (how often a passenger changes activity, and how late a need is acted on once it is high), and Incidents (`accident`: the bias is what the Bladder arithmetic above bounds).
+
+What these numbers assume:
+1. A running activity is scored again at each cadence from the same facts as any other. The one activity whose own effect pulls its driving need under its start threshold is `sleep`: Rest falls 25 per hour dimmed against a start threshold of 45, so a sleeper who began at Rest 50 would score 0 about 12 minutes in, inside `sleep`'s 20-minute minimum. These numbers assume a running `sleep` keeps scoring down to Rest 10, the end `passengers.md` gives it, by the module reading `current_activity`; `passengers.md` does not say how a running activity is scored.
+2. A running `screen` holds Boredom where it was when it started (CONCEPT pauses Boredom on IFE), so a passenger on a screen does not climb toward `stretch`'s Boredom 50 and needs the trait bonuses of 3.10 to be moved off the screen at all.
+3. `idle` is scored 5 for every passenger at every decision point and takes the bias like any current activity.
+
+### 3.10 Trait bonuses on activity scores
+
+`passengers.md` section 3 and section 4 give `frequent_flyer` a `sleep` bonus, `sociable` a `chat` bonus and `restless` a `stretch` bonus with no magnitude; `demanding` and `patient` shift the three call thresholds by 15, the only hook that had a number. The three bonuses are additive utility points, on the scale of 3.9. A module adds its bonus to its own score after its guards and its halving and only when that score is positive, then applies its cap, so a trait never makes an activity available that its thresholds or guards forbid (a `light_sleeper`'s zero with lights up stays zero) and never lifts a score past its cap. A module asks `facts:has_trait(name)` and does arithmetic only (passengers.md section 3). Computed, unmeasured.
+
+| Trait | Activity | Form | Value | In need points | Moves |
+|---|---|---|---|---|---|
+| `frequent_flyer` | `sleep` | additive utility | +8 | 10 Rest points (8 ÷ 0.8) | Experience (Rest), the `lights-up` lever check |
+| `sociable` | `chat` | additive utility | +5 | 10 Boredom points (5 ÷ 0.5) | Experience (Boredom), Incidents (`noise_complaint`) |
+| `restless` | `stretch` | additive utility | +20 | 40 Boredom points (20 ÷ 0.5) | Experience (Boredom), Experience through aisle traffic the carts meet |
+
+**`sociable` +5 and `restless` +20 are sized against `screen`.** On the same Boredom a fresh `screen` scores 2 above `chat` (onset 12 against 10, same slope) and 17 above `stretch` (screen at Boredom 50 scores 27, stretch 10). A bonus has to exceed that gap, or the trait never wins when the passenger has no current activity, and be no more than the gap plus the bias (4), or it interrupts a screen already running at the next cadence, which is the flip the bias exists to prevent. That gives (2, 6] for `chat` and (17, 21] for `stretch`; 5 and 20 sit one point under the top of each range. With them, a sociable passenger with an awake adjacent group member wins `chat` by 3 points over a fresh screen and loses by 1 to a screen already running (15 against 16), so they chat at the next activity end, not mid-screen (a screen runs 15 to 60 minutes); a restless passenger past Boredom 50 in cruise with the sign off does the same with `stretch`. The margins hold while both shapes are under their caps, up to Boredom about 70; above it the caps close them to a tie at Boredom 76, and no screen was running at a Boredom that high. Without a bonus a passenger never picks `chat` or `stretch` while a screen is available: chat is 2 below it and stretch 17. So a passenger who is not sociable chats only with the screen gone (an outage and no `own_device`), and a passenger who is not restless stretches only then.
+
+What a session does, in the rates of section 1.1: a chat of 5 to 20 minutes takes 20 per hour off Boredom, 1.7 to 6.7 points, against a sociable passenger's own rise of 30 per hour (33.3 × 0.9), so Boredom still rises at 10 per hour while chatting; a stretch takes 15 off a restless passenger's rise of 46.7 per hour (33.3 × 1.4), which is 19.3 minutes of Boredom. Chatting beside a sleeper sets `neighbour_chatting`, which zeroes a `light_sleeper`'s `sleep` score and halves anyone else's (`passengers.md` section 3), so `sociable` also feeds `noise_complaint`; a stretching passenger walks the aisle to the aft galley and holds an aisle slot (capacity 1, section 3.8), which a cart in cruise meets (CONCEPT pillar 3). The stretch is cruise-only, so it reaches the on-time-doors measure only if a cart is still in the aisle at descent start (section 2.22), which the cruise-only rule makes unlikely. The shares of adults who carry each trait, from the adult weights (section 2.9) and 0.85 traits per adult, ignoring the pairs that never co-occur: `sociable` about 10%, `restless` about 8%, `frequent_flyer` about 6% (about 18% on `business` trips, weight 30 of 140).
+
+**`frequent_flyer` +8 is 10 Rest points of preference.** It is not a gap rule: `sleep` and `screen` are both available, and the bonus decides how tired a frequent flyer must be before `sleep` outbids a screen. The Rest at which `sleep` outbids a screen held at a given Boredom:
+
+| Boredom held by the screen | 25 | 35 | 45 | 55 | 65 |
+|---|---|---|---|---|---|
+| Screen score | 14.5 | 19.5 | 24.5 | 29.5 | 34.5 |
+| Fresh screen: Rest, others | 50.7 | 56.9 | 63.2 | 69.4 | 75.7 |
+| Fresh screen: Rest, `frequent_flyer` | 45.0 (the threshold) | 46.9 | 53.2 | 59.4 | 65.7 |
+| Running screen (+4): Rest, others | 55.7 | 61.9 | 68.2 | 74.4 | 80.7 |
+| Running screen (+4): Rest, `frequent_flyer` | 45.7 | 51.9 | 58.2 | 64.4 | 70.7 |
+
+Rest rises 5 per hour times the body-clock factor (section 2.11), so 10 Rest points are 2.0 hours of base rise before 12:00 and 1.3 hours at the 1.5 post-lunch factor: a frequent flyer reaches the crossover that much sooner. A sleep of 20 to 90 minutes takes 8.3 to 37.5 Rest points dimmed (25 per hour) and 5.0 to 22.5 with lights up (15 per hour). With lights up the module halves its base score first and adds the bonus after, so the bonus is not halved: against a screen at Boredom 35 the others cross at Rest 81.3 and a frequent flyer at 61.3, 20 Rest points sooner (8 ÷ 0.4), and at Boredom 45 at 93.8 against 73.8. This is the point of the bonus ("sleeps anywhere") and it blunts the `lights-up` lever check (section 1.3's 30%-of-sleep-minutes target) for about 6% of adults and about 18% on `business` trips, the same way the `sleep_kit` minority does (section 2.26): worth watching when Z6 measures the lever.
+
+**`demanding` and `patient` keep their ±15 threshold shift**, applied to each of the three call activities. On the scale of 3.9 a shift moves the whole shape, since the score is 30 at the shifted threshold: a `demanding` passenger's `call_refreshment` scores 45 at Refreshment 65 (30 for others), enough to outbid a capped comfort activity at once (45 against 44), while a `patient` one scores 0 until 80. Unchanged numbers, restated on the scale.
+
+What the three bonuses assume beyond 3.9: every seat has seatback IFE (P1) and `screen` pauses Boredom, so a passenger on a screen holds Boredom where it started. Stretch needs Boredom 50, so it is reached only by passengers whose Boredom passed 50 before their first screen (boarding, taxi, climb) or who lost the screen to an outage. How many that is depends on the Boredom at cruise start, which is unmeasured; if it is few, `restless` has no visible effect however large its bonus, since the bonus decides who wins once `stretch` is available, not whether it is. Section 5 names the columns Z6 needs to read it.
+
+### 3.11 The queue length that makes a lav unreachable
+
+`passengers.md` section 3 ("When a lav is unreachable", clause 3): a passenger on a `lav_visit` waiting for the lav, in its queue node or in the aisle behind it, with Q or more people ahead of them (the occupant and everyone queued nearer) is unable to reach a lav, so the Bladder cascade (Unease ×1.3 above Bladder 70) can fire; a passenger overflowing into the aisle always counts. Value: **Q = 2**. Computed, unmeasured.
+
+Expected wait with Q ahead is the occupant's remaining time plus (Q − 1) full uses. Use time is 2 to 5 minutes for an adult and 3 to 6 for a child (section 2.5), uniform: mean 3.5 and 4.5. An occupant met at a random moment has E[X²] ÷ (2 E[X]) left: 13 ÷ 7 = 1.86 minutes for an adult, 2.33 for a child.
+
+| Q | Expected wait, adult uses | Expected wait, child uses |
+|---|---|---|
+| 1 | 1.9 min | 2.3 min |
+| 2 | 5.4 min | 6.8 min |
+| 3 | 8.9 min | 11.3 min |
+| 4 | 12.4 min | 15.8 min |
+
+If the doc's "2 to 5 minutes" covers the whole walk, queue and use (`passengers.md` section 3 reads either way), the occupancy per use is shorter and every wait above is an upper bound; the ordering of the Qs holds. Q = 1 fires behind any occupied lav, a wait of under 2 minutes, shorter than the 3 minutes the lav pick charges per person queued (section 2.8): not a passenger who cannot reach a lav. Q = 3 has an expected wait of 8.9 minutes, past the 8-minute overflow rule (section 2.8), which sends a passenger with Bladder under 80 back to their seat before the cascade has run long; Q = 2 fires at 5.4 minutes, two-thirds of that limit, and at the second queue place of a queue node that holds 4 (section 3.8). The `lav_queue_long` thought (section 2.28) is a separate number and an information-only grumble; whether "3 or more ahead" counts the occupant decides if it equals Q = 3 (counting the occupant) or the fourth queue place (section 3.8's reading, not counting him), so the two are not tied here.
+
+What it moves: the cascade multiplies the sum of the Unease pushes (`passengers.md` section 3, "How Unease moves"), so ×1.3 adds 30% of whatever is pushing: 1.8 per hour aboard in cruise (6 × 0.3), 4.8 in climb with the aboard push (16), 10.8 in light turbulence (36) and 25.8 in moderate (86). Over a 5.4-minute wait that is 0.16, 0.43, 0.96 and 2.3 Unease points. It applies only above Bladder 70, which a passenger who leaves at the first decision (Bladder 55, 54 minutes of base rise short of 70) never reaches; it falls on passengers held by the sign or late deciders, in a wave when the sign goes off. Each step of Q changes the cascade's time on by about one use, 3.5 minutes per wait: at most 1.5 Unease points in moderate turbulence (25.8 × 3.5 ÷ 60) and 0.1 in cruise. So Q moves Experience slightly, Incidents only through `panic` in turbulence, and the cause the report names for a cascade ("behind the aft lav queue", clause 3) more than any outcome. Z6 reads it as cascade-on minutes by cause (section 5) and can revise Q against that.
+
 ## 4. Scope note (not a flag)
 
 Every worked example in `passengers.md` and `crew.md` was re-derived by hand while collecting section 2 (the rate-multiplier composition, the Unease equilibrium under moderate turbulence, the auto-resolve focus formula and its 80%/7% and 46%/26% pick chances, and the quality-to-percentage split in the fourth-power worked example): all reproduce exactly as stated, so no number is flagged as wrong. The one open item found — the seat-comfort formula "D3 owns" (section 2.3) — is a scope gap, not an error: `passengers.md` already gives the three reference-layout constants M1 needs, and a continuous pitch-and-width formula has no second layout to calibrate against until the layout editor (M2 onward, already out of M1's scope). Section 2.3 records that as the resolution rather than an open question.
 
 ## 5. Open requests for implementers
 
-None open. Section 3.7's `inches_per_tick` row gives `BoardingFlow` (F3) a walking pace to turn the reference layout's pitches and fixture distances into ticks. Otherwise none yet — `Sky.Sim` runs no scenario, so there is no scenario key or CSV column to be missing from. This section is for a lever with no scenario switch, or an outcome with no balance-CSV column, once a run needs one.
+One open, for Z6 once F4 runs: the balance CSV needs per-seed columns for what sections 3.9 to 3.11 leave unmeasured, each a mean over the seed's passengers: `sleep_minutes_frequent_flyer` and `sleep_minutes_other` (minutes in `sleep`, split by whether the passenger has the trait), `chat_minutes_sociable` and `chat_minutes_other`, `stretch_count_restless` and `stretch_count_other`, `boredom_at_cruise_start_mean` (mean Boredom of all passengers at the first cruise tick) and `cascade_bladder_minutes_by_cause` (one column per cause the report names: no open lav, cart, queue, no escort, sign). All of them aggregate what `DecisionLog` and the activity actions already record, so each is a column, not a new switch. Section 3.7's `inches_per_tick` row gives `BoardingFlow` (F3) a walking pace to turn the reference layout's pitches and fixture distances into ticks. Otherwise none yet — `Sky.Sim` runs no scenario, so there is no scenario key or CSV column to be missing from. This section is for a lever with no scenario switch, or an outcome with no balance-CSV column, once a run needs one.
 
 ## 6. Runs
 
