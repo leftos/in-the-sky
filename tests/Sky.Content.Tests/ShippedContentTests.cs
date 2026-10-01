@@ -9,8 +9,10 @@ namespace Sky.Content.Tests;
 /// <summary>
 /// Pins the shipped content under <c>src/Sky.Content/Data</c> against the docs it was written from: the hybrid tree loads
 /// and validates (R10), the reference layout is OD2's 180 seats in two classes, its <see cref="LayoutAscii"/> dump matches
-/// the pinned file, the shipped crew carries the Floater trait's one free zone (<c>crew.md</c>), and the shipped manifest
-/// rules book no more than the layout's seats over seeds 1 to 20 (<c>passengers.md</c> section 5).
+/// the pinned file, the shipped crew carries the Floater trait's one free zone (<c>crew.md</c>), the shipped manifest
+/// rules book no more than the layout's seats over seeds 1 to 20 (<c>passengers.md</c> section 5), the seven shipped
+/// scenarios load and validate, each variant moves exactly one lever of the reference (OD4) and keeps every crew member's
+/// home zone, and the reference dims the cabin in <c>crew.md</c>'s two cruise windows.
 /// </summary>
 public sealed class ShippedContentTests
 {
@@ -20,12 +22,35 @@ public sealed class ShippedContentTests
     private const int BusinessSeatCount = 12;
     private const int EconomySeatCount = 168;
     private const int Seeds = 20;
+    private const string ReferenceScenarioId = "reference";
 
     /// <summary>The walking pace the test builds the nav graph with; the manifest draw never reads it (balance.md 3.7).</summary>
     private const double InchesPerTick = 7.87;
 
     /// <summary>The shipped content root beside the test assembly (R9).</summary>
     private static readonly string ShippedData = Path.Combine(AppContext.BaseDirectory, "Data");
+
+    /// <summary>The ids of the seven shipped scenarios: the reference and its six one-lever variants.</summary>
+    private static readonly string[] ShippedScenarioIds =
+    [
+        ReferenceScenarioId,
+        "service-back-to-front",
+        "one-lav-locked",
+        "lights-up",
+        "four-crew",
+        "covering",
+        "gate-delay-closed",
+    ];
+
+    /// <summary>The lever groups a variant may move (OD4, plus the gate conditions), each with the test of sameness.</summary>
+    private static readonly (string Name, Func<ScenarioFile, ScenarioFile, bool> Same)[] LeverGroups =
+    [
+        ("service plan", (a, b) => a.ServicePlan.SequenceEqual(b.ServicePlan)),
+        ("locked lavs", (a, b) => a.LockedLavs.ToHashSet(StringComparer.Ordinal).SetEquals(b.LockedLavs)),
+        ("lighting plan", (a, b) => a.LightingPlan.SequenceEqual(b.LightingPlan)),
+        ("crew assignment", (a, b) => SameCrew(a.Crew, b.Crew)),
+        ("gate conditions", (a, b) => a.GateDelayMinutes == b.GateDelayMinutes && a.ConcessionsOpen == b.ConcessionsOpen),
+    ];
 
     /// <summary>The shipped files, with the kinds that ship later filled from the fixtures, load and validate.</summary>
     [Fact]
@@ -94,6 +119,115 @@ public sealed class ShippedContentTests
         Assert.Equal(1, crew.Traits.Single(trait => trait.Id == "floater").FreeZones);
     }
 
+    /// <summary>The seven shipped scenarios load and validate, and they are the only scenarios in the tree.</summary>
+    [Fact]
+    public void EveryShippedScenarioLoadsAndValidates()
+    {
+        using var tree = HybridTree.Create();
+
+        ContentSet content = tree.Load();
+        ContentValidator.Validate(content);
+
+        Assert.Equal(ShippedScenarioIds.Order(StringComparer.Ordinal), content.Scenarios.Keys.Order(StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    /// Each variant moves exactly its own lever group of the reference, and its layout, system switches and timeline are
+    /// the reference's.
+    /// </summary>
+    /// <param name="variantId">The variant's scenario id.</param>
+    /// <param name="lever">The one lever group the variant moves.</param>
+    [Theory]
+    [InlineData("service-back-to-front", "service plan")]
+    [InlineData("one-lav-locked", "locked lavs")]
+    [InlineData("lights-up", "lighting plan")]
+    [InlineData("four-crew", "crew assignment")]
+    [InlineData("covering", "crew assignment")]
+    [InlineData("gate-delay-closed", "gate conditions")]
+    public void EachVariantDiffersFromReferenceInExactlyOneLever(string variantId, string lever)
+    {
+        using var tree = HybridTree.Create();
+        IReadOnlyDictionary<string, ScenarioFile> scenarios = tree.Load().Scenarios;
+        ScenarioFile reference = scenarios[ReferenceScenarioId];
+        ScenarioFile variant = scenarios[variantId];
+
+        string[] moved = [.. LeverGroups.Where(group => !group.Same(reference, variant)).Select(group => group.Name)];
+
+        Assert.Equal(new[] { lever }, moved);
+        Assert.Equal(reference.Layout, variant.Layout);
+        Assert.Equal(reference.Systems, variant.Systems);
+        Assert.Equal(reference.Timeline.BoardingStartLocalMinutes, variant.Timeline.BoardingStartLocalMinutes);
+        Assert.Equal(reference.Timeline.Entries, variant.Timeline.Entries);
+    }
+
+    /// <summary>
+    /// Every variant that keeps the reference's crew keeps each member's home zone, the first zone listing them, so a
+    /// variant moves its lever and not where a crew member sits, waits and is filed (<c>crew.md</c>, "The home zone").
+    /// </summary>
+    /// <param name="variantId">The variant's scenario id.</param>
+    [Theory]
+    [InlineData("service-back-to-front")]
+    [InlineData("one-lav-locked")]
+    [InlineData("lights-up")]
+    [InlineData("covering")]
+    [InlineData("gate-delay-closed")]
+    public void EachVariantKeepsEveryMembersHomeZone(string variantId)
+    {
+        using var tree = HybridTree.Create();
+        IReadOnlyDictionary<string, ScenarioFile> scenarios = tree.Load().Scenarios;
+
+        Assert.Equal(HomeZones(scenarios[ReferenceScenarioId].Crew), HomeZones(scenarios[variantId].Crew));
+    }
+
+    /// <summary>
+    /// The reference dims the cabin in two fixed windows counted from the seatbelt sign first going off after takeoff: 19 to
+    /// 39 and 62 to 69 (<c>crew.md</c>, "The reference lighting plan").
+    /// </summary>
+    [Fact]
+    public void ReferenceLightingPlanIsTheTwoCruiseWindows()
+    {
+        using var tree = HybridTree.Create();
+
+        ScenarioFile reference = tree.Load().Scenarios[ReferenceScenarioId];
+
+        DimmedPeriod[] expected = [new DimmedPeriod(19, 39), new DimmedPeriod(62, 69)];
+        Assert.Equal(expected, reference.LightingPlan);
+    }
+
+    /// <summary>
+    /// The crew's home zones, one <c>"member in zone"</c> line per crew member in ordinal member order: a member's home
+    /// zone is the first zone that lists them (<c>crew.md</c>, "The home zone").
+    /// </summary>
+    private static string[] HomeZones(CrewAssignment crew) =>
+        [
+            .. crew
+                .Zones.SelectMany(zone => zone.Crew.Select(member => (Member: member, Zone: zone.Id)))
+                .DistinctBy(home => home.Member, StringComparer.Ordinal)
+                .OrderBy(home => home.Member, StringComparer.Ordinal)
+                .Select(home => $"{home.Member} in {home.Zone}"),
+        ];
+
+    /// <summary>
+    /// Whether two crew levers set the same count, the same zones matched by id (each with its rows, stations and crew in
+    /// order, lead first) and the same cart spans. Zone ids are unique within a scenario (the validator checks it).
+    /// </summary>
+    private static bool SameCrew(CrewAssignment a, CrewAssignment b) =>
+        a.Count == b.Count
+        && a.Zones.Count == b.Zones.Count
+        && a.Zones.All(zone => b.Zones.Any(other => SameZone(zone, other)))
+        && a.Carts.Count == b.Carts.Count
+        && a.Carts.Zip(b.Carts).All(pair => SameCart(pair.First, pair.Second));
+
+    private static bool SameZone(CrewZone a, CrewZone b) =>
+        string.Equals(a.Id, b.Id, StringComparison.Ordinal)
+        && a.FirstRow == b.FirstRow
+        && a.LastRow == b.LastRow
+        && a.Stations.SequenceEqual(b.Stations, StringComparer.Ordinal)
+        && a.Crew.SequenceEqual(b.Crew, StringComparer.Ordinal);
+
+    private static bool SameCart(CartSpan a, CartSpan b) =>
+        a.FirstRow == b.FirstRow && a.LastRow == b.LastRow && a.Crew.SequenceEqual(b.Crew, StringComparer.Ordinal);
+
     /// <summary>Reads the pinned dump, its line endings normalised to LF and its closing newline dropped.</summary>
     /// <returns>The dump's text, as <see cref="LayoutAscii.Render"/> writes it.</returns>
     private static string PinnedText() =>
@@ -150,13 +284,11 @@ public sealed class ShippedContentTests
         }
 
         /// <summary>
-        /// Fills the file kinds that ship after X1 — crew and scenarios (X2) and activities with their Lua modules (X3) —
-        /// from <see cref="ContentTree.MinimalFiles"/>, so the shipped tree loads today and each fill drops by shipping,
-        /// with no edit here. The rule is by presence: a fixture file is written only when the shipped tree has no file at
-        /// that path, and the crew, the fixture scenario and the fixture layout that scenario names are written only when
-        /// the shipped files hold no scenario (X2 ships all three together), since the fill's own writes must not decide
-        /// what is still missing. <paramref name="shippedHasScenario"/> is read from the copied shipped files once, before
-        /// the first fill.
+        /// Fills the file kinds the shipped tree does not carry, the activities and their Lua modules, from
+        /// <see cref="ContentTree.MinimalFiles"/>, so the shipped tree loads; a kind's fill drops once it ships, with no
+        /// edit here. The rule is by presence: a fixture file is written only when the shipped tree has no file at that
+        /// path, and the fixture crew, scenario and layout are written only when the shipped files hold no scenario.
+        /// <paramref name="shippedHasScenario"/> is read from the copied shipped files once, before the first fill.
         /// </summary>
         /// <param name="root">The content root the shipped files were copied into.</param>
         /// <param name="shippedHasScenario">Whether the shipped files alone carry a scenario.</param>
@@ -176,7 +308,7 @@ public sealed class ShippedContentTests
         private static bool ShouldFill(string relative, string root, bool shippedHasScenario) =>
             !File.Exists(Path.Combine(root, relative)) && (!ShipsWithScenarios(relative) || !shippedHasScenario);
 
-        /// <summary>Whether the file belongs to the batch X2 ships: the crew, the scenarios and the layouts they name.</summary>
+        /// <summary>Whether the file ships with the scenarios: the crew, the scenarios and the layouts they name.</summary>
         private static bool ShipsWithScenarios(string relative) =>
             relative is "crew.json"
             || relative.StartsWith("scenarios/", StringComparison.Ordinal)

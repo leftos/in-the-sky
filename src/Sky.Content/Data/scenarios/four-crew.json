@@ -1,0 +1,43 @@
+{
+  "id": "four-crew",
+  "layout": "reference-narrowbody",
+  "gate_delay_minutes": 0,
+  "concessions_open": true,
+  "systems": { "needs": true, "events": true, "contagion": true, "thoughts": true },
+  "service_plan": [
+    { "kind": "Drinks", "start_minutes": 5, "direction": "FrontToBack" },
+    { "kind": "Meal", "start_minutes": 40, "direction": "FrontToBack" }
+  ],
+  "locked_lavs": [],
+  "lighting_plan": [
+    { "from_minutes": 19, "to_minutes": 39 },
+    { "from_minutes": 62, "to_minutes": 69 }
+  ],
+  "crew": {
+    "count": 4,
+    "zones": [
+      { "id": "F", "first_row": 0, "last_row": 15, "stations": [ "door-1L", "lav-fwd" ], "crew": [ "purser", "fa4" ] },
+      { "id": "A", "first_row": 16, "last_row": 30, "stations": [ "galley-aft", "lav-aft" ], "crew": [ "fa5", "fa6" ] }
+    ],
+    "carts": [
+      { "first_row": 3, "last_row": 30, "crew": [ "fa4", "fa5" ] }
+    ]
+  },
+  "timeline": {
+    "boarding_start_local_minutes": 630,
+    "entries": [
+      { "at_minutes": -20, "stage": "PreBoarding", "seatbelt_sign": true },
+      { "at_minutes": 0, "stage": "Boarding", "seatbelt_sign": true },
+      { "at_minutes": 32, "stage": "TaxiOut", "seatbelt_sign": true },
+      { "at_minutes": 44, "stage": "Takeoff", "seatbelt_sign": true },
+      { "at_minutes": 45, "stage": "Climb", "seatbelt_sign": true },
+      { "at_minutes": 56, "stage": "Climb", "seatbelt_sign": false },
+      { "at_minutes": 65, "stage": "Cruise", "seatbelt_sign": false },
+      { "at_minutes": 125, "stage": "Descent", "seatbelt_sign": false },
+      { "at_minutes": 132, "stage": "Descent", "seatbelt_sign": true },
+      { "at_minutes": 144, "stage": "Landing", "seatbelt_sign": true },
+      { "at_minutes": 145, "stage": "TaxiIn", "seatbelt_sign": true },
+      { "at_minutes": 151, "stage": "Deboarding", "seatbelt_sign": false }
+    ]
+  }
+}
