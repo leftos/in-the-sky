@@ -187,7 +187,7 @@ internal sealed class ContentTree : IDisposable
             { "id": "call_ignored", "valence": "Grumble", "hook": "call_light_on", "lever_tag": "crew_staffing", "salience": 3,
               "lasts_minutes": 30, "threshold": 5 },
             { "id": "late_and_fed_up", "valence": "Grumble", "hook": "boarded", "lever_tag": "service_plan", "salience": 2,
-              "lasts_minutes": null }
+              "lasts_minutes": null, "until": "first_served" }
           ]
         }
         """;

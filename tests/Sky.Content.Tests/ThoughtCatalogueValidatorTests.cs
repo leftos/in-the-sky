@@ -3,9 +3,9 @@ using Sky.Content.Validation;
 namespace Sky.Content.Tests;
 
 /// <summary>
-/// Pins the thought catalogue validator: every kind's lever tag, its neighbour lever tag when it has one, and its hook are
-/// from the known lists, each refusal naming <c>thoughts.json</c> and the JSON path of the field (R10); and the whole
-/// validator pipeline accepts the minimal tree.
+/// Pins the thought catalogue validator: every kind's lever tag and hook are from the known lists, and it lasts either
+/// <c>lasts_minutes</c> or <c>until</c> an event of the closed list, never both and never neither, each refusal naming
+/// <c>thoughts.json</c> and the JSON path of the field (R10); and the whole validator pipeline accepts the minimal tree.
 /// </summary>
 public sealed class ThoughtCatalogueValidatorTests
 {
@@ -25,17 +25,59 @@ public sealed class ThoughtCatalogueValidatorTests
         Assert.Contains("seat_pitch", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>A neighbour lever tag outside the known list is refused at the field.</summary>
+    /// <summary>A kind with both lasts_minutes and until is refused at until, naming the kind.</summary>
     [Fact]
-    public void UnknownNeighbourLeverTagIsRefused()
+    public void KindWithBothMinutesAndUntilIsRefused()
     {
         using var tree = ContentTree.Minimal();
-        tree.Replace(ThoughtsFile, "\"lever_tag\": \"crew_staffing\"", "\"lever_tag\": \"crew_staffing\", \"neighbour_lever_tag\": \"seatmates\"");
+        tree.Replace(ThoughtsFile, "\"lasts_minutes\": 30,", "\"lasts_minutes\": 30, \"until\": \"first_served\",");
 
         ContentLoadException error = Refusal(tree);
 
         Assert.Equal(ThoughtsFile, error.File);
-        Assert.Equal("$.kinds[0].neighbour_lever_tag", error.JsonPath);
+        Assert.Equal("$.kinds[0].until", error.JsonPath);
+        Assert.Contains("call_ignored", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A kind with neither lasts_minutes nor until is refused at until, naming the kind.</summary>
+    [Fact]
+    public void KindWithNeitherMinutesNorUntilIsRefused()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(ThoughtsFile, "\"lasts_minutes\": null, \"until\": \"first_served\"", "\"lasts_minutes\": null");
+
+        ContentLoadException error = Refusal(tree);
+
+        Assert.Equal(ThoughtsFile, error.File);
+        Assert.Equal("$.kinds[1].until", error.JsonPath);
+        Assert.Contains("late_and_fed_up", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>An until outside the closed list is refused at the field, naming the kind and the value.</summary>
+    [Fact]
+    public void UntilOutsideTheClosedListIsRefused()
+    {
+        using var tree = ContentTree.Minimal();
+        tree.Replace(ThoughtsFile, "\"until\": \"first_served\"", "\"until\": \"landed\"");
+
+        ContentLoadException error = Refusal(tree);
+
+        Assert.Equal(ThoughtsFile, error.File);
+        Assert.Equal("$.kinds[1].until", error.JsonPath);
+        Assert.Contains("late_and_fed_up", error.Message, StringComparison.Ordinal);
+        Assert.Contains("landed", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A kind with lasts_minutes null and until first_served is accepted and reads its until.</summary>
+    [Fact]
+    public void UntilFirstServedIsAccepted()
+    {
+        using var tree = ContentTree.Minimal();
+
+        ContentSet content = tree.Load();
+        new ThoughtCatalogueValidator().Validate(content);
+
+        Assert.Equal("first_served", content.Thoughts.Kinds.Single(kind => kind.Id == "late_and_fed_up").Until);
     }
 
     /// <summary>A hook the engine does not emit is refused at the field.</summary>

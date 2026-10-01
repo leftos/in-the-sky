@@ -29,17 +29,17 @@ public sealed record ThoughtKindSpec
     /// <summary>Gets the lever or moment that would change it.</summary>
     public required string LeverTag { get; init; }
 
-    /// <summary>Gets the lever tag when a neighbour is the subject, or null when it is always <see cref="LeverTag"/>.</summary>
-    public string? NeighbourLeverTag { get; init; }
-
     /// <summary>Gets what the thought is about, or null when it has no subject.</summary>
     public string? Subject { get; init; }
 
     /// <summary>Gets the salience, 1 to 3; a new thought replaces the current one at equal or higher salience.</summary>
     public required int Salience { get; init; }
 
-    /// <summary>Gets the sim minutes it lasts, or null for one that lasts until the passenger is first served; required either way.</summary>
+    /// <summary>Gets the sim minutes it lasts, or null for one that lasts until <see cref="Until"/>; required either way.</summary>
     public required int? LastsMinutes { get; init; }
+
+    /// <summary>Gets the engine event that ends the thought, when <see cref="LastsMinutes"/> is null.</summary>
+    public string? Until { get; init; }
 
     /// <summary>
     /// Gets the number the hook compares against, or null when it compares none. The unit is the hook's own, so one field

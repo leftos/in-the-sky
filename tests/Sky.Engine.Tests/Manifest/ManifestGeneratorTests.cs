@@ -397,7 +397,7 @@ public sealed class ManifestGeneratorTests
         CabinRow business = new(38, [NavGraphBuilderTests.Group(6, 26, "A", "C"), NavGraphBuilderTests.Group(90, 26, "D", "F")]);
         CabinRow economy = new(31, [NavGraphBuilderTests.Group(4, 18, "A", "B", "C"), NavGraphBuilderTests.Group(90, 18, "D", "E", "F")]);
         return new CabinLayout(
-            "reference-narrowbody",
+            "generator-test-narrowbody",
             148,
             [.. Enumerable.Repeat(business, BusinessRows), .. Enumerable.Repeat(economy, 28)],
             [new Aisle(74, 20)],

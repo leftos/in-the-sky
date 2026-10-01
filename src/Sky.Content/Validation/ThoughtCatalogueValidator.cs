@@ -3,8 +3,9 @@ using Sky.Content.Schema;
 namespace Sky.Content.Validation;
 
 /// <summary>
-/// Checks <c>thoughts.json</c>: every kind's lever tag, and its neighbour lever tag when it has one, is one of
-/// <see cref="LeverTags"/>, and its hook is one of <see cref="Hooks"/>.
+/// Checks <c>thoughts.json</c>: every kind's lever tag is one of <see cref="LeverTags"/>, its hook is one of
+/// <see cref="Hooks"/>, and it lasts either <c>lasts_minutes</c> or <c>until</c> one of <see cref="UntilEvents"/>, never both
+/// and never neither (<c>passengers.md</c> section 10, "Expiry by an event").
 /// </summary>
 public sealed class ThoughtCatalogueValidator : IContentValidator
 {
@@ -43,6 +44,12 @@ public sealed class ThoughtCatalogueValidator : IContentValidator
         "unease_lowered_by_crew",
     ];
 
+    /// <summary>
+    /// Gets the engine events a kind's <c>until</c> may name (<c>passengers.md</c> section 10): <c>first_served</c>, the
+    /// passenger first served a drink or a meal.
+    /// </summary>
+    public static IReadOnlyList<string> UntilEvents { get; } = ["first_served"];
+
     /// <inheritdoc/>
     public void Validate(ContentSet content)
     {
@@ -53,12 +60,31 @@ public sealed class ThoughtCatalogueValidator : IContentValidator
             string path = $"$.kinds[{position}]";
             ThoughtKindSpec kind = kinds[position];
             RequireListed($"{path}.lever_tag", kind.LeverTag, LeverTags, "a lever tag");
-            if (kind.NeighbourLeverTag is { } neighbour)
-            {
-                RequireListed($"{path}.neighbour_lever_tag", neighbour, LeverTags, "a lever tag");
-            }
-
             RequireListed($"{path}.hook", kind.Hook, Hooks, "an engine hook");
+            CheckExpiry($"{path}.until", kind);
+        }
+    }
+
+    /// <summary>Checks that the kind lasts either a number of minutes or until a listed event, never both and never neither.</summary>
+    private static void CheckExpiry(string untilPath, ThoughtKindSpec kind)
+    {
+        if (kind.LastsMinutes is not null && kind.Until is not null)
+        {
+            string both =
+                $"Expected lasts_minutes or until for kind \"{kind.Id}\", not both; "
+                + $"got lasts_minutes {kind.LastsMinutes} and until \"{kind.Until}\".";
+            throw new ContentLoadException(ThoughtsFile, untilPath, both, null);
+        }
+
+        if (kind.LastsMinutes is null && kind.Until is null)
+        {
+            string neither = $"Expected lasts_minutes or until for kind \"{kind.Id}\"; got lasts_minutes null and no until.";
+            throw new ContentLoadException(ThoughtsFile, untilPath, neither, null);
+        }
+
+        if (kind.Until is { } until)
+        {
+            RequireListed(untilPath, until, UntilEvents, $"an until event for kind \"{kind.Id}\"");
         }
     }
 
