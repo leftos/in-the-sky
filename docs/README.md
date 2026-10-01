@@ -15,7 +15,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Which tests exist, and where does a new one go? | [TEST_ALMANAC.md](./TEST_ALMANAC.md) |
 | What must Godot client code follow? | [GODOT_CONVENTIONS.md](./GODOT_CONVENTIONS.md) |
 | What did research find? | [research/](./research/) (dated notes, such as the Lua runtime comparison) |
-| What is next? | Linear, issues labelled `repo/in-the-sky`; [plans/MAIN.md](./plans/MAIN.md) is their generated snapshot |
+| What is next? | Linear, the `SKY` team (in-the-sky); [plans/MAIN.md](./plans/MAIN.md) is its generated snapshot |
 | What does a word mean? | The glossary below |
 
 ## Glossary
@@ -119,7 +119,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Lever variant | A scenario file that differs from the reference scenario in exactly one lever, swept against it to show the lever matters. |
 | Line consequence | An event consequence that journals a sentence as a moment tied to the event and a passenger, changing no state, so the report has words for it. |
 | Load-adjusted clock | The clock a gate's ceiling counts on: each few seconds it advances by the share of the machine the run's own processes did not have to share with other work, so it keeps wall time on an idle machine and slows while other agents load it. |
-| Milestone | A numbered stage of the roadmap (M0 to M6); M1's waves are the Linear projects `in-the-sky: M1-*`, and each milestone has a definition of done. |
+| Milestone | A numbered stage of the roadmap (M0 to M6); M1's waves are the `SKY` team's Linear projects `M1-*`, and each milestone has a definition of done. |
 | Misread | A need read recorded one band below the true one (toward fine), possible only when the true value is just above a band edge. |
 | Moment | Two senses. (1) A surfaced situation the player or crew answers with a choice, as opposed to a policy ("decide at the level of a moment"; seat conflicts arrive as moments). (2) In the report, a journal record that moved an outcome: its tick, what happened, who was involved, the cause chain behind it, and its effect on each scoring outcome. The report is built from moments. |
 | Named stream | A random sequence handed out by the one seeded RNG root under a fixed name, so adding draws in one system never shifts another's. |
@@ -198,7 +198,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Verdict | The word the report gives each of the four outcomes (Smooth, Rough, Bad); there is no overall grade. |
 | View projection | One of the Session's two ways of building what the client sees: from crew observations, or from the true state. |
 | Waiting limit | How long an event's crew task may sit unstarted before it times out into the event's `leave` effects, with a moment that nobody came. |
-| Wave | A group of plan items that share files and a gate, one Linear project named `in-the-sky: <wave>`; waves with disjoint files run side by side, and inside a wave a step waits only for the steps it consumes. |
+| Wave | A group of plan items that share files and a gate, one Linear project in the `SKY` team, named for the wave; waves with disjoint files run side by side, and inside a wave a step waits only for the steps it consumes. |
 | Witness pulse | The one-off Unease rise awake passengers within 2 rows take when an incident is raised or missed nearby; it is under the contagion switch. |
 | Zone | A set of rows and stations (door, lav, galley) whose crew answer its call buttons, walk its check-ins and resolve its events first. |
 | Zone lead | The first crew member listed for a zone, who resolves an event nobody noticed by the notice cap. |
