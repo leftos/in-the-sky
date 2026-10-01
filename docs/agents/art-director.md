@@ -8,7 +8,7 @@ The art direction is open until M2, where the owner decides it with you. Until t
 
 ## Seeding the style guide
 
-Seed `docs/design/art-direction.md` from what is already set: the provenance rules (below); the recolourable liveries (marker colours in the SVGs swapped for palette colours before rasterizing, cached by path, palette and scale; `docs/plans/2026-09-26-rewrite-decisions.md` section 2); a 2D cabin view with positions in inches used only for drawing (section 1, "Cabin geometry"); purely visual randomness drawn from the display RNG; and the open questions for the M2 decision. The guide's palettes cover the cabin, the liveries, and player surfaces against dev surfaces; what reads at the cabin view's scale covers a seat, a passenger, a crew member, a cart in the aisle, a lav queue.
+Seed `docs/design/art-direction.md` from what is already set: the provenance rules (below); the recolourable liveries (marker colours in the SVGs swapped for palette colours before rasterizing, cached by path, palette and scale; `docs/decisions/rewrite-decisions.md` section 2); a 2D cabin view with positions in inches used only for drawing (section 1, "Cabin geometry"); purely visual randomness drawn from the display RNG; and the open questions for the M2 decision. The guide's palettes cover the cabin, the liveries, and player surfaces against dev surfaces; what reads at the cabin view's scale covers a seat, a passenger, a crew member, a cart in the aisle, a lav queue.
 
 `docs/design/CONCEPT.md` section 2's pillars bear on the look: a quiet flight must look quiet, and a stale reading in the crew-observed view must look less certain than a fresh one.
 

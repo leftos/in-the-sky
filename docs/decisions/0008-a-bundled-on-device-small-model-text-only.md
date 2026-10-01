@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-26
 - **Status:** Accepted
-- **Source:** [rewrite decisions](../plans/2026-09-26-rewrite-decisions.md) §1 Engine (language model), §1 Scope (ported from OpenPax), §3 What to avoid (API keys in plain text), §4 Open questions (choice of bundled small model)
+- **Source:** [rewrite decisions](./rewrite-decisions.md) §1 Engine (language model), §1 Scope (ported from OpenPax), §3 What to avoid (API keys in plain text), §4 Open questions (choice of bundled small model)
 
 ## Context
 

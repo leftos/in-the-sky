@@ -1,0 +1,234 @@
+{
+  "issues": {
+    "Bdeps": {
+      "id": "5263b4ca-4ef7-4f52-884b-9bdf12c115d2",
+      "identifier": "GAM-47",
+      "linked": true
+    },
+    "Bops": {
+      "id": "44cd5a22-1e40-41c9-9c20-fb158f491612",
+      "identifier": "GAM-48",
+      "linked": true
+    },
+    "Bsaves": {
+      "id": "33266bf1-75a6-4ef5-b741-ded7cc94207f",
+      "identifier": "GAM-49",
+      "linked": true
+    },
+    "Bslots": {
+      "id": "e89c5004-ae7c-4d88-a96d-0ed37dbc843b",
+      "identifier": "GAM-46",
+      "linked": true
+    },
+    "F4": {
+      "id": "09f09544-a165-4d95-ab3c-c4b8c97a8a77",
+      "identifier": "GAM-6",
+      "linked": true
+    },
+    "F4a": {
+      "id": "7b497409-80f3-4538-a5fc-8e64482ef046",
+      "identifier": "GAM-7",
+      "linked": true
+    },
+    "F4b": {
+      "id": "4d0e9cc0-0298-4558-9e7c-469804fea0eb",
+      "identifier": "GAM-8",
+      "linked": true
+    },
+    "F5": {
+      "id": "1627615f-362a-49e1-a5be-2c5c268e1b5f",
+      "identifier": "GAM-9",
+      "linked": true
+    },
+    "F6": {
+      "id": "668e4f1f-772b-4d16-8a93-5236cffcf152",
+      "identifier": "GAM-10",
+      "linked": true
+    },
+    "F7": {
+      "id": "f3c27dd9-9843-4dd2-950d-e696b0688af9",
+      "identifier": "GAM-11",
+      "linked": true
+    },
+    "F8": {
+      "id": "7c4d6e07-4ffb-4a69-b2a2-177906691016",
+      "identifier": "GAM-12",
+      "linked": true
+    },
+    "G3": {
+      "id": "75ebaa35-b621-4c2b-9ac7-50b3888aebcc",
+      "identifier": "GAM-13",
+      "linked": true
+    },
+    "H1": {
+      "id": "d18ee162-e738-4fd0-9904-343e29655104",
+      "identifier": "GAM-24",
+      "linked": true
+    },
+    "H2": {
+      "id": "d50a45f1-cbf5-436e-96fe-2bcde37e339f",
+      "identifier": "GAM-25",
+      "linked": true
+    },
+    "H3": {
+      "id": "683925a5-7214-40fe-bdc1-3eb6240dcad7",
+      "identifier": "GAM-26",
+      "linked": true
+    },
+    "H4": {
+      "id": "bf9534b4-e210-47ba-8b71-a0e40de13ac6",
+      "identifier": "GAM-27",
+      "linked": true
+    },
+    "H5": {
+      "id": "39790bf2-5e8a-4e47-809c-8495e27ffe7c",
+      "identifier": "GAM-28",
+      "linked": true
+    },
+    "I1": {
+      "id": "c60111c3-c573-4247-bb3e-db0dc1c9e5db",
+      "identifier": "GAM-29",
+      "linked": true
+    },
+    "I2": {
+      "id": "148ed774-e3e7-4f3e-bf8e-7f345c1afda9",
+      "identifier": "GAM-30",
+      "linked": true
+    },
+    "I3": {
+      "id": "dc56b27b-608e-40d9-8dd2-511269359441",
+      "identifier": "GAM-31",
+      "linked": true
+    },
+    "M2": {
+      "id": "cdfaa669-7d40-4636-b383-6aa3d9c5996a",
+      "identifier": "GAM-41",
+      "linked": true
+    },
+    "M3": {
+      "id": "c3e3a734-3d00-4295-99a1-47b31a0216d3",
+      "identifier": "GAM-42",
+      "linked": true
+    },
+    "M4": {
+      "id": "7663ad15-925a-4618-aecf-53e5dc75799f",
+      "identifier": "GAM-43",
+      "linked": true
+    },
+    "M5": {
+      "id": "bb707237-08d5-4c5c-a9e2-ae96a68eb47a",
+      "identifier": "GAM-44",
+      "linked": true
+    },
+    "M6": {
+      "id": "dce46135-4565-436e-87a0-d44f89d53ab3",
+      "identifier": "GAM-45",
+      "linked": true
+    },
+    "X1obs": {
+      "id": "13fbe0cc-af98-4131-881a-75828a867831",
+      "identifier": "GAM-14",
+      "linked": true
+    },
+    "X2b": {
+      "id": "3cdac788-46ef-4126-9245-f5112d6db7e2",
+      "identifier": "GAM-15",
+      "linked": true
+    },
+    "X2clock": {
+      "id": "294f7ef6-3b49-44de-b4ff-dfbab23cfa71",
+      "identifier": "GAM-18",
+      "linked": true
+    },
+    "X2floater": {
+      "id": "d66966ce-89c7-4b72-ad5c-83f9adad9c9e",
+      "identifier": "GAM-17",
+      "linked": true
+    },
+    "X2ranges": {
+      "id": "33ee4e03-9126-4c93-a832-6cf652df800b",
+      "identifier": "GAM-16",
+      "linked": true
+    },
+    "X3": {
+      "id": "52351491-6edb-456c-8db5-d5af188f92ad",
+      "identifier": "GAM-19",
+      "linked": true
+    },
+    "X4": {
+      "id": "14118e82-69d3-462f-a969-89a7f7e1c926",
+      "identifier": "GAM-20",
+      "linked": true
+    },
+    "X4a": {
+      "id": "05b00601-f126-4e27-86a3-1cd0636f2897",
+      "identifier": "GAM-21",
+      "linked": true
+    },
+    "X4b": {
+      "id": "29a60d20-b81a-4106-b95e-72d91698255c",
+      "identifier": "GAM-22",
+      "linked": true
+    },
+    "X4dir": {
+      "id": "bdd19819-8bdf-4612-a93b-2368d644c6a7",
+      "identifier": "GAM-23",
+      "linked": true
+    },
+    "Z1": {
+      "id": "0dee952b-a48b-4e45-a2c4-3656d1cdd294",
+      "identifier": "GAM-32",
+      "linked": true
+    },
+    "Z2": {
+      "id": "5f47d539-b21c-4ac6-9c93-038c5c74e808",
+      "identifier": "GAM-33",
+      "linked": true
+    },
+    "Z3": {
+      "id": "96f23541-be80-4c73-88da-be0e8f0a6ff7",
+      "identifier": "GAM-34",
+      "linked": true
+    },
+    "Z4": {
+      "id": "3cf618ce-2d56-4a51-93e5-d24c99789a8d",
+      "identifier": "GAM-35",
+      "linked": true
+    },
+    "Z5": {
+      "id": "5ece5cbb-9775-44a8-827a-2e4d64bfb6e4",
+      "identifier": "GAM-36",
+      "linked": true
+    },
+    "Z6": {
+      "id": "09d43db3-ba9f-476e-85e8-5bd7815ac092",
+      "identifier": "GAM-37",
+      "linked": true
+    },
+    "Z6b": {
+      "id": "8963816b-52f4-4220-bfd3-804d77757dbc",
+      "identifier": "GAM-38",
+      "linked": true
+    },
+    "Z7": {
+      "id": "cd96321a-3f8e-4f12-b5f5-9c44169bb456",
+      "identifier": "GAM-39",
+      "linked": true
+    },
+    "Z8": {
+      "id": "83758daa-412e-41a0-8cb0-0bd42124979e",
+      "identifier": "GAM-40",
+      "linked": true
+    }
+  },
+  "projects": {
+    "B": "0c21d1ff-74b3-4bea-82ab-c5239220ff74",
+    "F": "feec771b-845a-4217-9554-3fa540c60aed",
+    "G": "6eac0580-081b-4859-a43a-c878855f6215",
+    "H": "ad5e2135-d2db-4ef7-ba6f-e9831533dfa7",
+    "I": "8b2e53e6-a6dc-48f7-90de-fe45bdd65d8d",
+    "L": "602cca21-8d3b-4919-a92f-e61759e749d2",
+    "X": "e06cb032-2689-4cfd-b2c2-a91acc684289",
+    "Z": "d2dc65df-2908-4398-8bed-7a4166818aaf"
+  }
+}

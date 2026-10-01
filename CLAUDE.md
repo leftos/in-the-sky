@@ -5,7 +5,7 @@ A passenger and crew cabin simulator: the player is the stage manager of an airl
 ## Start here
 
 - `docs/README.md`: the map and the glossary. Read it before searching the tree; a word used in a project sense is defined there.
-- `docs/plans/MAIN.md`: open work only, in working order; the next item is the first line from the top.
+- The plan is in Linear: every task is an issue labelled `repo/in-the-sky`, in working order by project; `docs/plans/MAIN.md` is its generated snapshot (`linear queue in-the-sky` gives the next item).
 - `docs/ARCHITECTURE.md`: the projects, the dependency edges they may have, and where a change goes.
 - `docs/DEVELOPMENT.md`: toolchain, first-clone setup, `sky.ps1` commands and ceilings, hooks, provenance, the godot MCP server.
 - `docs/TEST_ALMANAC.md`: every test class, what it proves, where a new one goes.
@@ -28,7 +28,7 @@ Everything runs from the repo root through `sky.ps1` (`pwsh ./sky.ps1 help`). Ev
 
 ## Workflow
 
-- Every task is a checkbox line in `docs/plans/MAIN.md` (or a subplan it links); a landed line moves, ticked, to `docs/plans/archive/`. A steer that arrives mid-task becomes a line there before anything else.
+- Every task is a Linear issue labelled `repo/in-the-sky`; `docs/plans/MAIN.md` is a generated snapshot, never edited by hand (change Linear, then snapshot). A steer that arrives mid-task gets an **add** before anything else. The operations and rules are in `~/.claude/docs/plan-operations.md`; M1's rulings are `docs/decisions/m1-rulings.md`.
 - The orchestrator settles non-game technical decisions itself (build config, test layout, tool choices) and records each in the owning doc or an ADR; only design, player-facing or public choices (a push, a GitHub post) go to the owner, through `AskUserQuestion`. The owner answers design questions well with previews on the options; when they ask to discuss the tradeoffs of two options, lay out the pros and cons in prose before asking again.
 - Source and test edits go to the user-level `implementer` agent with a brief naming the worktree root, the files, the change and a proving command per step; the main session owns docs, plans, config, ADRs and commits.
 - `/nextup` runs the plan through the project profile `.claude/skills/sky-nextup/SKILL.md` (agents, reviewers, gates, the Docs map, landing); every commit goes through the user-level `/changelog-and-commit`, which reads that profile's `## Changelog`.

@@ -1,6 +1,6 @@
 # M1 slice explorations, 2026-09-27
 
-The `sky-explore` maps for the slice cut on 2026-09-27 (F4 with the retro OpenPax prior-art check, X2 with X3, X4), stored for the next `/nextup` to brief from without exploring again (owner, 2026-09-27: "Store the exploration results so they can get picked up by /nextup but don't start any implementation work"). All read at main `c7b8604`; re-check a cited line with `rg -n` before a brief quotes it. Each section ends with its open decisions: those marked `(orchestrator)` are settled, the rest go to the decision round. The steps themselves stay in [2026-09-26-m1-headless-cabin-flight.md](./2026-09-26-m1-headless-cabin-flight.md).
+The `sky-explore` maps for the slice cut on 2026-09-27 (F4 with the retro OpenPax prior-art check, X2 with X3, X4), stored for the next `/nextup` to brief from without exploring again (owner, 2026-09-27: "Store the exploration results so they can get picked up by /nextup but don't start any implementation work"). All read at main `c7b8604`; re-check a cited line with `rg -n` before a brief quotes it. Each section ends with its open decisions: those marked `(orchestrator)` are settled, the rest go to the decision round. The steps themselves are Linear issues in the `in-the-sky: M1-F` and `in-the-sky: M1-X` projects, titled by step key; R and OD numbers are in [m1-rulings.md](../decisions/m1-rulings.md).
 
 ## X4: the M1 event modules
 
@@ -87,8 +87,8 @@ F4 needs F3a, F3b and C3 (landed), and runs after the in-flight F3b follow-up fi
 ### Open decisions
 
 1. The move-interrupt option: (orchestrator) Option 1. An engine mechanism, the docs describe no activity cutting into a move, and OpenPax converged on the same gate.
-2. The keep-current bias magnitude: balance-analyst sets it in `balance.md` section 3.2 before F4a's brief.
-3. What makes a lav unreachable for `Cascades`: a design question for game-designer (passengers.md), the number then balance-analyst's; F4b's brief waits on it.
+2. The keep-current bias magnitude: settled, `balance.md` section 3.9 (+4, additive, on its utility scale).
+3. What makes a lav unreachable for `Cascades`: settled, `passengers.md` section 3 (no open lav, a cart on the path, Q or more ahead in the queue, no escort for a child, the sign on), with Q = 2 in `balance.md` section 3.11.
 4. The neighbour lookup: (orchestrator) a per-seat neighbour table built once from `CabinLayout` at `FlightWorld` construction, in `Contagion.cs`.
 5. `DecisionLog` retention: (orchestrator) every decision kept (R16), a per-passenger list of fixed-size records, no cap in M1.
 6. The split: (orchestrator) F4a and F4b as above.
@@ -148,5 +148,5 @@ Two briefs, both editing `ContentTree.cs` in different entries, so they run one 
 1. `gate-delay-closed.json` in X2: (orchestrator) yes. Plan line 9 records the owner's triage giving it to X2, and the X2 line's omission is the plan's own inconsistency; the X2 line is amended to list it.
 2. The Floater field: (orchestrator) `CrewTraitSpec.FreeZones`, an int defaulting to 0, validated 0 or more; `floater` sets 1 (crew.md line 82).
 3. How `ShippedActivityTests` reaches the modules: (orchestrator) a `Sky.Content` project reference in the Scripting test csproj alone, loading through `ContentLoader`, the same route as X4; `ReferenceTests` pins the compiled `Sky.Scripting.dll`, so ADR 0001 is untouched.
-4. How `call_crew` names its reason: one module scoring `call_crew` with the reason chosen by the Engine (F4), or one activity id per reason (`call_refreshment`, `call_reassurance`, `call_lav_permission`) against passengers.md's single `call_crew` row. A design question for game-designer first, then the owner's round if the designer does not settle it from the doc.
-5. The `frequent_flyer`, `sociable` and `restless` bonus magnitudes: balance-analyst sets them in `balance.md` before X3's brief.
+4. How `call_crew` names its reason: settled, one activity id per reason (`call_refreshment`, `call_reassurance`, `call_lav_permission`), each its own module with its own thresholds (`passengers.md` section 3).
+5. The `frequent_flyer`, `sociable` and `restless` bonus magnitudes: settled, +8, +5 and +20 (`balance.md` section 3.10).

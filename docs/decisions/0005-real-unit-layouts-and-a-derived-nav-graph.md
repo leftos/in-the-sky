@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-26
 - **Status:** Accepted
-- **Source:** [rewrite decisions](../plans/2026-09-26-rewrite-decisions.md) §1 Engine (cabin geometry), §3 What to avoid (stringly-typed types and coordinate arithmetic)
+- **Source:** [rewrite decisions](./rewrite-decisions.md) §1 Engine (cabin geometry), §3 What to avoid (stringly-typed types and coordinate arithmetic)
 
 ## Context
 

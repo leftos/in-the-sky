@@ -49,7 +49,7 @@ A plain `net10.0` class library with no project or package references; its `Asse
 - `Randomness/`: `RngRoot` (the flight's seed) and `SimRandom`, a named stream (xoshiro256** seeded through SplitMix64 from the FNV-1a-64 hash of the seed and the name); every draw in the sim comes from one (ADR 0003, R5).
 - `Time/`: `SimTime` (the 250 ms tick, ticks per sim minute and hour) and `TickAccumulator`, which turns elapsed milliseconds into whole ticks and carries the remainder.
 
-`tests/Sky.Engine.Tests/Guards/ForbiddenApiTests.cs` reads the compiled Engine's metadata and fails on any wall-clock, randomness, threading, IO or string-hashing API (R3 in the M1 plan); a new Engine dependency on one of them is an allowlist edit there, argued in the change. A C# `event` or `lock` compiles to `System.Threading` calls, so either trips it.
+`tests/Sky.Engine.Tests/Guards/ForbiddenApiTests.cs` reads the compiled Engine's metadata and fails on any wall-clock, randomness, threading, IO or string-hashing API (R3 in `docs/decisions/m1-rulings.md`); a new Engine dependency on one of them is an allowlist edit there, argued in the change. A C# `event` or `lock` compiles to `System.Threading` calls, so either trips it.
 
 ### Content: `src/Sky.Content`
 

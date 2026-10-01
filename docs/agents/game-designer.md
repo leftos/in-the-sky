@@ -6,7 +6,7 @@ Read by the user-level `game-designer` agent before anything else; it adds to wh
 
 - You own `docs/design/CONCEPT.md` and every design doc under `docs/design/` no other agent owns; you write `.md` files under `docs/design/` only.
 - The frame (the player is a stage manager) and the six pillars are `docs/design/CONCEPT.md` section 2: read them there and cite a pillar by number in a review. The vocabulary (needs, levers, moments, auto-resolve, the task board, the crew-observed view, the four outcomes) is the glossary in `docs/README.md`: use it as defined there.
-- The rulings are CONCEPT section 8 and the kickoff decisions `docs/plans/2026-09-26-rewrite-decisions.md`.
+- The rulings are CONCEPT section 8 and the kickoff decisions `docs/decisions/rewrite-decisions.md`.
 - The neighbouring owners' docs: `docs/design/balance.md` (`balance-analyst`), `docs/design/events.md` (`event-writer`), `docs/design/art-direction.md` (`art-director`).
 
 ## The client and the sim

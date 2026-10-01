@@ -1,6 +1,6 @@
 # Game Concept
 
-Status: ruled by the owner in the concept pass; drafted by `game-designer`. Amended by the owner's triage of the OpenPax goals ([the AVSIM goals research](../research/2026-09-26-openpax-avsim-goals.md)), whose rulings T1 to T13 are in section 8 and whose deferred work is in section 9. What the owner decided at kickoff is in [the decisions doc](../plans/2026-09-26-rewrite-decisions.md) and is not reopened here. Section 8 records each ruling; options not taken are kept as the record of what was weighed. Terms are in the glossary in [docs/README.md](../README.md).
+Status: ruled by the owner in the concept pass; drafted by `game-designer`. Amended by the owner's triage of the OpenPax goals ([the AVSIM goals research](../research/2026-09-26-openpax-avsim-goals.md)), whose rulings T1 to T13 are in section 8 and whose deferred work is in section 9. What the owner decided at kickoff is in [the decisions doc](../decisions/rewrite-decisions.md) and is not reopened here. Section 8 records each ruling; options not taken are kept as the record of what was weighed. Terms are in the glossary in [docs/README.md](../README.md).
 
 ## 0. Terms
 

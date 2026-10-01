@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-26
 - **Status:** Accepted
-- **Source:** [rewrite decisions](../plans/2026-09-26-rewrite-decisions.md) §1 Engine (state and time, flights), §3 What to avoid (time that depends on the frame and the machine), §4 Open questions (tick size, MSFS clock edge cases)
+- **Source:** [rewrite decisions](./rewrite-decisions.md) §1 Engine (state and time, flights), §3 What to avoid (time that depends on the frame and the machine), §4 Open questions (tick size, MSFS clock edge cases)
 
 ## Context
 

@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-26
 - **Status:** Accepted
-- **Source:** [rewrite decisions](../plans/2026-09-26-rewrite-decisions.md) §1 Engine (solution layout), §1 Repo and workflow (platforms), §3 What to avoid (first item)
+- **Source:** [rewrite decisions](./rewrite-decisions.md) §1 Engine (solution layout), §1 Repo and workflow (platforms), §3 What to avoid (first item)
 
 ## Context
 

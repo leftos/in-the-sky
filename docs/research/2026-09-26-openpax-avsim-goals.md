@@ -2,7 +2,7 @@
 
 Source: the AVSIM thread "OpenPax: Open-Source Passenger Add-On (Early Development)" ([page 1][p1], [page 2][p2], [page 3][p3]), fetched with `curl` on 2026-09-26 and parsed post by post. The thread has three pages and 39 posts (15, 15 and 9); `/page/4/` redirects to page 3. The original poster, and so the owner, is **Leftos** (profile 520242); 21 of the 39 posts are theirs (9, 8 and 4 by page), dated 2025-01-29 to 2025-07-29. Every owner post was read in full as text. Not readable: the screenshots and videos in the 2025-02-22, 2025-07-28 and 2025-07-29 posts, which the page serves as lazy-loaded placeholders, so what the ticket-sales UI and the seat map looked like is not recorded here. Other users' posts are used only as context for what the owner answered. Dates are the post's UTC timestamp; each link goes to the post's anchor. Terms are in the glossary in [docs/README.md](../README.md).
 
-The comparison column reads [CONCEPT.md](../design/CONCEPT.md) as ruled on 2026-09-26. Where CONCEPT is silent but the kickoff record it defers to, [the rewrite decisions](../plans/2026-09-26-rewrite-decisions.md), settles the point, the verdict says so, since that record is part of the rewrite's position.
+The comparison column reads [CONCEPT.md](../design/CONCEPT.md) as ruled on 2026-09-26. Where CONCEPT is silent but the kickoff record it defers to, [the rewrite decisions](../decisions/rewrite-decisions.md), settles the point, the verdict says so, since that record is part of the rewrite's position.
 
 ## Summary
 

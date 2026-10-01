@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-26
 - **Status:** Accepted
-- **Source:** [rewrite decisions](../plans/2026-09-26-rewrite-decisions.md) §3 What to avoid (unseeded or shared randomness), §2 What to keep (per-entity RNG streams), §1 Engine (language model)
+- **Source:** [rewrite decisions](./rewrite-decisions.md) §3 What to avoid (unseeded or shared randomness), §2 What to keep (per-entity RNG streams), §1 Engine (language model)
 
 ## Context
 

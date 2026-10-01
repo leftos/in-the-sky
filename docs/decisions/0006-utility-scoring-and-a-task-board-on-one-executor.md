@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-26
 - **Status:** Accepted
-- **Source:** [rewrite decisions](../plans/2026-09-26-rewrite-decisions.md) §1 Engine (character AI, content), §2 What to keep (Behavior/Sequence composition), §3 What to avoid (no preemption model), §4 Open questions (Lua runtime, Lua boundary)
+- **Source:** [rewrite decisions](./rewrite-decisions.md) §1 Engine (character AI, content), §2 What to keep (Behavior/Sequence composition), §3 What to avoid (no preemption model), §4 Open questions (Lua runtime, Lua boundary)
 
 ## Context
 

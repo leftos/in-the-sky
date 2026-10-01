@@ -8,16 +8,17 @@ description: Profile for the user-level `nextup` skill in the In the Sky repo, l
 The generic loop is the user-level `nextup` skill; this file supplies only what is In the Sky's. Hotspots: none named yet. Terms (wave, slice, landing note, fix round, red proof) are in the glossary in `docs/README.md`.
 
 siblings: none
+linear: in-the-sky
 
 ## Pre-loop hook
 
-**Trade Godot and .NET lessons with the other projects.** Run the user-level `conventions-sync` skill once with `--stack godot,dotnet`, before the index is read. When it changed anything, `docs/GODOT_CONVENTIONS.md`, `docs/DOTNET_CONVENTIONS.md` and their `docs/.conventions-sync-<stack>.json` ledgers land on `main` as their own `docs:` commit (`git commit -F .tmp/commit-msg.txt -- <those four paths>`) before the first worktree is cut, since an implementer reads the conventions in its worktree. The skill commits its side of `~/.claude` itself.
+**Trade Godot and .NET lessons with the other projects.** Run the user-level `conventions-sync` skill once with `--stack godot,dotnet`, before the queue is read. When it changed anything, `docs/GODOT_CONVENTIONS.md`, `docs/DOTNET_CONVENTIONS.md` and their `docs/.conventions-sync-<stack>.json` ledgers land on `main` as their own `docs:` commit (`git commit -F .tmp/commit-msg.txt -- <those four paths>`) before the first worktree is cut, since an implementer reads the conventions in its worktree. The skill commits its side of `~/.claude` itself.
 
-**Check the driving docs against godot-mcp.** Run the user-level `godot-mcp-docs-sync` skill once, after the conventions sync and before the index is read. Its driving docs: `docs/DEVELOPMENT.md` ("The Godot client", with "Scratch scenes" and "The godot MCP server"), `CLAUDE.md` (its godot MCP lines), the body of every agent file under `.claude/agents/` that names a godot tool, and `docs/GODOT_CONVENTIONS.md` (the `no-mcp-bridge-at-commit` rule). When it changed anything, the docs it edited and `docs/.godot-mcp-sync.json` land on `main` as their own `docs:` commit (`git commit -F .tmp/commit-msg.txt -- <those paths>`) before the first worktree is cut, since an implementer drives the client by them.
+**Check the driving docs against godot-mcp.** Run the user-level `godot-mcp-docs-sync` skill once, after the conventions sync and before the queue is read. Its driving docs: `docs/DEVELOPMENT.md` ("The Godot client", with "Scratch scenes" and "The godot MCP server"), `CLAUDE.md` (its godot MCP lines), the body of every agent file under `.claude/agents/` that names a godot tool, and `docs/GODOT_CONVENTIONS.md` (the `no-mcp-bridge-at-commit` rule). When it changed anything, the docs it edited and `docs/.godot-mcp-sync.json` land on `main` as their own `docs:` commit (`git commit -F .tmp/commit-msg.txt -- <those paths>`) before the first worktree is cut, since an implementer drives the client by them.
 
 ## Decision round
 
-The owner directs; the orchestrator settles every non-game technical decision itself (build config, test layout, a data shape, a name, an API surface, a tool choice, where a step's scope ends), records it in its owning doc, an ADR, or the subplan's Decisions list marked `(orchestrator)` with its reason, and names it in the next status note. The round asks the owner only a design, player-facing or public choice (a push, a GitHub post), with previews on the options and the recommended one first; when the owner asks to discuss two options, lay out their pros and cons in prose before asking again. A design question goes to its domain expert first (Agents), and the expert's recommendation rides on the option.
+The owner directs; the orchestrator settles every non-game technical decision itself (build config, test layout, a data shape, a name, an API surface, a tool choice, where a step's scope ends), records it in its owning doc, an ADR, or the issue's description marked `(orchestrator)` with its reason, and names it in the next status note. The round asks the owner only a design, player-facing or public choice (a push, a GitHub post), with previews on the options and the recommended one first; when the owner asks to discuss two options, lay out their pros and cons in prose before asking again. A design question goes to its domain expert first (Agents), and the expert's recommendation rides on the option.
 
 A feature-branch verdict (an explorer's `BRANCH: feat/<name>`, or a hygiene pass's branch proposal) is always the owner's, asked with its evidence in the option, never settled by the orchestrator as a technical call (user-level `nextup` §3).
 
@@ -30,10 +31,12 @@ A feature-branch verdict (an explorer's `BRANCH: feat/<name>`, or a hygiene pass
 
 ## Plan
 
-- Index: `docs/plans/MAIN.md`, open work only, in working order: "Now" (the milestone in flight, grouped into waves by shared files, each wave naming its gate), "Next", "Later milestones", "Backlog". The next item is the first unchecked line from the top. A line is one item: the action, the files, who asked and when; designs and maps live in `docs/design/`, `docs/decisions/` or a linked dated subplan (`docs/plans/<date>-<slug>.md`).
-- Issues: `gh issue list -R leftos/in-the-sky`. An unplanned issue gets a line in the wave whose files it shares, else under "Backlog".
-- Pull requests: `gh pr list -R leftos/in-the-sky`. An unplanned PR gets one line, its review and landing: a person's PR in the wave whose files it shares, a Dependabot bump under "Backlog", each naming the files, whether the checks pass and whether it merges cleanly.
-- Finished-item convention: **a landed line leaves the index in its landing commit.** It moves, ticked, to the foot of `docs/plans/archive/YYYY-MM-done.md` (the month's file; a new month opens a new one) with its landing note, `Landed YYYY-MM-DD: <what landed, test counts, the red proof, reviewer findings>`. An item worked from a subplan is ticked there with the same note, and the index line goes with the subplan's last item; a finished subplan moves to `docs/plans/archive/`, never deleted. A reviewer or implementer observation the item does not fix becomes a new unchecked line beside the items that share its files.
+The plan lives in Linear (`linear: in-the-sky` above), per `~/.claude/docs/plan-operations.md`; `docs/plans/MAIN.md` is its generated snapshot. This repo's rules on top:
+
+- Project order is working order: the milestone in flight's waves (`in-the-sky: M1-F` … `M1-Z`, each grouped by shared files and naming its gate in its project description), then `in-the-sky: Later milestones`, then `in-the-sky: Backlog`. A wave earlier in that order outranks a later one; inside a wave, an issue waits only for the issues it is blocked by.
+- An M1 issue is titled by its step key (F5, H1, Z6), which the design docs cite; R and OD numbers are in `docs/decisions/m1-rulings.md`. Designs and maps live in `docs/design/`, `docs/decisions/` or a dated design file in `docs/plans/` linked from the issue.
+- An unplanned GitHub issue goes to the wave whose files it shares, else `in-the-sky: Backlog`. An unplanned PR gets an **add**, "Review and land PR #N": a person's PR in the wave whose files it shares, a Dependabot bump in `in-the-sky: Backlog`, naming the files, whether the checks pass and whether it merges cleanly.
+- The landing note `linear land --note` carries: what landed, test counts, the red proof, reviewer findings. A reviewer or implementer observation the item does not fix gets an **add** in the wave whose files it shares.
 
 ## Agents and the brief
 
@@ -56,13 +59,13 @@ By change type; a diff of several types gets every reviewer its types name:
 | Change | Reviewer |
 |---|---|
 | Any C# | `code-review` at `low` over the worktree's diff (if it returns nothing, `oracle` in its place) |
-| Anything under `src/Sky.Engine` | also `oracle` over the worktree's unstaged diff, with the subplan's decisions and a hazard list, closing `FINDINGS: <n hazard> <n defect> <n nit>` (owner's ask) |
+| Anything under `src/Sky.Engine` | also `oracle` over the worktree's unstaged diff, with the issue's decisions and a hazard list, closing `FINDINGS: <n hazard> <n defect> <n nit>` (owner's ask) |
 | Anything under `src/Sky.Client` | `godot-reviewer`, with the changed files and the worktree's `.tmp/build.log` path so it builds nothing |
-| A player-facing client change (M2 on) | after landing, `playtester`, and `ux-reviewer` on a new or changed screen; findings become plan lines |
+| A player-facing client change (M2 on) | after landing, `playtester`, and `ux-reviewer` on a new or changed screen; each finding gets an **add** |
 | `CLAUDE.md`, `.claude/`, a skill | a `writing-for-agents` read-through by the orchestrator |
 | `docs/design/` | the agent that owns the doc (Agents; `game-designer` for the rest) |
 
-Stage the first round in the worktree (`git -C <worktree> add <files>`) before sending findings back, so the unstaged diff afterwards is the fix round alone. **Two fix rounds at most**, both to the same implementer by `SendMessage`; a last pass follows only a hazard. Anything a last pass raises beyond a hazard becomes a plan line.
+Stage the first round in the worktree (`git -C <worktree> add <files>`) before sending findings back, so the unstaged diff afterwards is the fix round alone. **Two fix rounds at most**, both to the same implementer by `SendMessage`; a last pass follows only a hazard. Anything a last pass raises beyond a hazard gets an **add**.
 
 ## Docs map
 
@@ -84,14 +87,14 @@ Match the diff's paths and the implementer's `SURFACES` line against this table 
 
 ## Landing
 
-The item lands as one commit on its `landOn` branch (`main` below stands for it) in the checkout that has it out, the main checkout for `main`, never as a commit in its worktree: `git -C <worktree> add <the files the gate listed>`, `git -C <worktree> diff --cached --binary <branch.<slug>.base sha> -- > .tmp/<slug>.patch` (against the recorded base, not `HEAD`, so a `wip:` commit on the branch is in the patch; the `--` keeps git from reading the sha as a path), `git apply --index .tmp/<slug>.patch` on main, then the docs sweep and the plan edit written on main over it. The doc-drift hook checks the committing tree's docs, which only main's sweep has. When `main` moved since the worktree was cut, `pwsh tools/test-all.ps1` runs on main over the patch first. Stage by name, write the message to `.tmp/commit-msg.txt` (the user-level `changelog-and-commit` with `## Changelog` below), commit without asking, then `git worktree remove` and `git branch -D <slug>` (a patch landing leaves the branch unmerged in git's sense, so `-d` refuses it; landed is judged by content, and a `wip:` commit never lands and never counts as unlanded work). Commit often; **push only at a milestone**, and ask first, since a push is public. Major or experimental work goes under a feature marker (user-level `nextup` §3, "Feature branches"): its items land by this same patch path in the feature worktree (`../in-the-sky.wt/feat-<name>`), `feat/<name>` is pushed at the same milestones with the same ask, the item's plan tick is its own commit on main, and the feature PR into main merges only through `/ship` on the feature branch. A throwaway spike lives on `spike/<topic>` and is not landed by this loop. A session running from a worktree offers `/ship` at each push point instead of pushing (user-level `nextup`, "A worktree session offers a ship instead of a push"); that offer is the ask.
+The item lands as one commit on its `landOn` branch (`main` below stands for it) in the checkout that has it out, the main checkout for `main`, never as a commit in its worktree: `git -C <worktree> add <the files the gate listed>`, `git -C <worktree> diff --cached --binary <branch.<slug>.base sha> -- > .tmp/<slug>.patch` (against the recorded base, not `HEAD`, so a `wip:` commit on the branch is in the patch; the `--` keeps git from reading the sha as a path), `git apply --index .tmp/<slug>.patch` on main, then the docs sweep written on main over it; the item is **land**ed after the commit. The doc-drift hook checks the committing tree's docs, which only main's sweep has. When `main` moved since the worktree was cut, `pwsh tools/test-all.ps1` runs on main over the patch first. Stage by name, write the message to `.tmp/commit-msg.txt` (the user-level `changelog-and-commit` with `## Changelog` below), commit without asking, then `git worktree remove` and `git branch -D <slug>` (a patch landing leaves the branch unmerged in git's sense, so `-d` refuses it; landed is judged by content, and a `wip:` commit never lands and never counts as unlanded work). Commit often; **push only at a milestone**, and ask first, since a push is public. Major or experimental work goes under a feature marker (user-level `nextup` §3, "Feature branches"): its items land by this same patch path in the feature worktree (`../in-the-sky.wt/feat-<name>`), `feat/<name>` is pushed at the same milestones with the same ask, the item is **land**ed with `--note "on feat/<name>, ships with #N"`, and the feature PR into main merges only through `/ship` on the feature branch. A throwaway spike lives on `spike/<topic>` and is not landed by this loop. A session running from a worktree offers `/ship` at each push point instead of pushing (user-level `nextup`, "A worktree session offers a ship instead of a push"); that offer is the ask.
 
 ## Changelog
 
 Read by the user-level `changelog-and-commit`; each rule names the step it adds to or overrides.
 
 - Pre-release (Step 3): no `CHANGELOG.md` until the first release cut creates it, with that release's section and an empty `## Unreleased` above it; never create it here. Until then every commit is a no-bullet commit, with the docs sweep and the plan reconciliation as usual.
-- Plan (Step 2b): lines close by `## Plan`'s finished-item convention, never ticked in place.
+- Plan (Step 2b): **land** each item after its commit.
 - Docs map (Step 2c): `## Docs map` above.
 - Audience (Step 4): players, in the game's own words (a lever, a verdict, an event by its title, a button's text); no project names, decision numbers or attribution.
 - Commit message (Step 7): the `doc-drift-message` commit-msg hook refuses a commit staging anything under `src/Sky.Content/` and no `docs/design/` file unless the body carries `Docs: unchanged, <why>` at the start of a line.

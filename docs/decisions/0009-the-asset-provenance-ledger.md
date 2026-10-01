@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-26
 - **Status:** Accepted
-- **Source:** [rewrite decisions](../plans/2026-09-26-rewrite-decisions.md) §1 Asset provenance, §1 Scope (roadmap, M0)
+- **Source:** [rewrite decisions](./rewrite-decisions.md) §1 Asset provenance, §1 Scope (roadmap, M0)
 
 ## Context
 
