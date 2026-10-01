@@ -1,4 +1,6 @@
 * text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
 
 # Godot writes LF; keep hand-edited scene, resource and import files from picking up CRLF on Windows
 *.tscn text eol=lf
