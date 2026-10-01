@@ -35,7 +35,7 @@ Start here. In the Sky is a passenger and crew cabin simulator in Godot 4.7.2 .N
 | Bin help | A crew task standing at a row where a passenger has been stowing or retrieving a bag too long, cutting their remaining bin time (`docs/design/crew.md`). |
 | Body clock | The rule that sets a passenger's Rest from their wake time and the origin-local time of day, including the post-lunch dip (`docs/design/passengers.md` section 6). |
 | Booking | One party the manifest draws: its trip purpose, its size, whether it is a family, and its wake time, shared by its passengers, who are seated together where a seat group holds them. |
-| Bridge | The code the godot MCP server injects into a running client through an `override.cfg` beside `project.godot`, so an agent can drive the game; it is removed when the run stops and never tracked. |
+| Bridge | The code the godot MCP server injects into a running client through an `override.cfg` beside `project.godot`, so an agent can drive the game; it is removed when the last drive or arm on the folder ends, and never tracked. |
 | Brief | The written instructions for one implementer run: the plan steps it carries, the files each touches and the command that proves each. |
 | Cabin ready | The tick the last zone's secure check completes, which needs boarding complete, bins closed and every passenger seated and belted: the part of an on-time door the cabin controls (`crew.md`, Owner rulings 4). |
 | Call reason | Why a passenger pressed the call button (`refreshment`, `reassurance` or `lav_permission`): it decides what answering does and which need the answer reveals. Each reason is its own scored activity (`call_refreshment`, `call_reassurance`, `call_lav_permission`) with its own Lua module and thresholds. |
