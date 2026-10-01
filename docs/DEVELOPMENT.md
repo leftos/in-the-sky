@@ -106,7 +106,7 @@ The checker's own code is linted and tested by `pwsh ./sky.ps1 analysis`.
 
 `prek install` once per clone; `pwsh ./sky.ps1 hooks` runs every hook over every file. `prek.toml` runs these on every commit, in this order: the builtin checks, the Agent Mail lease guard, the fixers (they re-stage what they change), then the readers, then the build, then the doc-drift check.
 
-1. The builtin checks: `trailing-whitespace`, `end-of-file-fixer`, `check-merge-conflict`, `detect-private-key`, and `check-added-large-files` at 1024 KB, each staged to `pre-commit` only, so the `commit-msg` stage runs `doc-drift-message` alone.
+1. The builtin checks: `trailing-whitespace`, `end-of-file-fixer`, `mixed-line-ending --fix=lf` (every file LF but `.bat` and `.cmd`, as `.gitattributes` and `.editorconfig` say), `check-merge-conflict`, `detect-private-key`, and `check-added-large-files` at 1024 KB, each staged to `pre-commit` only, so the `commit-msg` stage runs `doc-drift-message` alone.
 2. `agent-mail-guard`: refuses a commit that stages a file another Claude Code session holds an exclusive Agent Mail lease on (`tools/hooks/Invoke-AgentMailGuard.ps1`, which runs the machine's `~/.claude/tools/agent-mail/guard-check.ps1` and skips with one line where that is not installed, as in CI). `AGENT_MAIL_BYPASS=1` overrides a stale lease.
 3. `dotnet-format-style`: `dotnet format style` at severity info over the staged C# files, re-staging what it changed (`tools/hooks/dotnet-format-wrapper.ps1`).
 4. `csharpier`: `dotnet csharpier format` over the staged C# files, re-staging what it changed (`tools/hooks/csharpier-wrapper.ps1`).
