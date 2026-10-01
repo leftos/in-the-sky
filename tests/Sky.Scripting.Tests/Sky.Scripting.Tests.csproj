@@ -14,7 +14,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Sky.Content\Sky.Content.csproj" />
     <ProjectReference Include="..\..\src\Sky.Scripting\Sky.Scripting.csproj" />
+  </ItemGroup>
+
+  <!-- The fixture event modules ShippedEventTests proves its checks on, beside the assembly like the shipped Data tree.
+       Update, not Include: the SDK's default None items already hold these files, and a second Include duplicates them. -->
+  <ItemGroup>
+    <None Update="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
