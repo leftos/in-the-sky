@@ -168,6 +168,10 @@ A trigger reads the cabin through `ctx`, built in step S3 (`LuaEventContext`) ov
 
 The fixed orders are what let a trigger that takes the first passenger or seat that fits replay the same flight on the same seed.
 
+Two things the M1 modules need and `ctx` does not read directly, derived from seat labels:
+- **Side by side.** A neighbour in the same row is side by side unless they sit across the aisle; on the reference cabin the aisle runs between C and D in both classes, so two seats in one row are side by side when both letters are A to C or both are D onwards.
+- **A passenger's cabin class.** Business rows come before economy rows, so a free business seat at row r makes every row up to r business, and a free economy seat at row r makes every row from r on economy. A row the free seats do not settle has no known class, and a move into a free seat is then not offered.
+
 ## 8. Brainstorm (M1)
 
 The eight candidates weighed for M1, in the order recommended. The owner picked the first four marked **picked**; the rest stay as a pool for later milestones and are not specced.
@@ -208,10 +212,10 @@ All numbers in this section are first values, D3: thresholds, chances, minutes, 
 **Phases.** `boarding`.
 
 **Trigger.**
-- Hard: a group of exactly two whose seats are not side by side, the second of them has just sat down, and the trigger can offer at least one move: a `swapper` (a passenger seated beside the partner, travelling alone, seated, same class) or a free pair (two free seats side by side in the same class). Without either, it returns nothing.
+- Hard: a group of exactly two whose seats are not side by side, both in their seats (`ctx` cannot tell who sat last, so the ask comes on a check after the second sits down), and the trigger can offer at least one move: a `swapper` (a passenger travelling alone and seated, side by side with the partner, or else with the subject; so in the same class) or a free pair (two free seats side by side in the pair's class). Without either, it returns nothing.
 - Soft: one of the pair in age band `child` ×2 (the other is then the `adult` of the same group).
 - Base chance: 0.01 per check.
-- Records: `subject` (the one who asks, who just sat), `partner`, `has_child`, `swapper` or nil, `pair` (two seat ids) or nil, `aisle_busy` (fewer than 70% of the manifest seated).
+- Records: `subject` (the one who asks: the parent with a child, otherwise the first of the pair in passenger order), `partner`, `has_child`, `swapper` or nil, `mover` (whichever of the pair sits apart from the swapper, who trades seats with them) or nil, `pair` (two seat ids) or nil, `aisle_busy` (fewer than 70% of the manifest seated).
 
 **Describe.** Adults: "Two passengers travelling together have seats in {subject_seat} and {partner_seat}. One of them stops a crew member in the aisle to ask if they can sit together." With a child: "A parent and child have seats in {subject_seat} and {partner_seat}, rows apart. The parent stops a crew member in the aisle to ask if they can sit together."
 
@@ -224,7 +228,7 @@ All numbers in this section are first values, D3: thresholds, chances, minutes, 
 | `leave` | `Leave it for now` | no | 0 | always |
 
 Effects:
-- `swap`: 0, subject, line "The crew member leans in to {swapper_seat} and asks if they would mind moving." · 2, swap subject and swapper · 2, subject and partner, Unease −10 · 2, swapper, Unease +8 · 5, subject and partner, Unease −6.
+- `swap`: 0, subject, line "The crew member leans in to {swapper_seat} and asks if they would mind moving." · 2, swap mover and swapper · 2, subject and partner, Unease −10 · 2, swapper, Unease +8 · 5, subject and partner, Unease −6.
 - `pair`: 0, subject, line "The crew member points out two empty seats in row {pair_row}." · 2, subject to `pair[1]`, partner to `pair[2]` · 2, subject and partner, Unease −10 · 5, subject and partner, Unease −6.
 - `leave`: 0, subject, line "They wave to each other over the seat backs." · 5, subject and partner, Unease +6 · 15, subject and partner, Unease +5. With a child, nothing more is added here: `passengers.md` already gives a child with no adult of their group in their seat group Unease ×1.3, and that adult ×1.2 (Context class), for as long as they sit apart. That lasting modifier is the child case's real cost, and the reason `leave` scores low for it; the seat moves in `swap` and `pair` are what end it.
 
@@ -338,7 +342,7 @@ When each is better:
 Effects:
 - `calm`: 0, subject, line "The crew member stands at the row and speaks quietly to both of them." · 1, subject and other, Unease −10 · 3, subject and other, Unease −10 · 3, neighbours, Unease −5.
 - `drink`: 0, subject, line "Two cups arrive, and the argument stops while they drink." · 2, subject and other, Refreshment −30 · 2, subject and other, Unease −8 · 5, subject and other, Unease −6 · 5, subject and other, Bladder +8 · 20, subject and other, Bladder +7. The Bladder steps are CONCEPT's drink pulse of +15 over 30 minutes.
-- `reseat`: 0, other, line "The crew member offers {other_seat} a seat further back, and they take it." · 2, other to `free_seat` · 2, subject and other, Unease −15 · 5, subject and other, Unease −10 · 2, neighbours, Unease −5.
+- `reseat`: 0, other, line "The crew member offers the passenger in {other_seat} the empty seat at {free_seat}, and they take it." · 2, other to `free_seat` · 2, subject and other, Unease −15 · 5, subject and other, Unease −10 · 2, neighbours, Unease −5.
 - `leave`: 0, subject, line "The voices rise over the armrest, and heads turn in the rows around." · 3, subject and other, Unease +8 · 3, neighbours, Unease +5 · 8, neighbours, Unease +3 · if `fierce`, 6, subject, incident `fight` (section 9); otherwise 10, subject and other, Unease +4.
 
 Quality (base, plus adjustments, clamped to [0, 1]):
