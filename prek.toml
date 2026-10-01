@@ -18,10 +18,19 @@ hooks = [
 [[repos]]
 repo = "local"
 
-# Order matters: the fixers run and re-stage first, the readers report on the result, the warnings-as-errors build gates
-# it, and the doc-drift check closes, always_run so a docs-only commit is checked too. Both C# wrappers `git add` what
+# Order matters: the Agent Mail lease guard refuses a commit on another session's leased file before any local hook runs,
+# the fixers run and re-stage next, the readers report on the result, the warnings-as-errors build gates it, and the
+# doc-drift check closes, always_run so a docs-only commit is checked too. Both C# wrappers `git add` what
 # they changed so the commit proceeds instead of failing with "files were modified by this hook". They are pwsh because
 # prek launched from PowerShell on Windows can hand a bash hook the WSL stub, which has no dotnet.
+
+[[repos.hooks]]
+id = "agent-mail-guard"
+name = "agent-mail lease guard"
+entry = "pwsh tools/hooks/Invoke-AgentMailGuard.ps1"
+language = "system"
+pass_filenames = true
+stages = ["pre-commit"]
 
 [[repos.hooks]]
 id = "dotnet-format-style"

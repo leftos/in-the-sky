@@ -104,17 +104,18 @@ The checker's own code is linted and tested by `pwsh ./sky.ps1 analysis`.
 
 ## Hooks
 
-`prek install` once per clone; `pwsh ./sky.ps1 hooks` runs every hook over every file. `prek.toml` runs these on every commit, in this order: the fixers first (they re-stage what they change), then the readers, then the build, then the doc-drift check.
+`prek install` once per clone; `pwsh ./sky.ps1 hooks` runs every hook over every file. `prek.toml` runs these on every commit, in this order: the builtin checks, the Agent Mail lease guard, the fixers (they re-stage what they change), then the readers, then the build, then the doc-drift check.
 
 1. The builtin checks: `trailing-whitespace`, `end-of-file-fixer`, `check-merge-conflict`, `detect-private-key`, and `check-added-large-files` at 1024 KB, each staged to `pre-commit` only, so the `commit-msg` stage runs `doc-drift-message` alone.
-2. `dotnet-format-style`: `dotnet format style` at severity info over the staged C# files, re-staging what it changed (`tools/hooks/dotnet-format-wrapper.ps1`).
-3. `csharpier`: `dotnet csharpier format` over the staged C# files, re-staging what it changed (`tools/hooks/csharpier-wrapper.ps1`).
-4. `psscriptanalyzer`: PSScriptAnalyzer over the staged PowerShell, under `PSScriptAnalyzerSettings.psd1`.
-5. `line-length`: 150 characters for C#, PowerShell and Python (`tools/hooks/Test-LineLength.ps1`; with `-All` it reads the whole tree, as the `line-length` row of `tools/test-all.ps1` does).
-6. `gitleaks`: `gitleaks git --pre-commit --staged --redact`, the secrets scan over the staged changes.
-7. `provenance`: the provenance check (above), on every commit whatever it stages.
-8. `dotnet-build`: `dotnet build -p:TreatWarningsAsErrors=true`.
-9. `doc-drift`: `tools/hooks/Test-DocDrift.ps1`, on every commit: `docs/ARCHITECTURE.md` names every `src/Sky.*` project in backticks, and `docs/TEST_ALMANAC.md` every `tests/Sky.*.Tests` project and every `*Tests` class. `pwsh tools/hooks/Test-DocDrift.ps1 -Update` rewrites the almanac's Counts table from the tree.
+2. `agent-mail-guard`: refuses a commit that stages a file another Claude Code session holds an exclusive Agent Mail lease on (`tools/hooks/Invoke-AgentMailGuard.ps1`, which runs the machine's `~/.claude/tools/agent-mail/guard-check.ps1` and skips with one line where that is not installed, as in CI). `AGENT_MAIL_BYPASS=1` overrides a stale lease.
+3. `dotnet-format-style`: `dotnet format style` at severity info over the staged C# files, re-staging what it changed (`tools/hooks/dotnet-format-wrapper.ps1`).
+4. `csharpier`: `dotnet csharpier format` over the staged C# files, re-staging what it changed (`tools/hooks/csharpier-wrapper.ps1`).
+5. `psscriptanalyzer`: PSScriptAnalyzer over the staged PowerShell, under `PSScriptAnalyzerSettings.psd1`.
+6. `line-length`: 150 characters for C#, PowerShell and Python (`tools/hooks/Test-LineLength.ps1`; with `-All` it reads the whole tree, as the `line-length` row of `tools/test-all.ps1` does).
+7. `gitleaks`: `gitleaks git --pre-commit --staged --redact`, the secrets scan over the staged changes.
+8. `provenance`: the provenance check (above), on every commit whatever it stages.
+9. `dotnet-build`: `dotnet build -p:TreatWarningsAsErrors=true`.
+10. `doc-drift`: `tools/hooks/Test-DocDrift.ps1`, on every commit: `docs/ARCHITECTURE.md` names every `src/Sky.*` project in backticks, and `docs/TEST_ALMANAC.md` every `tests/Sky.*.Tests` project and every `*Tests` class. `pwsh tools/hooks/Test-DocDrift.ps1 -Update` rewrites the almanac's Counts table from the tree.
 
 One hook runs at the commit-msg stage: `doc-drift-message` (`Test-DocDrift.ps1 -CommitMessage`) refuses a commit that stages anything under `src/Sky.Content/` without staging a file under `docs/design/` or carrying a body line starting `Docs: unchanged, <why>`. `prek install` installs both stages; a clone installed before the commit-msg stage was added runs `prek install` again.
 
