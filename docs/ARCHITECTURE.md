@@ -94,6 +94,23 @@ A class library referencing `Sky.Engine`. ADR 0008 governs it: the bundled small
 
 A Godot 4.7.2 .NET project (`Godot.NET.Sdk`) referencing `Sky.Session`, with its marker at `Scripts/AssemblyMarker.cs`, one scene (`Scenes/Main.tscn`), and `Scratch/` compiled into the Debug assembly alone. ADR 0001 governs it: it draws views and holds no rules. Not built yet.
 
+## Integration footguns
+
+A change to A that needs a change to B, where nothing but a test, a hook or a reviewer catches the miss.
+
+- **Add a project reference** → also add the `typeof` to the referencing project's `AssemblyMarker.Dependencies`, the edge to its `ReferenceTests` `expected` array and to the table above; `ReferenceTests` fails on a missing or extra edge. An edge into `Sky.Engine`'s own references is an ADR first (ADR 0001).
+- **A test project needs shipped content** → give that test project a `ProjectReference` to `Sky.Content`, which copies `Data/**` to its output; the `src` project it tests keeps its edges, since `ReferenceTests` reads the compiled `src` assembly.
+- **Add a `src/Sky.*` project or a test class** → name it in this file (projects) and in `docs/TEST_ALMANAC.md` (a row per class, the counts by `pwsh tools/hooks/Test-DocDrift.ps1 -Update`); the doc-drift pre-commit hook refuses the commit otherwise.
+- **Set a `TargetFramework`** → in each csproj, never in `Directory.Build.props`, which Godot rewrites (godot#103545).
+- **Reorder `activities.json`'s list or the activity modules** → the `ActivityId`s change with it: ids are interned by index and `LuaBehaviorScripts` takes the modules in that order (R9). The same holds for traits and `TraitId`, and for professions and `ProfessionId`.
+- **Change what a named random stream draws, or the order it draws in** → every seed's outcome moves; the pinned seeds (`RngRootTests`, `ManifestGeneratorTests.SeedOneManifestIsPinned`) go red and are re-recorded in the same commit, with the reason in its body, since a recorded flight no longer replays (ADR 0003, 0004).
+- **Change anything under `src/Sky.Content/`** → stage the owning `docs/design/` doc in the same commit, or start a body line with `Docs: unchanged, <why>`; the `doc-drift-message` commit-msg hook refuses it otherwise. Any `.json` or `.lua` there also changes `ContentSet.Hash`.
+- **Add an asset** → its `assets/PROVENANCE.toml` entry with an allowlisted license, then `pwsh ./sky.ps1 provenance` to regenerate `CREDITS.md`, all in one commit (ADR 0009); the provenance check refuses an unledgered file.
+
+## Test locations
+
+Each `src/Sky.<Name>` has its twin `tests/Sky.<Name>.Tests`, a test project holding that layer's tests and its `ReferenceTests`. `docs/TEST_ALMANAC.md` lists every class and what it proves, and its "Where a new test goes" section places a new one; `pwsh sky.ps1 test -Project <Name> -Filter "*<Class>"` runs one class.
+
 ## Where decisions live
 
 - `docs/decisions/`: the ADRs, one engineering decision each, indexed in its `README.md`.
