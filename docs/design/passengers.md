@@ -151,13 +151,13 @@ Every share and range is [D3]. The generator draws bookings (a booking is a grou
 
 ### 6. The Rest body clock (day departure)
 
-The reference flight is a day departure (CONCEPT section 8, question 10). The numbers below assume boarding starts 09:30 origin local; crew.md (D2) owns the timeline, and the clock moves with it.
+The reference flight is a day departure (CONCEPT section 8, question 10). The numbers below assume boarding starts 10:30 origin local, as crew.md (D2)'s reference timeline has it; crew.md owns the timeline, and the clock moves with it. The flight runs 10:30 to about 13:14, so the 1.2 band below covers the meal and descent, and the post-lunch dip reaches only deboarding.
 
 - **Wake time** is drawn per booking and shared by its members within 15 minutes [D3]: `business` 05:00 to 06:30, `leisure` 06:00 to 08:30, `visiting` 05:30 to 08:00.
-- **Rest at boarding** = 6 × hours awake, plus 15 if the passenger woke before 06:00 (a short night), capped at 60 [D3]. An early business traveller boards at about 39; a family that woke at 08:00 boards at about 9.
+- **Rest at boarding** = 6 × hours awake, plus 15 if the passenger woke before 06:00 (a short night), capped at 60 [D3]. A business traveller who woke at 05:30 boards at 45, at the `sleep` threshold already; a family that woke at 08:00 boards at 15.
 - **Rise while awake** = 5 per hour [D3] × a body-clock factor by origin-local time, applied as a Trait-class modifier (it is who the passenger is, so it multiplies with `child` rather than adding across classes): 1.0 before 12:00, 1.2 from 12:00 to 13:00, 1.5 from 13:00 to 16:00 (the post-lunch dip) [D3]. The post-meal slump (section 3) stacks on it as a Service-class ×1.3.
 - **Falls only while asleep** (CONCEPT), at the `sleep` rates of section 3.
-- **Wake-ups.** A sleeper wakes when crossed by a neighbour leaving their seat (0.6), when crew wake them on purpose (crew.md (D2); the cart never does), in moderate turbulence (0.3 per 5 minutes), or when an incident is raised within witness reach (0.5) [D3]; `light_sleeper` and `heavy_sleeper` scale each chance. Each wake-up counts on the passenger and is recorded, so the report can say "22C was woken three times by 22A".
+- **Wake-ups.** A sleeper wakes when crossed by a neighbour leaving their seat (0.6), in moderate turbulence (0.3 per 5 minutes), or when an incident is raised within witness reach (0.5) [D3]; `light_sleeper` and `heavy_sleeper` scale each chance. Each wake-up counts on the passenger and is recorded, so the report can say "22C was woken three times by 22A". Crew wake nobody in M1: the cart skips sleepers (crew.md (D2), ruled 7) and no crew rule wakes one. A rule that does (CONCEPT section 4's "do not wake for service", a later lever) brings its own wake cause and its own thought kind (section 10).
 
 The shape this gives: on a day flight most passengers do not sleep; after the meal, early risers and business travellers doze if the cabin is dimmed. The lighting lever works through the `sleep` score and the recovery rate, so the lights-up variant costs sleep minutes rather than raising Rest everywhere.
 
@@ -245,12 +245,16 @@ The M1 catalogue. Every threshold, salience and duration is [D3]; the words play
 | `call_answered_fast` | praise | own call answered within 2 min | the crew member | `crew_staffing` | 1 | 15 min |
 | `lav_untidy` | grumble | finishes a visit to an untidy lav (crew.md's lav condition) | the lav | `crew_staffing` | 2 | 20 min |
 | `saw_incident` | grumble | takes a witness pulse (section 7) | the incident's seat | `crew_staffing` | 3 | 30 min |
-| `woken_up` | grumble | woken by a neighbour crossing, by crew, or by turbulence | who woke them, if anyone | `moment` when a neighbour woke them, else `lighting_plan` | 2 | 30 min |
+| `woken_up` | grumble | woken by a neighbour crossing (section 6); no other wake cause births it | the neighbour who crossed | `moment` | 2 | 30 min |
 | `too_bright_to_sleep` | grumble | a decision point finds Rest at 60 or more with `sleep` halved or zeroed by the lights | | `lighting_plan` | 2 | 30 min |
 | `good_nap` | praise | wakes on their own after 40 min or more asleep | | `lighting_plan` | 1 | 20 min |
 | `scared_of_bumps` | grumble | a decision point in turbulence finds Unease at 55 or more | | `check_in_cadence` | 3 | 20 min |
 | `reassured` | praise | a check-in stop, a follow-up or an answered `reassurance` call lowers their Unease | the crew member | `check_in_cadence` | 2 | 30 min |
 | `bored_no_screen` | grumble | a decision point finds Boredom at 60 or more and `screen` unavailable | | `moment` | 2 | 30 min |
+
+**One lever tag per kind.** A kind carries exactly one lever tag, never a tag picked by cause at the hook: the thoughts panel (M3) groups by kind and opens the one lever the tag names, so a kind whose tag varied would put two levers behind one group. When one situation has causes that point at different levers, each cause is its own kind with its own hook, and its words differ anyway ("22A climbed over me" against "the crew woke me"). This is why `woken_up` is born only from a neighbour crossing: a turbulence wake points at no lever (moderate turbulence is the feed's, and `scared_of_bumps` already carries what turbulence does to an uneasy passenger), a wake by a nearby incident also takes the witness pulse, whose `saw_incident` (salience 3) replaces it, and crew wake nobody in M1 (section 6). None of them is a lighting matter: the lights change who is asleep, not what wakes them, and `too_bright_to_sleep` and `good_nap` carry the lighting lever. In the content, `woken_up`'s hook fires for the neighbour-crossing wake alone, its tag is the plain `lever_tag`, and the schema has no per-cause tag field.
+
+**Expiry by an event (`late_and_fed_up`).** A kind lasts either a number of minutes or until a named engine event, never both and never neither, and the content says which: `lasts_minutes` holds the minutes, or it is null and `until` names the event; the validator refuses a kind with both or neither, and an `until` outside its closed list. M1's list has one entry, `first_served`: the passenger is first served a drink or a meal (a round, a catch-up or an answered `refreshment` call), the same condition that ends section 2's late-and-fed-up modifier, so the thought and the modifier end on one tick. The expiry runs before that service's own `served` hook, so the passenger then thinks `drink_welcome` or `served_late`. A passenger never served keeps it to deboarding. In the observed view an `until` kind is never marked `stale` by age, since the crew cannot know when it ended; the next reveal replaces it. No engine reading keys on a kind's id.
 
 `announcement_policy` has no M1 kind because M1 has no announcements; its first kinds (the delay nobody explained, the announcement that woke the cabin) come with the lever at M3 and M4.
 
